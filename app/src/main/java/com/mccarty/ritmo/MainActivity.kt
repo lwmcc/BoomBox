@@ -12,9 +12,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -32,6 +32,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.ViewModel.MainViewModel
 import com.mccarty.ritmo.model.CurrentAlbum
+import com.mccarty.ritmo.model.PlaylistItem
+import com.mccarty.ritmo.model.RecentlyPlayedItem
 import com.mccarty.ritmo.ui.theme.BoomBoxTheme
 import com.mccarty.ritmo.utils.convertBitmapFromDrawable
 import com.skydoves.landscapist.glide.GlideImage
@@ -130,12 +132,6 @@ class MainActivity : ComponentActivity() {
             .build()
     }
 
-
-    override fun onStop() {
-        super.onStop()
-
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, intent)
         val response = AuthorizationClient.getResponse(resultCode, data)
@@ -170,19 +166,63 @@ fun Greeting(name: String) {
 //@Preview(showBackground = true)
 @Composable
 fun SetCurrentlyPlaying(model: MainViewModel) {
-    val currentAlbum: CurrentAlbum by model.currentAlbum. collectAsStateWithLifecycle()
+    val currentAlbum: CurrentAlbum by model.currentAlbum.collectAsStateWithLifecycle()
     val currentAlbumImageUrl: String by model.currentAlbumImageUrl.collectAsStateWithLifecycle()
+    val recentlyPlayed: List<RecentlyPlayedItem> by model.recentlyPlayed.collectAsStateWithLifecycle()
+    val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
 
-    Column {
-        GlideImage(
-            imageModel = currentAlbumImageUrl,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .size(600.dp)
-        )
-        Text(text = "${currentAlbum.name}")
-        Text(text = "${currentAlbum.album?.name}")
-        Text(text = "${currentAlbum.album?.release_date}")
+    LazyColumn{
+        item {
+            GlideImage(
+                imageModel = currentAlbumImageUrl,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .size(600.dp)
+            )
+        }
+
+        currentAlbum.artists.forEach {
+            item {
+                Text(text = "${it.name}")
+            }
+        }
+
+        item {
+            Text(text = "${currentAlbum.name}")
+        }
+
+        item {
+            Text(text = "${currentAlbum.album?.name}")
+        }
+
+        item {
+            Text(text = "Release Date: ${currentAlbum.album?.release_date}")
+        }
+
+        // Recently Played
+        item {
+            Text(text ="Recently Played")
+        }
+        recentlyPlayed.forEach {
+            item {
+                Text(text = it.track.name)
+                Text(text = it.track.album.name)
+            }
+        }
+
+        // Playlists
+        item {
+            Text(text ="Play Lists")
+        }
+        playLists.forEach {
+            item {
+                Text(text = it.name)
+                if (it.description.isNotEmpty()) {
+                    Text(text = it.description)
+                }
+                Text(text = "Total Tracks: ${it.tracks.total.toString()}")
+            }
+        }
     }
 }
 
