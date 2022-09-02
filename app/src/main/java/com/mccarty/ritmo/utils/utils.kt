@@ -1,5 +1,9 @@
 package com.mccarty.ritmo.utils
 
+import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.Drawable
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.mccarty.ritmo.model.*
@@ -64,3 +68,19 @@ fun processQueue(response: Response<JsonObject>): Pair<CurrentAlbum, List<Curren
          Pair(CurrentAlbum(), emptyList())
      }
 }
+
+fun List<Image>.getImageUrlFromList(index: Int): String {
+    if(index < 0 || index >= this.size) return ""
+
+    var imageUrl = ""
+    imageUrl = this.let {
+        if(this.isNotEmpty()) {
+            this[index].url
+        } else {
+            ""
+        }
+    }.toString()
+    return imageUrl
+}
+
+fun Int.convertBitmapFromDrawable(resources: Resources): Bitmap = BitmapFactory.decodeResource(resources, this)

@@ -1,30 +1,46 @@
 package com.mccarty.ritmo
 
+//import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+//import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
+import android.R
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.ViewModel.MainViewModel
+import com.mccarty.ritmo.model.CurrentAlbum
 import com.mccarty.ritmo.ui.theme.BoomBoxTheme
+import com.mccarty.ritmo.utils.convertBitmapFromDrawable
+import com.skydoves.landscapist.glide.GlideImage
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -45,7 +61,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting("Android")
+                    SetCurrentlyPlaying(model)
                 }
             }
         }
@@ -55,6 +71,8 @@ class MainActivity : ComponentActivity() {
                 model.recentlyPlayed.collect {
                     it.forEach {
                         println("MainActivity ${it.track.album.name}")
+                        //it.track.name
+                        //it.track.album.name
                     }
                 }
             }
@@ -75,6 +93,8 @@ class MainActivity : ComponentActivity() {
                 model.queueItemList.collect {
                     it.forEach {
                         println("MainActivity QUE ${it.name}")
+                        //it.album?.name
+                        //it.name
                     }
                 }
             }
@@ -84,9 +104,12 @@ class MainActivity : ComponentActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 model.currentAlbum.collect {
                     println("MainActivity CA ${it.name}")
+                    //it.album?.name
+                    //it.album?.release_date
                 }
             }
         }
+
     }
 
     override fun onStart() {
@@ -141,6 +164,26 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(name: String) {
     Text(text = "Hello $name!")
+}
+
+@OptIn(ExperimentalLifecycleComposeApi::class)
+//@Preview(showBackground = true)
+@Composable
+fun SetCurrentlyPlaying(model: MainViewModel) {
+    val currentAlbum: CurrentAlbum by model.currentAlbum. collectAsStateWithLifecycle()
+    val currentAlbumImageUrl: String by model.currentAlbumImageUrl.collectAsStateWithLifecycle()
+
+    Column {
+        GlideImage(
+            imageModel = currentAlbumImageUrl,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .size(600.dp)
+        )
+        Text(text = "${currentAlbum.name}")
+        Text(text = "${currentAlbum.album?.name}")
+        Text(text = "${currentAlbum.album?.release_date}")
+    }
 }
 
 @Preview(showBackground = true)

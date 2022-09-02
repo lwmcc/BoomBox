@@ -1,20 +1,16 @@
 package com.mccarty.ritmo.ViewModel
 
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.ritmo.api.ApiClient
-import com.mccarty.ritmo.model.CurrentAlbum
-import com.mccarty.ritmo.model.CurrentQueueItem
-import com.mccarty.ritmo.model.PlaylistItem
-import com.mccarty.ritmo.model.RecentlyPlayedItem
+import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.repository.remote.Repository
+import com.mccarty.ritmo.utils.getImageUrlFromList
 import com.mccarty.ritmo.utils.processPlaylist
 import com.mccarty.ritmo.utils.processQueue
 import com.mccarty.ritmo.utils.processRecentlyPlayed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,6 +32,9 @@ class MainViewModel @Inject constructor(
 
     private var _currentAlbum = MutableStateFlow(CurrentAlbum())
     val currentAlbum: StateFlow<CurrentAlbum> = _currentAlbum
+
+    private var _currentAlbumImageUrl = MutableStateFlow("larry")
+    val currentAlbumImageUrl: StateFlow<String> = _currentAlbumImageUrl
 
     fun getRecentlyPlayed() {
         viewModelScope.launch {
@@ -63,6 +62,15 @@ class MainViewModel @Inject constructor(
                     val pair = processQueue(it)
                     _currentAlbum.value = pair.first
                     _queueItemList.value = pair.second
+
+                    val image = pair.first.album?.images?.getImageUrlFromList(0)
+
+                    if (image != null) {
+                        _currentAlbumImageUrl.value = image
+                        println("IMAEG $image")
+                    }
+
+                    //_currentAlbumImageUrl.value = getAlbumArtwork(pair.first.album?.images)
                 }
         }
     }
@@ -71,5 +79,17 @@ class MainViewModel @Inject constructor(
         ApiClient.apply {
             this.token = token
         }
+    }
+
+    private fun getAlbumArtwork(images: List<Image>?): String {
+        var image = ""
+        image = images?.let {
+            if(it.isNotEmpty()) {
+                it[0].url
+            } else {
+                ""
+            }
+        }.toString()
+        return image
     }
 }
