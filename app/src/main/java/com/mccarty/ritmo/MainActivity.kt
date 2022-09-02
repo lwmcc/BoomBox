@@ -1,20 +1,13 @@
 package com.mccarty.ritmo
 
-//import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
-//import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
-import android.R
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
@@ -22,6 +15,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -29,6 +23,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -37,6 +32,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.ViewModel.MainViewModel
 import com.mccarty.ritmo.model.CurrentAlbum
+import com.mccarty.ritmo.model.CurrentQueueItem
 import com.mccarty.ritmo.model.PlaylistItem
 import com.mccarty.ritmo.model.RecentlyPlayedItem
 import com.mccarty.ritmo.ui.theme.BoomBoxTheme
@@ -72,51 +68,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.recentlyPlayed.collect {
-                    it.forEach {
-                        println("MainActivity ${it.track.album.name}")
-                        //it.track.name
-                        //it.track.album.name
-                    }
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.playLists.collect {
-                    it.forEach {
-                        println("MainActivity PL ${it.name}")
-                    }
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.queueItemList.collect {
-                    it.forEach {
-                        println("MainActivity QUE ${it.name}")
-                        //it.album?.name
-                        //it.name
-                    }
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.currentAlbum.collect {
-                    println("MainActivity CA ${it.name}")
-                    //it.album?.name
-                    //it.album?.release_date
-                }
-            }
-        }
-
     }
 
     override fun onStart() {
@@ -175,22 +126,31 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
     val currentAlbumImageUrl: String by model.currentAlbumImageUrl.collectAsStateWithLifecycle()
     val recentlyPlayed: List<RecentlyPlayedItem> by model.recentlyPlayed.collectAsStateWithLifecycle()
     val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
+    val queueItems: List<CurrentQueueItem> by model.queueItemList.collectAsStateWithLifecycle()
 
-    LazyColumn {
+    LazyColumn(
+        modifier = Modifier.padding(horizontal = 25.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+
+        ) {
         // Currently Playing
         item {
             GlideImage(
                 imageModel = currentAlbumImageUrl,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(600.dp)
+                    .size(300.dp)
             )
         }
         item {
             Text(
                 text = "Currently Playing",
                 fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
             )
         }
         currentAlbum.artists.forEach {
@@ -198,7 +158,11 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
                 Text(
                     text = "${it.name}",
                     fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .paddingFromBaseline(top = 25.dp)
+                        .fillMaxWidth(),
                 )
             }
         }
@@ -206,7 +170,11 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
             Text(
                 text = "${currentAlbum.name}",
                 fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Normal
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
             )
         }
         item {
@@ -214,6 +182,10 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
                 text = "${currentAlbum.album?.name}",
                 fontWeight = FontWeight.Normal,
                 fontStyle = FontStyle.Normal,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
             )
         }
         item {
@@ -221,8 +193,48 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
                 text = "Release Date: ${currentAlbum.album?.release_date}",
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Normal,
+                fontSize = 16.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
             )
             Divider(thickness = 2.dp)
+        }
+
+        // Queue
+        item {
+            Text(
+                text ="Music Queue",
+                fontStyle = FontStyle.Normal,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
+            )
+        }
+
+        queueItems.forEach {
+            item {
+                Text(
+                    text = it.name,
+                    fontStyle = FontStyle.Normal,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .paddingFromBaseline(top = 25.dp)
+                        .fillMaxWidth(),
+                )
+                Text(
+                    text = it.album.name,
+                    fontStyle = FontStyle.Normal,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .paddingFromBaseline(top = 25.dp)
+                        .fillMaxWidth(),
+                )
+            }
         }
 
         // Recently Played
@@ -231,16 +243,38 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
                 text ="Recently Played",
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
             )
         }
         recentlyPlayed.forEach {
             item {
-                Text(text = it.track.name)
-                Text(text = it.track.album.name)
+                Text(
+                    text = it.track.name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .paddingFromBaseline(top = 25.dp)
+                        .fillMaxWidth(),
+                )
+                Text(
+                    text = it.track.album.name,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .paddingFromBaseline(1.dp)
+                        .fillMaxWidth(),
+                )
             }
         }
         item {
-            Divider(thickness = 2.dp)
+            Divider(
+                thickness = 2.dp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 10.dp)
+                    .fillMaxWidth(),
+            )
         }
 
         // Playlists
@@ -248,24 +282,42 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
             Text(
                 text ="Playlists",
                 fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Bold,)
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
+            )
         }
         playLists.forEach {
             item {
-                Text(text = it.name)
+                Text(
+                    text = it.name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .paddingFromBaseline(top = 25.dp)
+                        .fillMaxWidth(),
+                )
                 if (it.description.isNotEmpty()) {
-                    Text(text = it.description)
+                    Text(
+                        text = it.description,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .paddingFromBaseline(1.dp)
+                            .fillMaxWidth(),
+                    )
                 }
-                Text(text = "Total Tracks: ${it.tracks.total.toString()}")
+                Text(
+                    text = "Total Tracks: ${it.tracks.total}",
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .paddingFromBaseline(1.dp)
+                        .fillMaxWidth(),
+                )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    BoomBoxTheme {
-        Greeting("Android")
     }
 }

@@ -10,16 +10,12 @@ import com.mccarty.ritmo.utils.processPlaylist
 import com.mccarty.ritmo.utils.processQueue
 import com.mccarty.ritmo.utils.processRecentlyPlayed
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
-    private val repository: Repository,
-    private val dispatchers: Dispatchers,
-    ): ViewModel() {
+class MainViewModel @Inject constructor(private val repository: Repository): ViewModel() {
 
     private var _recentlyPlayed = MutableStateFlow<List<RecentlyPlayedItem>>(emptyList())
     val recentlyPlayed: StateFlow<List<RecentlyPlayedItem>> = _recentlyPlayed
@@ -67,10 +63,7 @@ class MainViewModel @Inject constructor(
 
                     if (image != null) {
                         _currentAlbumImageUrl.value = image
-                        println("IMAEG $image")
                     }
-
-                    //_currentAlbumImageUrl.value = getAlbumArtwork(pair.first.album?.images)
                 }
         }
     }
@@ -79,17 +72,5 @@ class MainViewModel @Inject constructor(
         ApiClient.apply {
             this.token = token
         }
-    }
-
-    private fun getAlbumArtwork(images: List<Image>?): String {
-        var image = ""
-        image = images?.let {
-            if(it.isNotEmpty()) {
-                it[0].url
-            } else {
-                ""
-            }
-        }.toString()
-        return image
     }
 }
