@@ -12,16 +12,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -171,7 +176,8 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
     val recentlyPlayed: List<RecentlyPlayedItem> by model.recentlyPlayed.collectAsStateWithLifecycle()
     val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
 
-    LazyColumn{
+    LazyColumn {
+        // Currently Playing
         item {
             GlideImage(
                 imageModel = currentAlbumImageUrl,
@@ -180,28 +186,52 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
                     .size(600.dp)
             )
         }
-
+        item {
+            Text(
+                text = "Currently Playing",
+                fontStyle = FontStyle.Normal,
+                fontWeight = FontWeight.Bold
+            )
+        }
         currentAlbum.artists.forEach {
             item {
-                Text(text = "${it.name}")
+                Text(
+                    text = "${it.name}",
+                    fontStyle = FontStyle.Normal,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
-
         item {
-            Text(text = "${currentAlbum.name}")
+            Text(
+                text = "${currentAlbum.name}",
+                fontStyle = FontStyle.Normal,
+                fontWeight = FontWeight.Normal
+            )
         }
-
         item {
-            Text(text = "${currentAlbum.album?.name}")
+            Text(
+                text = "${currentAlbum.album?.name}",
+                fontWeight = FontWeight.Normal,
+                fontStyle = FontStyle.Normal,
+            )
         }
-
         item {
-            Text(text = "Release Date: ${currentAlbum.album?.release_date}")
+            Text(
+                text = "Release Date: ${currentAlbum.album?.release_date}",
+                fontStyle = FontStyle.Normal,
+                fontWeight = FontWeight.Normal,
+            )
+            Divider(thickness = 2.dp)
         }
 
         // Recently Played
         item {
-            Text(text ="Recently Played")
+            Text(
+                text ="Recently Played",
+                fontStyle = FontStyle.Normal,
+                fontWeight = FontWeight.Bold,
+            )
         }
         recentlyPlayed.forEach {
             item {
@@ -209,10 +239,16 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
                 Text(text = it.track.album.name)
             }
         }
+        item {
+            Divider(thickness = 2.dp)
+        }
 
         // Playlists
         item {
-            Text(text ="Play Lists")
+            Text(
+                text ="Playlists",
+                fontStyle = FontStyle.Normal,
+                fontWeight = FontWeight.Bold,)
         }
         playLists.forEach {
             item {
