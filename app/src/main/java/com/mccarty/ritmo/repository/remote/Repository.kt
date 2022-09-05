@@ -1,5 +1,6 @@
 package com.mccarty.ritmo.repository.remote
 
+import androidx.compose.animation.core.FloatSpringSpec
 import com.google.gson.JsonObject
 import com.mccarty.ritmo.api.ApiService
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +42,16 @@ class Repository @Inject constructor(
             val queue = retrofit.create(ApiService::class.java).getUsersQueue()
             emit(queue)
             delay(refreshInterval)
+        }
+    }
+
+    fun getAlbumInfo(id: String): Flow<Response<JsonObject>> {
+        return flow {
+            while(true) {
+                val album = retrofit.create(ApiService::class.java).getAlbum(id)
+                emit(album)
+                delay(refreshInterval)
+            }
         }
     }
 }

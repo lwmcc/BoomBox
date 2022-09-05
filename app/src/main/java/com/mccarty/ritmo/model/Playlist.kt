@@ -39,10 +39,10 @@ data class Owner(
 )
 
 data class Tracks(
-    val href: String,
-    val total: Int
+    val href: String = "",
+    val total: Int = 0,
 )
 
 data class ExternalUrlsX(
-    val spotify: String
+    val spotify: String = ""
 )

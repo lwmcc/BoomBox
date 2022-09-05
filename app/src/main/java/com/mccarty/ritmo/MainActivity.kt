@@ -34,6 +34,7 @@ import com.mccarty.ritmo.ViewModel.MainViewModel
 import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.ui.theme.BoomBoxTheme
 import com.mccarty.ritmo.utils.convertBitmapFromDrawable
+import com.mccarty.ritmo.utils.getImageUrlFromList
 import com.skydoves.landscapist.glide.GlideImage
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
@@ -97,6 +98,7 @@ class MainActivity : ComponentActivity() {
                     model.getRecentlyPlayed()
                     model.getPlaylists()
                     model.getQueue()
+                    model.getLastPlayedSongId()
                 }
             }
 
@@ -110,11 +112,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
-}
-
 @OptIn(ExperimentalLifecycleComposeApi::class)
 //@Preview(showBackground = true)
 @Composable
@@ -124,12 +121,14 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
     val recentlyPlayed: List<RecentlyPlayedItem> by model.recentlyPlayed.collectAsStateWithLifecycle()
     val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
     val queueItems: List<CurrentQueueItem> by model.queueItemList.collectAsStateWithLifecycle()
+    val album: AlbumXX by model.album.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally
 
         ) {
+
         // Currently Playing
         if(currentAlbum.artists.isNotEmpty()) {
             item {
@@ -150,6 +149,43 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
                         .paddingFromBaseline(top = 40.dp)
                         .fillMaxWidth(),
                 )
+            }
+        } else { // Last album plated
+            if(album.images.isNotEmpty()) {
+                item {
+                    GlideImage(
+                        imageModel = album.images?.getImageUrlFromList(0),
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .size(300.dp)
+                    )
+                }
+                if(album.artists.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = album.artists[0].name,
+                            fontStyle = FontStyle.Normal,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            modifier = Modifier
+                                .paddingFromBaseline(top = 40.dp)
+                                .fillMaxWidth(),
+                        )
+                    }
+                    item {
+                        Text(
+                            text = album.name,
+                            fontStyle = FontStyle.Normal,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .paddingFromBaseline(top = 25.dp)
+                                .fillMaxWidth(),
+                        )
+                    }
+                }
+            } else {
+                println("EMPTY")
             }
         }
         for(artist in currentAlbum.artists) {
@@ -245,6 +281,7 @@ fun SetCurrentlyPlaying(model: MainViewModel) {
 
         // Recently Played
         if(recentlyPlayed.isNotEmpty()) {
+
             item {
                 Divider(
                     thickness = 2.dp,

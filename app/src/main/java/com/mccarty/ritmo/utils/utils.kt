@@ -70,6 +70,24 @@ fun processQueue(response: Response<JsonObject>): Pair<CurrentlyPlaying, List<Cu
      }
 }
 
+fun processAlbumData(response: Response<JsonObject>): AlbumXX {
+    return if(response.isSuccessful) {
+        try {
+            val json = response.body()?.asJsonObject
+            val g = Gson().fromJson(json, AlbumXX::class.java)
+            return g
+        }catch (je: JSONException) {
+            AlbumXX()
+        } catch (npe: NullPointerException) {
+            AlbumXX()
+        } catch(cce: ClassCastException) {
+            AlbumXX()
+        }
+    } else {
+        AlbumXX()
+    }
+}
+
 fun List<Image>.getImageUrlFromList(index: Int): String {
     if(index < 0 || index >= this.size) return ""
 

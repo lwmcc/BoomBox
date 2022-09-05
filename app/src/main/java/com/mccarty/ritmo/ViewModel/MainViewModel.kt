@@ -5,10 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.repository.remote.Repository
-import com.mccarty.ritmo.utils.getImageUrlFromList
-import com.mccarty.ritmo.utils.processPlaylist
-import com.mccarty.ritmo.utils.processQueue
-import com.mccarty.ritmo.utils.processRecentlyPlayed
+import com.mccarty.ritmo.utils.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -20,6 +17,9 @@ class MainViewModel @Inject constructor(private val repository: Repository): Vie
     private var _recentlyPlayed = MutableStateFlow<List<RecentlyPlayedItem>>(emptyList())
     val recentlyPlayed: StateFlow<List<RecentlyPlayedItem>> = _recentlyPlayed
 
+    private var _lastPlayed = MutableStateFlow<String>("")
+    val lastPlayed: StateFlow<String> = _lastPlayed
+
     private var _playLists = MutableStateFlow<List<PlaylistItem>>(emptyList())
     val playLists: StateFlow<List<PlaylistItem>> = _playLists
 
@@ -30,8 +30,11 @@ class MainViewModel @Inject constructor(private val repository: Repository): Vie
     private var _currentAlbum = MutableStateFlow(CurrentlyPlaying())
     val currentAlbum: StateFlow<CurrentlyPlaying> = _currentAlbum
 
-    private var _currentAlbumImageUrl = MutableStateFlow("larry")
+    private var _currentAlbumImageUrl = MutableStateFlow("")
     val currentAlbumImageUrl: StateFlow<String> = _currentAlbumImageUrl
+
+    private var _album = MutableStateFlow(AlbumXX())
+    val album: StateFlow<AlbumXX> = _album
 
     fun getRecentlyPlayed() {
         viewModelScope.launch {
@@ -64,6 +67,16 @@ class MainViewModel @Inject constructor(private val repository: Repository): Vie
                     if (image != null) {
                         _currentAlbumImageUrl.value = image
                     }
+                }
+        }
+    }
+
+    fun getLastPlayedSongId() {
+        viewModelScope.launch {
+            repository.getAlbumInfo("3aDFhZOz4EkitF1DlYGsxM").stateIn(scope = viewModelScope)
+                .collect {
+                    _album.value = processAlbumData(it)
+                    println("MainViewModel ${_album.value.images[0].url}")
                 }
         }
     }
