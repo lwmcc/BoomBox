@@ -101,5 +101,3 @@ fun List<Image>.getImageUrlFromList(index: Int): String {
     }.toString()
     return imageUrl
 }
-
-fun Int.convertBitmapFromDrawable(resources: Resources): Bitmap = BitmapFactory.decodeResource(resources, this)
