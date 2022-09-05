@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(private val repository: Repository): ViewModel() {
+class MainViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
 
     private var _recentlyPlayed = MutableStateFlow<List<RecentlyPlayedItem>>(emptyList())
     val recentlyPlayed: StateFlow<List<RecentlyPlayedItem>> = _recentlyPlayed
@@ -41,8 +41,7 @@ class MainViewModel @Inject constructor(private val repository: Repository): Vie
             repository.recentlyPlayed.stateIn(scope = viewModelScope)
                 .collect {
                     _recentlyPlayed.value = processRecentlyPlayed(it)
-                    println("MainViewModel THE ID ${_recentlyPlayed.value[0].track.album.id}")
-            }
+                }
         }
     }
 
@@ -50,7 +49,7 @@ class MainViewModel @Inject constructor(private val repository: Repository): Vie
         viewModelScope.launch {
             repository.playLists.stateIn(scope = viewModelScope)
                 .collect {
-                    _playLists.value =  processPlaylist(it)
+                    _playLists.value = processPlaylist(it)
                 }
         }
     }
@@ -68,22 +67,19 @@ class MainViewModel @Inject constructor(private val repository: Repository): Vie
                     if (image != null) {
                         _currentAlbumImageUrl.value = image
                     }
-
                 }
         }
     }
 
-    // Track ID 3aDFhZOz4EkitF1DlYGsxM
-    // _recentlyPlayed.value[0].track.album.id
     fun getLastPlayedSongId() {
-
-        viewModelScope.launch {
-            repository.getAlbumInfo("3aDFhZOz4EkitF1DlYGsxM").stateIn(scope = viewModelScope)
-                .collect {
-                    _album.value = processAlbumData(it)
-                    println("MainViewModel GET ID ${_album.value.images.size}")
-                    //println("MainViewModel GET ID ${_album.value.images[0].url}")
-                }
+        if (_recentlyPlayed.value.isNotEmpty()) {
+            val id = _recentlyPlayed.value[0].track.album.id
+            viewModelScope.launch {
+                repository.getAlbumInfo(id).stateIn(scope = viewModelScope)
+                    .collect {
+                        _album.value = processAlbumData(it)
+                    }
+            }
         }
     }
 
