@@ -9,6 +9,7 @@ import com.google.gson.JsonObject
 import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.utils.Constants.CURRENTLY_PLAYING
 import com.mccarty.ritmo.utils.Constants.ITEMS
+import com.mccarty.ritmo.utils.Constants.QUEUE
 import org.json.JSONException
 import retrofit2.Response
 import java.lang.NullPointerException
@@ -45,27 +46,27 @@ fun processRecentlyPlayed(response: Response<JsonObject>): List<RecentlyPlayedIt
     }
 }
 
-fun processQueue(response: Response<JsonObject>): Pair<CurrentAlbum, List<CurrentQueueItem>> {
+fun processQueue(response: Response<JsonObject>): Pair<CurrentlyPlaying, List<CurrentQueueItem>> {
      return if(response.isSuccessful) {
          try {
              val currentlyPlaying = response.body()?.getAsJsonObject(CURRENTLY_PLAYING)
              val json = currentlyPlaying?.asJsonObject
-             val currentAlbum = Gson().fromJson(json, CurrentAlbum::class.java)
+             var playing = Gson().fromJson(json, CurrentlyPlaying::class.java)
 
-             val queue = response.body()?.getAsJsonArray("queue")
+             val queue = response.body()?.getAsJsonArray(QUEUE)
              val jsonQueue = queue?.asJsonArray
              val currentQueue = Gson().fromJson(jsonQueue, CurrentQueue::class.java).toList()
 
-             Pair(currentAlbum, currentQueue)
+             Pair(playing, currentQueue)
          } catch (je: JSONException) {
-             Pair(CurrentAlbum(), emptyList())
+             Pair(CurrentlyPlaying(), emptyList())
          } catch (npe: NullPointerException) {
-             Pair(CurrentAlbum(), emptyList())
+             Pair(CurrentlyPlaying(), emptyList())
          } catch(cce: ClassCastException) {
-             Pair(CurrentAlbum(), emptyList())
+             Pair(CurrentlyPlaying(), emptyList())
          }
     } else {
-         Pair(CurrentAlbum(), emptyList())
+         Pair(CurrentlyPlaying(), emptyList())
      }
 }
 

@@ -26,8 +26,9 @@ class MainViewModel @Inject constructor(private val repository: Repository): Vie
     private var _queueItemList = MutableStateFlow<List<CurrentQueueItem>>(emptyList())
     val queueItemList: StateFlow<List<CurrentQueueItem>> = _queueItemList
 
-    private var _currentAlbum = MutableStateFlow(CurrentAlbum())
-    val currentAlbum: StateFlow<CurrentAlbum> = _currentAlbum
+    // TODO: change name
+    private var _currentAlbum = MutableStateFlow(CurrentlyPlaying())
+    val currentAlbum: StateFlow<CurrentlyPlaying> = _currentAlbum
 
     private var _currentAlbumImageUrl = MutableStateFlow("larry")
     val currentAlbumImageUrl: StateFlow<String> = _currentAlbumImageUrl
@@ -52,7 +53,6 @@ class MainViewModel @Inject constructor(private val repository: Repository): Vie
 
     fun getQueue() {
         viewModelScope.launch {
-
             repository.userQueue.stateIn(scope = viewModelScope)
                 .collect {
                     val pair = processQueue(it)
