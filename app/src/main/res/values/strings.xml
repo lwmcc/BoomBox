@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">BoomBox</string>
+
+
+    <string name="currently_playing">Currently Playing</string>
+    <string name="music_queue">Music Queue</string>
+    <string name="playlists">Playlists</string>
+    <string name="recently_played">Recently Played</string>
+    <string name="total_tracks">Total Tracks: </string>
 </resources>

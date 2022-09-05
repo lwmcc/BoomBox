@@ -41,6 +41,7 @@ class MainViewModel @Inject constructor(private val repository: Repository): Vie
             repository.recentlyPlayed.stateIn(scope = viewModelScope)
                 .collect {
                     _recentlyPlayed.value = processRecentlyPlayed(it)
+                    println("MainViewModel THE ID ${_recentlyPlayed.value[0].track.album.id}")
             }
         }
     }
@@ -67,16 +68,21 @@ class MainViewModel @Inject constructor(private val repository: Repository): Vie
                     if (image != null) {
                         _currentAlbumImageUrl.value = image
                     }
+
                 }
         }
     }
 
+    // Track ID 3aDFhZOz4EkitF1DlYGsxM
+    // _recentlyPlayed.value[0].track.album.id
     fun getLastPlayedSongId() {
+
         viewModelScope.launch {
             repository.getAlbumInfo("3aDFhZOz4EkitF1DlYGsxM").stateIn(scope = viewModelScope)
                 .collect {
                     _album.value = processAlbumData(it)
-                    println("MainViewModel ${_album.value.images[0].url}")
+                    println("MainViewModel GET ID ${_album.value.images.size}")
+                    //println("MainViewModel GET ID ${_album.value.images[0].url}")
                 }
         }
     }

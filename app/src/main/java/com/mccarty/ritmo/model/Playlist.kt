@@ -23,12 +23,6 @@ data class ExternalUrls(
     val spotify: String
 )
 
-//data class Image(
-//    val height: Int,
-//    val url: String,
-//    val width: Int
-//)
-
 data class Owner(
     val display_name: String,
     val external_urls: ExternalUrlsX,
