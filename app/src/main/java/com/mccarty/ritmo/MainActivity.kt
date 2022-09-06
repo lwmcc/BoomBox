@@ -1,5 +1,6 @@
 package com.mccarty.ritmo
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -10,11 +11,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.codelab.android.datastore.AlbumPreference
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
-import com.mccarty.ritmo.ViewModel.MainViewModel
+import com.mccarty.ritmo.data.AlbumPreferenceSerializer
+import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.ui.screens.MainScreen
 import com.mccarty.ritmo.ui.theme.BoomBoxTheme
 import com.spotify.sdk.android.auth.AuthorizationClient
@@ -22,7 +27,6 @@ import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -47,12 +51,25 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            model.album.collect {
+                saveAlbum(this@MainActivity, it)
+            }
+        }
+
+        lifecycleScope.launch {
+            this@MainActivity.albumPreferenceDataStore.data.collect {
+                model.setLastPlayedAlbumData(artistName = it.artistName, albumName = it.albumName, imageUrl = it.imageUrl, releaseDate = it.releaseDate)
+            }
+        }
     }
 
     override fun onStart() {
         super.onStart()
         val request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN)
         AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
+        saveAlbum(MainActivity@ this, model.album.value)
     }
 
     private fun getAuthenticationRequest(type: AuthorizationResponse.Type): AuthorizationRequest? {
@@ -62,7 +79,13 @@ class MainActivity : ComponentActivity() {
             getRedirectUri().toString()
         )
             .setShowDialog(false)
-            .setScopes(arrayOf("user-read-email", "user-read-recently-played", "user-read-playback-state"))
+            .setScopes(
+                arrayOf(
+                    "user-read-email",
+                    "user-read-recently-played",
+                    "user-read-playback-state"
+                )
+            )
             .setCampaign("your-campaign-token")
             .build()
     }
@@ -71,7 +94,7 @@ class MainActivity : ComponentActivity() {
         super.onActivityResult(requestCode, resultCode, intent)
         val response = AuthorizationClient.getResponse(resultCode, data)
 
-        if(requestCode == AUTH_TOKEN_REQUEST_CODE) {
+        if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
             model.setAuthToken(response.accessToken)
 
             lifecycleScope.launch {
@@ -80,6 +103,7 @@ class MainActivity : ComponentActivity() {
                     model.getPlaylists()
                     model.getQueue()
                     model.getLastPlayedSongId()
+                    model.getCurrentlyPlaying()
                 }
             }
 
@@ -91,4 +115,24 @@ class MainActivity : ComponentActivity() {
     private fun getRedirectUri(): Uri? {
         return return Uri.parse(REDIRECT_URI)
     }
+
+    private fun saveAlbum(context: Context, album: AlbumXX) {
+        if (album.artists.isNotEmpty()) {
+            lifecycleScope.launch {
+                context.albumPreferenceDataStore.updateData {
+                    it.toBuilder()
+                        .setArtistName(album.artists[0].name)
+                        .setAlbumName(album.name)
+                        .setReleaseDate(album.release_date)
+                        .setImageUrl(album.images[0].url)
+                        .build()
+                }
+            }
+        }
+    }
+
+    val Context.albumPreferenceDataStore: DataStore<AlbumPreference> by dataStore(
+        fileName = "album_settings.proto",
+        serializer = AlbumPreferenceSerializer
+    )
 }

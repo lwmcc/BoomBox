@@ -18,4 +18,7 @@ interface ApiService {
 
     @GET("/v1/albums/{id}")
     suspend fun getAlbum(@Path("id") id: String): Response<JsonObject>
+
+    @GET("/v1/me/player/currently-playing")
+    suspend fun getCurrentlyPlaying(): Response<JsonObject>
 }

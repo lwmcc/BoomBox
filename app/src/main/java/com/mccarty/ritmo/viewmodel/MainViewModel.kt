@@ -1,5 +1,7 @@
-package com.mccarty.ritmo.ViewModel
+package com.mccarty.ritmo
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.ritmo.api.ApiClient
@@ -17,16 +19,12 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     private var _recentlyPlayed = MutableStateFlow<List<RecentlyPlayedItem>>(emptyList())
     val recentlyPlayed: StateFlow<List<RecentlyPlayedItem>> = _recentlyPlayed
 
-    private var _lastPlayed = MutableStateFlow<String>("")
-    val lastPlayed: StateFlow<String> = _lastPlayed
-
     private var _playLists = MutableStateFlow<List<PlaylistItem>>(emptyList())
     val playLists: StateFlow<List<PlaylistItem>> = _playLists
 
     private var _queueItemList = MutableStateFlow<List<CurrentQueueItem>>(emptyList())
     val queueItemList: StateFlow<List<CurrentQueueItem>> = _queueItemList
 
-    // TODO: change name
     private var _currentAlbum = MutableStateFlow(CurrentlyPlaying())
     val currentAlbum: StateFlow<CurrentlyPlaying> = _currentAlbum
 
@@ -35,6 +33,22 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
 
     private var _album = MutableStateFlow(AlbumXX())
     val album: StateFlow<AlbumXX> = _album
+
+    private var _currentlyPlaying = MutableStateFlow(false)
+    val currentlyPlaying: StateFlow<Boolean> = _currentlyPlaying
+
+    // Last played data
+    private var _artistName = MutableLiveData<String>("")
+    var artistName: LiveData<String> = _artistName
+
+    private var _albumName = MutableLiveData<String>("")
+    var albumName: LiveData<String> = _albumName
+
+    private var _imageUrl = MutableLiveData<String>("")
+    var imageUrl: LiveData<String> = _imageUrl
+
+    private var _releaseDate = MutableLiveData<String>("")
+    var releaseDate: LiveData<String> = _releaseDate
 
     fun getRecentlyPlayed() {
         viewModelScope.launch {
@@ -61,12 +75,21 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
                     val pair = processQueue(it)
                     _currentAlbum.value = pair.first
                     _queueItemList.value = pair.second
-
                     val image = pair.first.album?.images?.getImageUrlFromList(0)
 
                     if (image != null) {
                         _currentAlbumImageUrl.value = image
                     }
+                }
+        }
+    }
+
+    fun getCurrentlyPlaying() {
+        viewModelScope.launch {
+            repository.currentlyPlaying.stateIn(scope = viewModelScope)
+                .collect {
+                    _currentlyPlaying.value = processCurrentlyPlaying(it)!! // This will always return something
+                    println("MainViewModel ${_currentlyPlaying.value}")
                 }
         }
     }
@@ -87,5 +110,12 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         ApiClient.apply {
             this.token = token
         }
+    }
+
+    fun setLastPlayedAlbumData(artistName: String, albumName: String, imageUrl: String, releaseDate: String) {
+        _artistName.value = artistName
+        _albumName.value = albumName
+        _imageUrl.value = imageUrl
+        _releaseDate.value = releaseDate
     }
 }

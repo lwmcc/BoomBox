@@ -10,9 +10,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -20,11 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.codelab.android.datastore.AlbumPreference
+import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.R
-import com.mccarty.ritmo.ViewModel.MainViewModel
+import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.utils.getImageUrlFromList
 import com.skydoves.landscapist.glide.GlideImage
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
@@ -35,13 +42,19 @@ fun MainScreen(model: MainViewModel) {
     val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
     val queueItems: List<CurrentQueueItem> by model.queueItemList.collectAsStateWithLifecycle()
     val album: AlbumXX by model.album.collectAsStateWithLifecycle()
+    val currentlyPlaying: Boolean  by model.currentlyPlaying.collectAsStateWithLifecycle()
+
+    val lastPlayedArtist = model.artistName.observeAsState().value
+    val lastPlayedAlbum = model.albumName.observeAsState().value
+    val lastImageUrl = model.imageUrl.observeAsState().value
+    val lastReleaseDate = model.releaseDate.observeAsState().value
 
     LazyColumn(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Currently Playing
-        if(currentAlbum.artists.isNotEmpty()) {
+        if(currentlyPlaying) {
             item {
                 GlideImage(
                     imageModel = currentAlbumImageUrl,
@@ -66,7 +79,7 @@ fun MainScreen(model: MainViewModel) {
             if(album.images.isNotEmpty()) {
                 item {
                     GlideImage(
-                        imageModel = album.images.getImageUrlFromList(0),
+                        imageModel = lastImageUrl,
                         contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .size(300.dp)
@@ -96,12 +109,54 @@ fun MainScreen(model: MainViewModel) {
                         )
                     }
                 }
+            } else {
+                item {
+                    GlideImage(
+                        imageModel = lastImageUrl,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .size(300.dp)
+                    )
+                }
+                item {
+                    Text(
+                        text = lastPlayedArtist.toString(),
+                        fontStyle = FontStyle.Normal,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .paddingFromBaseline(top = 40.dp)
+                            .fillMaxWidth(),
+                    )
+                }
+                item {
+                    Text(
+                        text = lastPlayedAlbum.toString(),
+                        fontStyle = FontStyle.Normal,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .paddingFromBaseline(top = 25.dp)
+                            .fillMaxWidth(),
+                    )
+                }
+                item {
+                    Text(
+                        text = lastReleaseDate.toString(),
+                        fontStyle = FontStyle.Normal,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .paddingFromBaseline(top = 25.dp)
+                            .fillMaxWidth(),
+                    )
+                }
             }
         }
         for(artist in currentAlbum.artists) {
             item {
                 Text(
-                    text = "${artist.name}",
+                    text = artist.name,
                     fontStyle = FontStyle.Normal,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
@@ -114,7 +169,7 @@ fun MainScreen(model: MainViewModel) {
         if(currentAlbum.artists.isNotEmpty()) {
             item {
                 Text(
-                    text = "${currentAlbum.name}",
+                    text = currentAlbum.name,
                     fontStyle = FontStyle.Normal,
                     fontWeight = FontWeight.Normal,
                     fontSize = 14.sp,

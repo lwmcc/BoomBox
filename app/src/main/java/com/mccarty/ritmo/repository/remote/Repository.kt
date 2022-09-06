@@ -1,8 +1,15 @@
 package com.mccarty.ritmo.repository.remote
 
+import android.app.Application
 import androidx.compose.animation.core.FloatSpringSpec
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import com.codelab.android.datastore.AlbumPreference
 import com.google.gson.JsonObject
 import com.mccarty.ritmo.api.ApiService
+import com.mccarty.ritmo.data.AlbumPreferenceSerializer
+import com.mccarty.ritmo.model.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -15,7 +22,7 @@ import javax.inject.Inject
 
 class Repository @Inject constructor(
     private val dispatchers: Dispatchers,
-    private val retrofit: Retrofit,
+    private val retrofit: Retrofit
     ) {
 
     // TODO: pass in constructor?
@@ -41,6 +48,14 @@ class Repository @Inject constructor(
         while(true) {
             val queue = retrofit.create(ApiService::class.java).getUsersQueue()
             emit(queue)
+            delay(refreshInterval)
+        }
+    }
+
+    val currentlyPlaying: Flow<Response<JsonObject>> = flow {
+        while(true) {
+            val playing = retrofit.create(ApiService::class.java).getCurrentlyPlaying()
+            emit(playing)
             delay(refreshInterval)
         }
     }

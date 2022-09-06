@@ -1,6 +1,12 @@
 package com.mccarty.ritmo.module
 
+import android.app.Application
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import com.codelab.android.datastore.AlbumPreference
 import com.mccarty.ritmo.api.ApiClient
+import com.mccarty.ritmo.data.AlbumPreferenceSerializer
 import com.mccarty.ritmo.module.Constants.BASE_SPOTIFY_URL
 import com.mccarty.ritmo.repository.remote.Constants.APPLICATION_JSON_SPOTIFY
 import com.mccarty.ritmo.repository.remote.Constants.AUTHORIZATION_SPOTIFY
@@ -20,6 +26,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class AppModule {
+
+    @Singleton
+    @Provides
+    fun provideContext(application: Application): Context = application.applicationContext
 
     private fun getOkHttp(): OkHttpClient {
         return OkHttpClient()
