@@ -1,23 +1,34 @@
 package com.mccarty.ritmo
 
+import android.content.res.AssetManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonArray
+import com.google.gson.reflect.TypeToken
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.*
+import com.mccarty.ritmo.repository.local.LocalRepository
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.utils.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
+class MainViewModel @Inject constructor(
+    private val repository: Repository,
+    private val localRepository: LocalRepository,
+) : ViewModel() {
 
     private var _recentlyPlayed = MutableStateFlow<List<RecentlyPlayedItem>>(emptyList())
     val recentlyPlayed: StateFlow<List<RecentlyPlayedItem>> = _recentlyPlayed
+
+    private var _recentlyPlayedCached = MutableStateFlow<List<RecentlyPlayedItem>>(emptyList())
+    val recentlyPlayedCached: StateFlow<List<RecentlyPlayedItem>> = _recentlyPlayedCached
 
     private var _playLists = MutableStateFlow<List<PlaylistItem>>(emptyList())
     val playLists: StateFlow<List<PlaylistItem>> = _playLists
@@ -53,8 +64,14 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     fun getRecentlyPlayed() {
         viewModelScope.launch {
             repository.recentlyPlayed.stateIn(scope = viewModelScope)
-                .collect {
-                    _recentlyPlayed.value = processRecentlyPlayed(it)
+                .first {
+                    println("MainViewModel ${it.body()}")
+                    val pair = processRecentlyPlayed(it)
+                    _recentlyPlayed.value = pair.second
+                    viewModelScope.launch(Dispatchers.IO) {
+                        localRepository.insertRecentlyPlayedList(pair.second.toTypedArray())
+                    }
+                    true
                 }
         }
     }
@@ -64,6 +81,9 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
             repository.playLists.stateIn(scope = viewModelScope)
                 .collect {
                     _playLists.value = processPlaylist(it)
+
+                    // TODO: save to db
+                    // save interval??
                 }
         }
     }
@@ -88,8 +108,8 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         viewModelScope.launch {
             repository.currentlyPlaying.stateIn(scope = viewModelScope)
                 .collect {
-                    _currentlyPlaying.value = processCurrentlyPlaying(it)!! // This will always return something
-                    println("MainViewModel ${_currentlyPlaying.value}")
+                    _currentlyPlaying.value =
+                        processCurrentlyPlaying(it)!! // This will always return something
                 }
         }
     }
@@ -112,10 +132,50 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         }
     }
 
-    fun setLastPlayedAlbumData(artistName: String, albumName: String, imageUrl: String, releaseDate: String) {
+    fun setLastPlayedAlbumData(
+        artistName: String,
+        albumName: String,
+        imageUrl: String,
+        releaseDate: String
+    ) {
         _artistName.value = artistName
         _albumName.value = albumName
         _imageUrl.value = imageUrl
         _releaseDate.value = releaseDate
+    }
+
+    fun getRetryInterval(): Flow<Int> {
+        println("MainViewModel retry")
+        return localRepository.getRetryIntervalSeconds()
+    }
+
+    suspend fun retryIntervalHasExpired(): Boolean {
+        val currentTime = System.currentTimeMillis() % 60
+        var insertionTime = 0L
+        var interval = 0
+        viewModelScope.launch(Dispatchers.Default) {
+            localRepository.getInsertionTimeSeconds().collect {
+                insertionTime = it
+            }
+            localRepository.getRetryIntervalSeconds().collect {
+                interval = it
+            }
+        }
+        return currentTime - insertionTime > interval
+    }
+
+    suspend fun getRecentlyPlayedFromRepo() = localRepository.getRecentlyPlayed().collect {
+        viewModelScope.launch(Dispatchers.Default) {
+            val recentlyPlayed = mutableListOf<RecentlyPlayedItem>()
+            it.forEach {
+                println("MainViewModel ${it.track.name}")
+                recentlyPlayed.add(it)
+            }
+            //_recentlyPlayed.value = recentlyPlayed
+        }
+    }
+
+    companion object {
+        var getRecentlyPlayedItem = true
     }
 }

@@ -118,7 +118,18 @@ dependencies {
 
     implementation "com.google.accompanist:accompanist-systemuicontroller:0.17.0"
 
-    // Datastore
+    // Proto Datastore
     implementation("androidx.datastore:datastore:1.0.0")
     implementation  "com.google.protobuf:protobuf-javalite:3.18.0"
+
+    // Preference Datastore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Room Db
+    //val room_version = "2.4.3"
+    implementation("androidx.room:room-runtime:2.4.3")
+    annotationProcessor("androidx.room:room-compiler:2.4.3")
+    kapt("androidx.room:room-compiler:2.4.3")
+    implementation 'androidx.room:room-ktx:2.2.1'
+    //ksp("androidx.room:room-compiler:2.4.3")
 }

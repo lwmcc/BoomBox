@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.codelab.android.datastore.AlbumPreference
 import com.google.gson.JsonObject
+import com.mccarty.ritmo.MainViewModel.Companion.getRecentlyPlayedItem
 import com.mccarty.ritmo.api.ApiService
 import com.mccarty.ritmo.data.AlbumPreferenceSerializer
 import com.mccarty.ritmo.model.Context
@@ -27,6 +28,9 @@ class Repository @Inject constructor(
 
     // TODO: pass in constructor?
     private val refreshInterval: Long = 5000
+    private val twentySecondInterval: Long = 20_000
+    private val fiveMinuteInterval: Long = 300_000
+    private val tenMinuteInterval: Long = 600_000
 
     val recentlyPlayed: Flow<Response<JsonObject>> = flow {
         while(true) {
@@ -40,7 +44,7 @@ class Repository @Inject constructor(
         while(true) {
             val playLists = retrofit.create(ApiService::class.java).getUserPlaylists()
             emit(playLists)
-            delay(refreshInterval)
+            delay(tenMinuteInterval)
         }
     }
 
@@ -48,7 +52,7 @@ class Repository @Inject constructor(
         while(true) {
             val queue = retrofit.create(ApiService::class.java).getUsersQueue()
             emit(queue)
-            delay(refreshInterval)
+            delay(fiveMinuteInterval)
         }
     }
 
@@ -56,7 +60,7 @@ class Repository @Inject constructor(
         while(true) {
             val playing = retrofit.create(ApiService::class.java).getCurrentlyPlaying()
             emit(playing)
-            delay(refreshInterval)
+            delay(twentySecondInterval)
         }
     }
 

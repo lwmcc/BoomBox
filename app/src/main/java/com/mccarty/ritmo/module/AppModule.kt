@@ -2,18 +2,17 @@ package com.mccarty.ritmo.module
 
 import android.app.Application
 import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.dataStore
-import com.codelab.android.datastore.AlbumPreference
 import com.mccarty.ritmo.api.ApiClient
-import com.mccarty.ritmo.data.AlbumPreferenceSerializer
 import com.mccarty.ritmo.module.Constants.BASE_SPOTIFY_URL
+import com.mccarty.ritmo.repository.db.AppDatabase
+import com.mccarty.ritmo.repository.local.LocalRepository
 import com.mccarty.ritmo.repository.remote.Constants.APPLICATION_JSON_SPOTIFY
 import com.mccarty.ritmo.repository.remote.Constants.AUTHORIZATION_SPOTIFY
 import com.mccarty.ritmo.repository.remote.Constants.CONTENT_TYPE_SPOTIFY
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
 import okhttp3.Interceptor
@@ -27,9 +26,15 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 class AppModule {
 
-    @Singleton
     @Provides
-    fun provideContext(application: Application): Context = application.applicationContext
+    @Singleton
+    fun provideContext(@ApplicationContext context: Context): Context = context.applicationContext
+
+    @Provides
+    @Singleton
+    fun provideLocalRepository(context: Context, db: AppDatabase): LocalRepository {
+        return LocalRepository(context, db)
+    }
 
     private fun getOkHttp(): OkHttpClient {
         return OkHttpClient()

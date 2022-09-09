@@ -1,11 +1,17 @@
 package com.mccarty.ritmo.model
 
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 class RecentlyPlayed : ArrayList<RecentlyPlayedItem>()
 
+@Entity(tableName = "recently_played_item")
 data class RecentlyPlayedItem(
-    val context: Context,
-    val played_at: String,
-    val track: Track
+    @PrimaryKey val id: Int,
+    @ColumnInfo(name = "context") val context: Context,
+    @ColumnInfo(name = "played_at") val played_at: String,
+    @ColumnInfo(name = "track") val track: Track
 )
 
 data class Context(
@@ -35,35 +41,6 @@ data class Track(
     val uri: String
 )
 
-//data class Album(
-//    val album_type: String = "",
-//    val artists: List<Artist> = emptyList(),
-//    val available_markets: List<String> = emptyList(),
-//    val external_urls: ExternalUrlsXX?,
-//    val href: String = "",
-//    val id: String = "",
-//    val images: List<Image> = emptyList(),
-//    val name: String = "",
-//    val release_date: String = "",
-//    val release_date_precision: String = "",
-//    val total_tracks: Int = 0,
-//    val type: String = "",
-//    val uri: String = "",
-//)
-
-//data class ArtistX(
-//    val external_urls: ExternalUrlsXXX,
-//    val href: String,
-//    val id: String,
-//    val name: String,
-//    val type: String,
-//    val uri: String
-//)
-
-//data class ExternalIds(
-//    val isrc: String = ""
-//)
-
 data class ExternalUrlsXXXX(
     val spotify: String
 )
@@ -80,7 +57,3 @@ data class Artist(
 data class ExternalUrlsXX(
     val spotify: String = ""
 )
-
-//data class ExternalUrlsXXX(
-//    val spotify: String = ""
-//)

@@ -13,6 +13,7 @@ import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -60,7 +61,12 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             this@MainActivity.albumPreferenceDataStore.data.collect {
-                model.setLastPlayedAlbumData(artistName = it.artistName, albumName = it.albumName, imageUrl = it.imageUrl, releaseDate = it.releaseDate)
+                model.setLastPlayedAlbumData(
+                    artistName = it.artistName,
+                    albumName = it.albumName,
+                    imageUrl = it.imageUrl,
+                    releaseDate = it.releaseDate
+                )
             }
         }
     }
@@ -99,11 +105,15 @@ class MainActivity : ComponentActivity() {
 
             lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    model.getRecentlyPlayed()
-                    model.getPlaylists()
-                    model.getQueue()
-                    model.getLastPlayedSongId()
-                    model.getCurrentlyPlaying()
+                    model.getRetryInterval().collect {
+                        model.getRecentlyPlayed()
+                        model.getPlaylists()
+                        model.getQueue()
+                        model.getLastPlayedSongId()
+                        model.getCurrentlyPlaying()
+                        // TODO: Get data from db
+                        //model.getRecentlyPlayedFromRepo()
+                    }
                 }
             }
 
@@ -135,4 +145,6 @@ class MainActivity : ComponentActivity() {
         fileName = "album_settings.proto",
         serializer = AlbumPreferenceSerializer
     )
+
+    val Context.dataStore by preferencesDataStore(name = "user_preferences")
 }

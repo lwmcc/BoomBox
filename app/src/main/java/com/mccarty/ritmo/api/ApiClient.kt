@@ -1,7 +1,7 @@
 package com.mccarty.ritmo.api
 
-import com.mccarty.ritmo.module.AppModule
-import com.mccarty.ritmo.module.Constants
+import com.mccarty.ritmo.module.Constants.BASE_SPOTIFY_URL
+import com.mccarty.ritmo.repository.Constants
 import com.mccarty.ritmo.repository.remote.Constants.APPLICATION_JSON_SPOTIFY
 import com.mccarty.ritmo.repository.remote.Constants.AUTHORIZATION_SPOTIFY
 import com.mccarty.ritmo.repository.remote.Constants.CONTENT_TYPE_SPOTIFY
@@ -10,7 +10,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
 
 class ApiClient(private val token: String) {
     private fun getOkHttp(token: String): OkHttpClient {
@@ -25,7 +24,7 @@ class ApiClient(private val token: String) {
 
     fun getRetrofit(token: String): ApiService {
         return Retrofit.Builder()
-            .baseUrl(Constants.BASE_SPOTIFY_URL)
+            .baseUrl(BASE_SPOTIFY_URL)
             .client(getOkHttp(token))
             .addConverterFactory(GsonConverterFactory.create())
             .build().create(ApiService::class.java)

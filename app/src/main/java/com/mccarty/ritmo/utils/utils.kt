@@ -1,5 +1,6 @@
 package com.mccarty.ritmo.utils
 
+import android.content.res.AssetManager
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -13,6 +14,7 @@ import com.mccarty.ritmo.utils.Constants.QUEUE
 import org.json.JSONException
 import retrofit2.Response
 import java.lang.NullPointerException
+import java.lang.NumberFormatException
 
 fun processPlaylist(response: Response<JsonObject>): List<PlaylistItem> {
     return if (response.isSuccessful) {
@@ -30,19 +32,30 @@ fun processPlaylist(response: Response<JsonObject>): List<PlaylistItem> {
     }
 }
 
-fun processRecentlyPlayed(response: Response<JsonObject>): List<RecentlyPlayedItem> {
+fun processRecentlyPlayed(response: Response<JsonObject>): Pair<Int, List<RecentlyPlayedItem>> {
+    val retryInterval = 0
+    val oneHour = 3_600
     return if (response.isSuccessful) {
         try {
             val items = response.body()?.getAsJsonArray(ITEMS)
             val json = items?.asJsonArray
-            Gson().fromJson(json, RecentlyPlayed::class.java).toList()
+            val list = Gson().fromJson(json, RecentlyPlayed::class.java).toList()
+            Pair(retryInterval, list)
         } catch (je: JSONException) {
-            emptyList()
+            Pair(retryInterval, emptyList())
         } catch (npe: NullPointerException) {
-            emptyList()
+            Pair(retryInterval, emptyList())
+        }
+    }
+    else if(response.code() == 429) {
+        try {
+            val header = response.headers().get("Retry-After")?.toInt()
+            Pair(header ?: oneHour, emptyList())
+        } catch (nfe: NumberFormatException) {
+            Pair(0, emptyList())
         }
     } else {
-        emptyList()
+        Pair(retryInterval, emptyList())
     }
 }
 
@@ -129,4 +142,9 @@ fun List<Image>.getImageUrlFromList(index: Int): String {
         }
     }.toString()
     return imageUrl
+}
+
+// TODO: generics??
+fun currentTimeSecondsd(time: Long): Long {
+    return time / 60
 }
