@@ -20,7 +20,7 @@ class LocalRepository @Inject constructor (
     ) {
     data class UserPreferences(val spotifyRetryInterval: Int)
 
-    // TODO: seconds Long?
+    // TODO: seconds Long? no longer needed to delete
     suspend fun saveRetryIntervalSeconds(seconds: Int, insertionTime: Long) {
         context.dataStore.edit {
             it[PreferencesKeys.RETRY_INTERVAL] = seconds
@@ -30,18 +30,21 @@ class LocalRepository @Inject constructor (
         }
     }
 
+    // TODO: seconds Long? no longer needed to delete
     suspend fun saveRetryInsertionTime(insertionTime: Long) {
         context.dataStore.edit {
             it[PreferencesKeys.INSERTION_TIME] = insertionTime
         }
     }
 
+    // TODO: seconds Long? no longer needed to delete
     fun getRetryIntervalSeconds(): Flow<Int> {
         return context.dataStore.data.map {
             it[PreferencesKeys.RETRY_INTERVAL] ?: 0
         }
     }
 
+    // TODO: seconds Long? no longer needed to delete
     fun getInsertionTimeSeconds(): Flow<Long> {
         return context.dataStore.data.map {
             it[PreferencesKeys.INSERTION_TIME] ?: 0

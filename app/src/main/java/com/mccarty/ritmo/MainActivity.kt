@@ -141,6 +141,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // TODO: move to repo
     val Context.albumPreferenceDataStore: DataStore<AlbumPreference> by dataStore(
         fileName = "album_settings.proto",
         serializer = AlbumPreferenceSerializer

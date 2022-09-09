@@ -65,7 +65,6 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             repository.recentlyPlayed.stateIn(scope = viewModelScope)
                 .first {
-                    println("MainViewModel ${it.body()}")
                     val pair = processRecentlyPlayed(it)
                     _recentlyPlayed.value = pair.second
                     viewModelScope.launch(Dispatchers.IO) {
@@ -81,9 +80,6 @@ class MainViewModel @Inject constructor(
             repository.playLists.stateIn(scope = viewModelScope)
                 .collect {
                     _playLists.value = processPlaylist(it)
-
-                    // TODO: save to db
-                    // save interval??
                 }
         }
     }

@@ -42,7 +42,7 @@ fun MainScreen(model: MainViewModel) {
     val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
     val queueItems: List<CurrentQueueItem> by model.queueItemList.collectAsStateWithLifecycle()
     val album: AlbumXX by model.album.collectAsStateWithLifecycle()
-    val currentlyPlaying: Boolean  by model.currentlyPlaying.collectAsStateWithLifecycle()
+    val currentlyPlaying: Boolean by model.currentlyPlaying.collectAsStateWithLifecycle()
 
     val lastPlayedArtist = model.artistName.observeAsState().value
     val lastPlayedAlbum = model.albumName.observeAsState().value
@@ -54,7 +54,7 @@ fun MainScreen(model: MainViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Currently Playing
-        if(currentlyPlaying) {
+        if (currentlyPlaying) {
             item {
                 GlideImage(
                     imageModel = currentAlbumImageUrl,
@@ -76,7 +76,7 @@ fun MainScreen(model: MainViewModel) {
                 )
             }
         } else { // Last album played
-            if(album.images.isNotEmpty()) {
+            if (album.images.isNotEmpty()) {
                 item {
                     GlideImage(
                         imageModel = lastImageUrl,
@@ -85,10 +85,10 @@ fun MainScreen(model: MainViewModel) {
                             .size(300.dp)
                     )
                 }
-                if(album.artists.isNotEmpty()) {
+                if (album.artists.isNotEmpty()) {
                     item {
                         Text(
-                            text = album.artists[0].name,
+                            text = "${album.artists[0].name} LAST PLAYED",
                             fontStyle = FontStyle.Normal,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
@@ -120,7 +120,7 @@ fun MainScreen(model: MainViewModel) {
                 }
                 item {
                     Text(
-                        text = lastPlayedArtist.toString(),
+                        text = "${lastPlayedArtist.toString()} IMAGE EMPTY",
                         fontStyle = FontStyle.Normal,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
@@ -153,7 +153,7 @@ fun MainScreen(model: MainViewModel) {
                 }
             }
         }
-        for(artist in currentAlbum.artists) {
+        for (artist in currentAlbum.artists) {
             item {
                 Text(
                     text = artist.name,
@@ -166,7 +166,7 @@ fun MainScreen(model: MainViewModel) {
                 )
             }
         }
-        if(currentAlbum.artists.isNotEmpty()) {
+        if (currentAlbum.artists.isNotEmpty()) {
             item {
                 Text(
                     text = currentAlbum.name,
@@ -203,12 +203,13 @@ fun MainScreen(model: MainViewModel) {
                     thickness = 2.dp,
                     modifier = Modifier
                         .paddingFromBaseline(top = 40.dp)
-                        .fillMaxWidth(),)
+                        .fillMaxWidth(),
+                )
             }
         }
 
-        if(queueItems.isNotEmpty()) {
-            // Queue
+        // Queue
+        if (queueItems.isNotEmpty()) {
             item {
                 Text(
                     text = stringResource(R.string.music_queue),
@@ -222,7 +223,7 @@ fun MainScreen(model: MainViewModel) {
                 )
             }
         }
-        for(item in queueItems) {
+        for (item in queueItems) {
             item {
                 Text(
                     text = item.name,
@@ -246,7 +247,7 @@ fun MainScreen(model: MainViewModel) {
         }
 
         // Recently Played
-        if(recentlyPlayed.isNotEmpty()) {
+        if (recentlyPlayed.isNotEmpty()) {
             item {
                 Divider(
                     thickness = 2.dp,
@@ -268,7 +269,7 @@ fun MainScreen(model: MainViewModel) {
                 )
             }
         }
-        for(item in recentlyPlayed) {
+        for (item in recentlyPlayed) {
             item {
                 Text(
                     text = item.track.name,
@@ -287,7 +288,7 @@ fun MainScreen(model: MainViewModel) {
                 )
             }
         }
-        if(recentlyPlayed.isNotEmpty()) {
+        if (recentlyPlayed.isNotEmpty()) {
             item {
                 Divider(
                     thickness = 2.dp,
@@ -299,7 +300,7 @@ fun MainScreen(model: MainViewModel) {
         }
 
         // Playlists
-        if(playLists.isNotEmpty()) {
+        if (playLists.isNotEmpty()) {
             item {
                 Text(
                     text = stringResource(id = R.string.playlists),
@@ -313,7 +314,7 @@ fun MainScreen(model: MainViewModel) {
                 )
             }
         }
-        for(item in playLists) {
+        for (item in playLists) {
             item {
                 Text(
                     text = item.name,
