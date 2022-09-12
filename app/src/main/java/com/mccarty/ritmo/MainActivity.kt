@@ -1,6 +1,5 @@
 package com.mccarty.ritmo
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -10,22 +9,11 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.datastore.core.DataStore
-import androidx.datastore.dataStore
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.NavHostController
-import com.codelab.android.datastore.AlbumPreference
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
-import com.mccarty.ritmo.data.AlbumPreferenceSerializer
-import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.ui.screens.StartScreen
 import com.mccarty.ritmo.ui.theme.BoomBoxTheme
 import com.spotify.sdk.android.auth.AuthorizationClient
@@ -39,11 +27,8 @@ class MainActivity : ComponentActivity() {
     val AUTH_TOKEN_REQUEST_CODE = 0x10
     val AUTH_CODE_REQUEST_CODE = 0x11
     val REDIRECT_URI = "com.mccarty.ritmo://auth"
-    private var accessToken: String = ""
     private var accessCode = ""
     private val model: MainViewModel by viewModels()
-
-    private val nav = NavHostController(this@MainActivity)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,15 +54,10 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // first start null
-        // on rotate not null
-        println("MainActivity CREATE ${savedInstanceState.toString()}")
-    }
-
-    override fun onStart() {
-        super.onStart()
-        val request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN)
-        AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
+        if(savedInstanceState == null) {
+            val request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN)
+            AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
+        }
     }
 
     private fun getAuthenticationRequest(type: AuthorizationResponse.Type): AuthorizationRequest? {
