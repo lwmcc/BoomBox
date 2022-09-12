@@ -55,9 +55,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    //val navController = rememberNavController()
-                    //MainScreen(model)
-                    StartScreen(model)
+                    StartScreen()
                 }
             }
         }
@@ -76,6 +74,16 @@ class MainActivity : ComponentActivity() {
                     imageUrl = it.imageUrl,
                     releaseDate = it.releaseDate
                 )
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.currentlyPlaying.collect { isPlaying ->
+                    model.recentlyPlayed.collect { list ->
+                        model.setMainHeader(isPlaying, list)
+                    }
+                }
             }
         }
     }

@@ -3,11 +3,9 @@ package com.mccarty.ritmo.ui.screens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -20,42 +18,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.ui.material.surface.Surface
-import com.codelab.android.datastore.AlbumPreference
-import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.*
-import com.mccarty.ritmo.utils.getImageUrlFromList
 import com.skydoves.landscapist.glide.GlideImage
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun MainScreen(
     model: MainViewModel,
-    modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
-//    val currentAlbum: CurrentlyPlaying by model.currentAlbum.collectAsStateWithLifecycle()
-//    val currentAlbumImageUrl: String by model.currentAlbumImageUrl.collectAsStateWithLifecycle()
-    val recentlyPlayed: List<RecentlyPlayedItem> by model.recentlyPlayed.collectAsStateWithLifecycle()
+    val recentlyPlayed: List<TrackV2Item> by model.recentlyPlayed.collectAsStateWithLifecycle()
     val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
-    val mainMusicHeader: MainViewModel.MainMusicHeader by model.mainMusicHeader.collectAsStateWithLifecycle()
-//  val queueItems: List<CurrentQueueItem> by model.queueItemList.collectAsStateWithLifecycle()
-//  val album: AlbumXX by model.album.collectAsStateWithLifecycle()
-    val currentlyPlaying: Boolean by model.currentlyPlaying.collectAsStateWithLifecycle()
-
-    val lastPlayedArtist = model.artistName.observeAsState().value
-    val lastPlayedAlbum: String? = model.albumName.observeAsState().value
-    val lastImageUrl = model.imageUrl.observeAsState().value
-//  val lastReleaseDate = model.releaseDate.observeAsState().value
+    val mainMusicHeader: MainMusicHeader by model.mainMusicHeader.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier.padding(horizontal = 25.dp),
@@ -65,7 +43,7 @@ fun MainScreen(
         // Header
         item {
             GlideImage(
-                imageModel = if (currentlyPlaying) mainMusicHeader.imageUrl ?: "" else lastImageUrl ?: "",
+                imageModel = mainMusicHeader.imageUrl,
                 contentScale = ContentScale.Fit,
                 placeHolder = ImageBitmap.imageResource(R.drawable.default_music),
                 error = ImageBitmap.imageResource(R.drawable.default_music),
@@ -75,7 +53,7 @@ fun MainScreen(
         }
         item {
             Text(
-                text = if (currentlyPlaying) mainMusicHeader.artistName ?: "" else lastPlayedArtist ?: "",
+                text = mainMusicHeader.artistName,
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
@@ -86,7 +64,7 @@ fun MainScreen(
         }
         item {
             Text(
-                text = if (currentlyPlaying) mainMusicHeader.albumName ?: "" else lastPlayedAlbum ?: "",
+                text = mainMusicHeader.albumName,
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
@@ -97,7 +75,7 @@ fun MainScreen(
         }
         item {
             Text(
-                text = if (currentlyPlaying) mainMusicHeader.songName ?: "" else "",
+                text = mainMusicHeader.songName,
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
@@ -142,7 +120,7 @@ fun MainScreen(
                 ) {
                     Column() {
                         Text(
-                            text = "${item?.track?.name}",
+                            text = "${item.track?.name}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             modifier = Modifier

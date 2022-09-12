@@ -22,8 +22,8 @@ class MainViewModel @Inject constructor(
     private val localRepository: LocalRepository,
 ) : ViewModel() {
 
-    private var _recentlyPlayed = MutableStateFlow<List<RecentlyPlayedItem>>(emptyList())
-    val recentlyPlayed: StateFlow<List<RecentlyPlayedItem>> = _recentlyPlayed
+    private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
+    val recentlyPlayed: StateFlow<List<TrackV2Item>> = _recentlyPlayed
 
     private var _recentlyPlayedCached = MutableStateFlow<List<RecentlyPlayedItem>>(emptyList())
     val recentlyPlayedCached: StateFlow<List<RecentlyPlayedItem>> = _recentlyPlayedCached
@@ -69,17 +69,17 @@ class MainViewModel @Inject constructor(
                 .first {
                     val list = processRecentlyPlayed(it)
                     _recentlyPlayed.value = list
-                    viewModelScope.launch(Dispatchers.IO) {
-                        localRepository.insertRecentlyPlayedList(list)
-                    }
+                    //viewModelScope.launch(Dispatchers.IO) {
+                    //    localRepository.insertRecentlyPlayedList(list) // TODO: changed model
+                    //}
                     true
                 }
         }
     }
 
     // TODO: remove duplicate code
-    fun getRecentlyPlayedForHeader(): List<RecentlyPlayedItem> {
-        var list: List<RecentlyPlayedItem> = mutableListOf()
+    fun getRecentlyPlayedForHeader(): List<TrackV2Item> {
+        var list: List<TrackV2Item> = mutableListOf()
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 repository.recentlyPlayed.stateIn(scope = viewModelScope)
@@ -121,6 +121,17 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun setMainHeader(isPlaying: Boolean, list: List<TrackV2Item>) {
+        if(!isPlaying && list.isNotEmpty()) {
+            _mainMusicHeader.value = MainMusicHeader().apply {
+                this.imageUrl = list.get(0).track?.album?.images?.get(0)?.url ?: ""
+                this.artistName = list.get(0).track?.album?.artists?.get(0)?.name ?: ""
+                this.albumName = list.get(0).track?.album?.name ?: ""
+                this.songName = list.get(0).track?.name ?: ""
+            }
+        }
+    }
+
     fun getLastPlayedSongId() {
         if (_recentlyPlayed.value.isNotEmpty()) {
             val id = _recentlyPlayed.value[0].track?.album?.id
@@ -152,38 +163,4 @@ class MainViewModel @Inject constructor(
         _imageUrl.value = imageUrl
         _releaseDate.value = releaseDate
     }
-
-    suspend fun retryIntervalHasExpired(): Boolean {
-        val currentTime = System.currentTimeMillis() % 60
-        var insertionTime = 0L
-        var interval = 0
-        viewModelScope.launch(Dispatchers.Default) {
-            localRepository.getInsertionTimeSeconds().collect {
-                insertionTime = it
-            }
-            localRepository.getRetryIntervalSeconds().collect {
-                interval = it
-            }
-        }
-        return currentTime - insertionTime > interval
-    }
-
-    suspend fun getRecentlyPlayedFromRepo() = localRepository.getRecentlyPlayed().collect {
-        viewModelScope.launch(Dispatchers.Default) {
-            val recentlyPlayed = mutableListOf<RecentlyPlayedItem>()
-            it.forEach {
-                println("MainViewModel ${it.track?.name}")
-                recentlyPlayed.add(it)
-            }
-            //_recentlyPlayed.value = recentlyPlayed
-        }
-    }
-
-    // TODO: move this? it's only used here
-    data class MainMusicHeader(
-        var imageUrl: String? = "",
-        var artistName: String? = "",
-        var albumName: String? = "",
-        var songName: String? = "",
-    )
 }

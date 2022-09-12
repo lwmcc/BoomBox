@@ -32,12 +32,12 @@ fun processPlaylist(response: Response<JsonObject>): List<PlaylistItem> {
     }
 }
 
-fun processRecentlyPlayed(response: Response<JsonObject>): List<RecentlyPlayedItem> {
+fun processRecentlyPlayed(response: Response<JsonObject>): List<TrackV2Item> {
     return if (response.isSuccessful) {
         try {
             val items = response.body()?.getAsJsonArray(ITEMS)
             val json = items?.asJsonArray
-            val list = Gson().fromJson(json, RecentlyPlayed::class.java).toList()
+            val list = Gson().fromJson(json, RecentlyPlayedTrack::class.java).toList()
             list
         } catch (je: JSONException) {
             emptyList()
