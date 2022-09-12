@@ -78,16 +78,6 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-
-        lifecycleScope.launch {
-            model.currentlyPlaying.collect { currentlyPlaying ->
-                if(currentlyPlaying) {
-                    println("MainActivity Playing $currentlyPlaying")
-                } else {
-                    println("MainActivity Playing $currentlyPlaying")
-                }
-            }
-        }
     }
 
     override fun onStart() {
@@ -124,10 +114,10 @@ class MainActivity : ComponentActivity() {
 
             lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
-                        model.getLastPlayedSongId()
-                        model.getRecentlyPlayed()
-                        model.getPlaylists()
                     model.getCurrentlyPlaying()
+                    model.getRecentlyPlayed()
+                    model.getLastPlayedSongId()
+                    model.getPlaylists()
                 }
             }
 
@@ -158,7 +148,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalLifecycleComposeApi::class)
     @Composable
     fun songIsCurrentlyPlaying() {
-        val currentlyPlaying: Boolean  by model.currentlyPlaying.collectAsStateWithLifecycle()
+        val currentlyPlaying: Boolean by model.currentlyPlaying.collectAsStateWithLifecycle()
         println("MainActivity Playing ${model.currentlyPlaying.value}")
     }
 

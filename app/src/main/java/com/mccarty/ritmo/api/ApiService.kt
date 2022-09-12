@@ -20,5 +20,5 @@ interface ApiService {
     suspend fun getAlbum(@Path("id") id: String): Response<JsonObject>
 
     @GET("/v1/me/player/currently-playing")
-    suspend fun getCurrentlyPlaying(): Response<JsonObject>
+    suspend fun getCurrentlyPlayingTrack(): Response<JsonObject>
 }

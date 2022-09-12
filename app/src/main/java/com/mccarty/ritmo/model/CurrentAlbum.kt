@@ -1,7 +1,7 @@
 package com.mccarty.ritmo.model
 
 data class CurrentAlbum(
-    //val album: Album? = Album(external_urls = ExternalUrlsXX()),
+    val album: Album? = Album(external_urls = ExternalUrlsXXX()),
     val artists: List<ArtistX> = emptyList(),
     val available_markets: List<String> = emptyList(),
     val disc_number: Int = 0,

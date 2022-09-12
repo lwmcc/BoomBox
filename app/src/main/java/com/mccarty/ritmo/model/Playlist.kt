@@ -20,7 +20,7 @@ data class PlaylistItem(
 )
 
 data class ExternalUrls(
-    val spotify: String
+    val spotify: String = ""
 )
 
 data class Owner(

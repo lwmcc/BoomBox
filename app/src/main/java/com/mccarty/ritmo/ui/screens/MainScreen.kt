@@ -47,21 +47,15 @@ fun MainScreen(
 //    val currentAlbumImageUrl: String by model.currentAlbumImageUrl.collectAsStateWithLifecycle()
     val recentlyPlayed: List<RecentlyPlayedItem> by model.recentlyPlayed.collectAsStateWithLifecycle()
     val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
-//    val queueItems: List<CurrentQueueItem> by model.queueItemList.collectAsStateWithLifecycle()
-//    val album: AlbumXX by model.album.collectAsStateWithLifecycle()
-//    val currentlyPlaying: Boolean by model.currentlyPlaying.collectAsStateWithLifecycle()
-//
-//    val lastPlayedArtist = model.artistName.observeAsState().value
-//    val lastPlayedAlbum = model.albumName.observeAsState().value
-//    val lastImageUrl = model.imageUrl.observeAsState().value
-//    val lastReleaseDate = model.releaseDate.observeAsState().value
-//
-//    val navController = rememberNavController()
-//
-//    NavHost(navController = navController, startDestination = "song_details") {
-//        composable("song_details") { SongDetails(navController = navController) }
-//    }
-//
+    val mainMusicHeader: MainViewModel.MainMusicHeader by model.mainMusicHeader.collectAsStateWithLifecycle()
+//  val queueItems: List<CurrentQueueItem> by model.queueItemList.collectAsStateWithLifecycle()
+//  val album: AlbumXX by model.album.collectAsStateWithLifecycle()
+    val currentlyPlaying: Boolean by model.currentlyPlaying.collectAsStateWithLifecycle()
+
+    val lastPlayedArtist = model.artistName.observeAsState().value
+    val lastPlayedAlbum: String? = model.albumName.observeAsState().value
+    val lastImageUrl = model.imageUrl.observeAsState().value
+//  val lastReleaseDate = model.releaseDate.observeAsState().value
 
     LazyColumn(
         modifier = Modifier.padding(horizontal = 25.dp),
@@ -71,16 +65,17 @@ fun MainScreen(
         // Header
         item {
             GlideImage(
-                imageModel = "",
+                imageModel = if (currentlyPlaying) mainMusicHeader.imageUrl ?: "" else lastImageUrl ?: "",
                 contentScale = ContentScale.Fit,
-                placeHolder = ImageBitmap.imageResource(id = R.drawable.default_music),
+                placeHolder = ImageBitmap.imageResource(R.drawable.default_music),
+                error = ImageBitmap.imageResource(R.drawable.default_music),
                 modifier = Modifier
                     .size(300.dp)
             )
         }
         item {
             Text(
-                text = "",
+                text = if (currentlyPlaying) mainMusicHeader.artistName ?: "" else lastPlayedArtist ?: "",
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
@@ -91,7 +86,7 @@ fun MainScreen(
         }
         item {
             Text(
-                text = "",
+                text = if (currentlyPlaying) mainMusicHeader.albumName ?: "" else lastPlayedAlbum ?: "",
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
@@ -102,18 +97,7 @@ fun MainScreen(
         }
         item {
             Text(
-                text = "",
-                fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Normal,
-                fontSize = 14.sp,
-                modifier = Modifier
-                    .paddingFromBaseline(top = 25.dp)
-                    .fillMaxWidth(),
-            )
-        }
-        item {
-            Text(
-                text = "",
+                text = if (currentlyPlaying) mainMusicHeader.songName ?: "" else "",
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
@@ -130,7 +114,7 @@ fun MainScreen(
                 Divider(
                     thickness = 2.dp,
                     modifier = Modifier
-                        .paddingFromBaseline(top = 40.dp)
+                        .paddingFromBaseline(top = 25.dp)
                         .fillMaxWidth(),
                 )
             }
@@ -198,7 +182,7 @@ fun MainScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(onClick = {
-                            navController.navigate("song_details") // TODO: go to playlist
+                            navController.navigate("playlist_screen")
                         }),
                 ) {
                     Column() {

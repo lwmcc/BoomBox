@@ -1,23 +1,13 @@
 package com.mccarty.ritmo.repository.remote
 
-import android.app.Application
-import androidx.compose.animation.core.FloatSpringSpec
-import androidx.datastore.core.DataStore
-import androidx.datastore.dataStore
-import com.codelab.android.datastore.AlbumPreference
 import com.google.gson.JsonObject
 import com.mccarty.ritmo.api.ApiService
-import com.mccarty.ritmo.data.AlbumPreferenceSerializer
-import com.mccarty.ritmo.model.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import retrofit2.Response
 import retrofit2.Retrofit
-import retrofit2.create
 import javax.inject.Inject
 
 class Repository @Inject constructor(
@@ -55,11 +45,11 @@ class Repository @Inject constructor(
         }
     }
 
-    val currentlyPlaying: Flow<Response<JsonObject>> = flow {
+    val currentlyPlayingTrack: Flow<Response<JsonObject>> = flow {
         while(true) {
-            val playing = retrofit.create(ApiService::class.java).getCurrentlyPlaying()
+            val playing = retrofit.create(ApiService::class.java).getCurrentlyPlayingTrack()
             emit(playing)
-            delay(twentySecondInterval)
+            delay(refreshInterval)
         }
     }
 

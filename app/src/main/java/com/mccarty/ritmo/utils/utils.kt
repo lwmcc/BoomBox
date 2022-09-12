@@ -32,30 +32,27 @@ fun processPlaylist(response: Response<JsonObject>): List<PlaylistItem> {
     }
 }
 
-fun processRecentlyPlayed(response: Response<JsonObject>): Pair<Int, List<RecentlyPlayedItem>> {
-    val retryInterval = 0
-    val oneHour = 3_600
+fun processRecentlyPlayed(response: Response<JsonObject>): List<RecentlyPlayedItem> {
     return if (response.isSuccessful) {
         try {
             val items = response.body()?.getAsJsonArray(ITEMS)
             val json = items?.asJsonArray
             val list = Gson().fromJson(json, RecentlyPlayed::class.java).toList()
-            Pair(retryInterval, list)
+            list
         } catch (je: JSONException) {
-            Pair(retryInterval, emptyList())
+            emptyList()
         } catch (npe: NullPointerException) {
-            Pair(retryInterval, emptyList())
+            emptyList()
         }
-    }
-    else if(response.code() == 429) {
+    } else if (response.code() == 429) {
         try {
             val header = response.headers().get("Retry-After")?.toInt()
-            Pair(header ?: oneHour, emptyList())
+            emptyList()
         } catch (nfe: NumberFormatException) {
-            Pair(0, emptyList())
+            emptyList()
         }
     } else {
-        Pair(retryInterval, emptyList())
+        emptyList()
     }
 }
 
@@ -101,32 +98,31 @@ fun processAlbumData(response: Response<JsonObject>): AlbumXX {
     }
 }
 
-fun processCurrentlyPlaying(response: Response<JsonObject>): Boolean? {
+fun processCurrentlyPlaying(response: Response<JsonObject>): Pair<Boolean, ItemV2> {
     return if (response.isSuccessful) {
         when (response.code()) {
             200 -> {
                 try {
-                    val isPlaying = response.body()?.getAsJsonPrimitive("is_playing")
-                    val json = isPlaying?.asJsonPrimitive
-                    json?.asBoolean
+                    val json = response.body()?.asJsonObject
+                    val g = Gson().fromJson(json, CurrentlyPlayingTrack::class.java)
+                    Pair(g.is_playing, g.item)
                 } catch (je: JSONException) {
-                    false
+                    Pair(false, ItemV2())
                 } catch (npe: NullPointerException) {
-                    false
-                } catch (cce: ClassCastException) { // TODO: add these where needed
-                    false
+                    Pair(false, ItemV2())
+                } catch (cce: ClassCastException) {
+                    Pair(false, ItemV2())
                 }
             }
-            204 -> { // Is not currently playing anything
-                println("MainViewModel 204 ")
-                false
+            204 -> { // Code 204 means it is not currently playing anything
+                Pair(false, ItemV2())
             }
             else -> {
-                false
+                Pair(false, ItemV2())
             }
         }
     } else {
-        false
+        Pair(false, ItemV2())
     }
 }
 

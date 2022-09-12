@@ -1,13 +1,10 @@
 package com.mccarty.ritmo
 
-import android.content.res.AssetManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonArray
-import com.google.gson.reflect.TypeToken
+import com.google.gson.JsonObject
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.repository.local.LocalRepository
@@ -16,6 +13,7 @@ import com.mccarty.ritmo.utils.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel
@@ -48,15 +46,19 @@ class MainViewModel @Inject constructor(
     private var _currentlyPlaying = MutableStateFlow(false)
     val currentlyPlaying: StateFlow<Boolean> = _currentlyPlaying
 
+    private var _mainMusicHeader = MutableStateFlow(MainMusicHeader())
+    val mainMusicHeader: StateFlow<MainMusicHeader> = _mainMusicHeader
+
     // Last played data
+    // TODO: showing wrong artist as last played
     private var _artistName = MutableLiveData<String>("")
-    var artistName: LiveData<String> = _artistName
+    var artistName: LiveData<String?> = _artistName
 
     private var _albumName = MutableLiveData<String>("")
-    var albumName: LiveData<String> = _albumName
+    var albumName: LiveData<String?> = _albumName
 
     private var _imageUrl = MutableLiveData<String>("")
-    var imageUrl: LiveData<String> = _imageUrl
+    var imageUrl: LiveData<String?> = _imageUrl
 
     private var _releaseDate = MutableLiveData<String>("")
     var releaseDate: LiveData<String> = _releaseDate
@@ -65,15 +67,29 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             repository.recentlyPlayed.stateIn(scope = viewModelScope)
                 .first {
-                    println("MainViewModel ${it.body()}")
-                    val pair = processRecentlyPlayed(it)
-                    _recentlyPlayed.value = pair.second
+                    val list = processRecentlyPlayed(it)
+                    _recentlyPlayed.value = list
                     viewModelScope.launch(Dispatchers.IO) {
-                        localRepository.insertRecentlyPlayedList(pair.second)
+                        localRepository.insertRecentlyPlayedList(list)
                     }
                     true
                 }
         }
+    }
+
+    // TODO: remove duplicate code
+    fun getRecentlyPlayedForHeader(): List<RecentlyPlayedItem> {
+        var list: List<RecentlyPlayedItem> = mutableListOf()
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                repository.recentlyPlayed.stateIn(scope = viewModelScope)
+                    .first {
+                        list = processRecentlyPlayed(it)
+                        true
+                    }
+            }
+        }
+        return list
     }
 
     fun getPlaylists() {
@@ -81,36 +97,25 @@ class MainViewModel @Inject constructor(
             repository.playLists.stateIn(scope = viewModelScope)
                 .collect {
                     _playLists.value = processPlaylist(it)
-
-                    // TODO: save to db
-                    // save interval??
                 }
         }
     }
 
     fun getCurrentlyPlaying() {
         viewModelScope.launch {
-            repository.currentlyPlaying.stateIn(scope = viewModelScope)
+            repository.currentlyPlayingTrack.stateIn(scope = viewModelScope)
                 .collect {
-                    val playing = processCurrentlyPlaying(it)!! // This will always return something
-                    _currentlyPlaying.value = playing
-
-                    // image_url
-                    // artist
-                    // album
-                    // song title
-                    // release date
-
-                    if(playing) {
-                        // if true add to db
-                        // show in UI
-                    } else {
-                        // else if false
-                        //get from db
-                        // show in ui
-
-                        // if no song in db
-                        // show default
+                    val playing = processCurrentlyPlaying(it)
+                    val isPlaying = playing.first
+                    val item = playing.second
+                    _currentlyPlaying.value = isPlaying
+                    if (isPlaying) {
+                        _mainMusicHeader.value = MainMusicHeader().apply {
+                            this.imageUrl = item.album.images[0].url
+                            this.artistName = item.album.artists[0].name
+                            this.albumName = item.album.name
+                            this.songName = item.name
+                        }
                     }
                 }
         }
@@ -173,4 +178,12 @@ class MainViewModel @Inject constructor(
             //_recentlyPlayed.value = recentlyPlayed
         }
     }
+
+    // TODO: move this? it's only used here
+    data class MainMusicHeader(
+        var imageUrl: String? = "",
+        var artistName: String? = "",
+        var albumName: String? = "",
+        var songName: String? = "",
+    )
 }

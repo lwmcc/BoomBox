@@ -19,5 +19,8 @@ fun StartScreen(model : MainViewModel) { // TODO: inject model
         composable("song_details") {
             SongDetailsScreen()
         }
+        composable("playlist_screen") {
+            PlaylistScreen()
+        }
     }
 }
