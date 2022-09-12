@@ -119,7 +119,7 @@ fun MainScreen(
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             modifier = Modifier
-                                .paddingFromBaseline(top = 40.dp)
+                                .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth(),
                         )
                         Text(
@@ -175,7 +175,7 @@ fun MainScreen(
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             modifier = Modifier
-                                .paddingFromBaseline(top = 40.dp)
+                                .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth(),
                         )
                         if (item.description.isNotEmpty()) {
