@@ -1,10 +1,7 @@
 package com.mccarty.ritmo
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.JsonObject
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.repository.local.LocalRepository
@@ -13,7 +10,6 @@ import com.mccarty.ritmo.utils.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel
@@ -48,20 +44,6 @@ class MainViewModel @Inject constructor(
 
     private var _mainMusicHeader = MutableStateFlow(MainMusicHeader())
     val mainMusicHeader: StateFlow<MainMusicHeader> = _mainMusicHeader
-
-    // Last played data
-    // TODO: showing wrong artist as last played
-    private var _artistName = MutableLiveData<String>("")
-    var artistName: LiveData<String?> = _artistName
-
-    private var _albumName = MutableLiveData<String>("")
-    var albumName: LiveData<String?> = _albumName
-
-    private var _imageUrl = MutableLiveData<String>("")
-    var imageUrl: LiveData<String?> = _imageUrl
-
-    private var _releaseDate = MutableLiveData<String>("")
-    var releaseDate: LiveData<String> = _releaseDate
 
     fun getRecentlyPlayed() {
         viewModelScope.launch {
@@ -150,17 +132,5 @@ class MainViewModel @Inject constructor(
         ApiClient.apply {
             this.token = token
         }
-    }
-
-    fun setLastPlayedAlbumData(
-        artistName: String,
-        albumName: String,
-        imageUrl: String,
-        releaseDate: String
-    ) {
-        _artistName.value = artistName
-        _albumName.value = albumName
-        _imageUrl.value = imageUrl
-        _releaseDate.value = releaseDate
     }
 }

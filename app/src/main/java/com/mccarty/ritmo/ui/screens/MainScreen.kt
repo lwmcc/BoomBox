@@ -1,5 +1,6 @@
 package com.mccarty.ritmo.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.imageResource
@@ -89,14 +91,6 @@ fun MainScreen(
         // Recently Played
         if (recentlyPlayed.isNotEmpty()) {
             item {
-                Divider(
-                    thickness = 2.dp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 25.dp)
-                        .fillMaxWidth(),
-                )
-            }
-            item {
                 Text(
                     text = stringResource(R.string.recently_played),
                     color = MaterialTheme.colors.primary,
@@ -116,7 +110,8 @@ fun MainScreen(
                         .fillMaxWidth()
                         .clickable(onClick = {
                             navController.navigate("song_details")
-                        }),
+                        }).padding(5.dp),
+                    shape = MaterialTheme.shapes.small,
                 ) {
                     Column() {
                         Text(
@@ -134,7 +129,7 @@ fun MainScreen(
                                 .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth()
                         )
-                        if(item.track?.artists?.isNotEmpty() == true) {
+                        if (item.track?.artists?.isNotEmpty() == true) {
                             Text(
                                 text = "${item.track.artists.get(0).name}",
                                 fontSize = 12.sp,
@@ -168,9 +163,11 @@ fun MainScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(5.dp)
                         .clickable(onClick = {
                             navController.navigate("playlist_screen")
                         }),
+                    shape = MaterialTheme.shapes.small,
                 ) {
                     Column() {
                         Text(

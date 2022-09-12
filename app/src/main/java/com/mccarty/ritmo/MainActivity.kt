@@ -50,7 +50,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BoomBoxTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
@@ -63,17 +62,6 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             model.album.collect {
                 saveAlbum(this@MainActivity, it)
-            }
-        }
-
-        lifecycleScope.launch {
-            this@MainActivity.albumPreferenceDataStore.data.collect {
-                model.setLastPlayedAlbumData(
-                    artistName = it.artistName,
-                    albumName = it.albumName,
-                    imageUrl = it.imageUrl,
-                    releaseDate = it.releaseDate
-                )
             }
         }
 
