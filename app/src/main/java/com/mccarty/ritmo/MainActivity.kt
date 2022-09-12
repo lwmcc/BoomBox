@@ -60,12 +60,6 @@ class MainActivity : ComponentActivity() {
         }
 
         lifecycleScope.launch {
-            model.album.collect {
-                saveAlbum(this@MainActivity, it)
-            }
-        }
-
-        lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 model.currentlyPlaying.collect { isPlaying ->
                     model.recentlyPlayed.collect { list ->
@@ -74,13 +68,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        // first start null
+        // on rotate not null
+        println("MainActivity CREATE ${savedInstanceState.toString()}")
     }
 
     override fun onStart() {
         super.onStart()
         val request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN)
         AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
-        saveAlbum(MainActivity@ this, model.album.value)
     }
 
     private fun getAuthenticationRequest(type: AuthorizationResponse.Type): AuthorizationRequest? {
@@ -105,53 +102,26 @@ class MainActivity : ComponentActivity() {
         super.onActivityResult(requestCode, resultCode, intent)
         val response = AuthorizationClient.getResponse(resultCode, data)
 
-        if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
-            model.setAuthToken(response.accessToken)
+        if(requestCode != null && response?.accessToken != null) {
+            if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
+                model.setAuthToken(response.accessToken)
 
-            lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    model.getCurrentlyPlaying()
-                    model.getRecentlyPlayed()
-                    model.getLastPlayedSongId()
-                    model.getPlaylists()
+                lifecycleScope.launch {
+                    repeatOnLifecycle(Lifecycle.State.STARTED) {
+                        model.getCurrentlyPlaying()
+                        model.getRecentlyPlayed()
+                        model.getLastPlayedSongId()
+                        model.getPlaylists()
+                    }
                 }
-            }
 
-        } else if (requestCode == AUTH_CODE_REQUEST_CODE) {
-            accessCode = response.code
+            } else if (requestCode == AUTH_CODE_REQUEST_CODE) {
+                accessCode = response.code
+            }
         }
     }
 
     private fun getRedirectUri(): Uri? {
         return Uri.parse(REDIRECT_URI)
     }
-
-    private fun saveAlbum(context: Context, album: AlbumXX) {
-        if (album.artists.isNotEmpty()) {
-            lifecycleScope.launch {
-                context.albumPreferenceDataStore.updateData {
-                    it.toBuilder()
-                        .setArtistName(album.artists[0].name)
-                        .setAlbumName(album.name)
-                        .setReleaseDate(album.release_date)
-                        .setImageUrl(album.images[0].url)
-                        .build()
-                }
-            }
-        }
-    }
-
-    @OptIn(ExperimentalLifecycleComposeApi::class)
-    @Composable
-    fun songIsCurrentlyPlaying() {
-        val currentlyPlaying: Boolean by model.currentlyPlaying.collectAsStateWithLifecycle()
-        println("MainActivity Playing ${model.currentlyPlaying.value}")
-    }
-
-    val Context.albumPreferenceDataStore: DataStore<AlbumPreference> by dataStore(
-        fileName = "album_settings.proto",
-        serializer = AlbumPreferenceSerializer
-    )
-
-    val Context.dataStore by preferencesDataStore(name = "user_preferences")
 }
