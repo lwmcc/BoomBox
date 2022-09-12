@@ -57,11 +57,7 @@ class LocalRepository @Inject constructor (
         val INSERTION_TIME = longPreferencesKey(INSERTION_TIME_PREFERENCES_KEY)
     }
 
-    suspend fun insertRecentlyPlayedList(array: Array<RecentlyPlayedItem>) = array.forEach {
-            db.musicDao().insertRecentlyPlayedItem(it)
-    }
-
-    suspend fun insertRecentlyPlayedItem(item: RecentlyPlayedItem) = db.musicDao().insertRecentlyPlayedItem(item)
+    suspend fun insertRecentlyPlayedList(list: List<RecentlyPlayedItem>) = db.musicDao().insertRecentlyPlayedItems(list)
 
     fun getRecentlyPlayed() = db.musicDao().getRecentlyPlayed()
 }

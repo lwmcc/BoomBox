@@ -10,18 +10,23 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavHostController
 import com.codelab.android.datastore.AlbumPreference
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.data.AlbumPreferenceSerializer
 import com.mccarty.ritmo.model.AlbumXX
-import com.mccarty.ritmo.ui.screens.MainScreen
+import com.mccarty.ritmo.ui.screens.StartScreen
 import com.mccarty.ritmo.ui.theme.BoomBoxTheme
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
@@ -38,6 +43,8 @@ class MainActivity : ComponentActivity() {
     private var accessCode = ""
     private val model: MainViewModel by viewModels()
 
+    private val nav = NavHostController(this@MainActivity)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -48,7 +55,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    MainScreen(model)
+                    //val navController = rememberNavController()
+                    //MainScreen(model)
+                    StartScreen(model)
                 }
             }
         }
@@ -67,6 +76,16 @@ class MainActivity : ComponentActivity() {
                     imageUrl = it.imageUrl,
                     releaseDate = it.releaseDate
                 )
+            }
+        }
+
+        lifecycleScope.launch {
+            model.currentlyPlaying.collect { currentlyPlaying ->
+                if(currentlyPlaying) {
+                    println("MainActivity Playing $currentlyPlaying")
+                } else {
+                    println("MainActivity Playing $currentlyPlaying")
+                }
             }
         }
     }
@@ -105,15 +124,10 @@ class MainActivity : ComponentActivity() {
 
             lifecycleScope.launch {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    model.getRetryInterval().collect {
+                        model.getLastPlayedSongId()
                         model.getRecentlyPlayed()
                         model.getPlaylists()
-                        model.getQueue()
-                        model.getLastPlayedSongId()
-                        model.getCurrentlyPlaying()
-                        // TODO: Get data from db
-                        //model.getRecentlyPlayedFromRepo()
-                    }
+                    model.getCurrentlyPlaying()
                 }
             }
 
@@ -123,7 +137,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun getRedirectUri(): Uri? {
-        return return Uri.parse(REDIRECT_URI)
+        return Uri.parse(REDIRECT_URI)
     }
 
     private fun saveAlbum(context: Context, album: AlbumXX) {
@@ -139,6 +153,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    @OptIn(ExperimentalLifecycleComposeApi::class)
+    @Composable
+    fun songIsCurrentlyPlaying() {
+        val currentlyPlaying: Boolean  by model.currentlyPlaying.collectAsStateWithLifecycle()
+        println("MainActivity Playing ${model.currentlyPlaying.value}")
     }
 
     val Context.albumPreferenceDataStore: DataStore<AlbumPreference> by dataStore(

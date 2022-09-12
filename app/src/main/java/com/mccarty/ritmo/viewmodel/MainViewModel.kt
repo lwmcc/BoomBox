@@ -69,7 +69,7 @@ class MainViewModel @Inject constructor(
                     val pair = processRecentlyPlayed(it)
                     _recentlyPlayed.value = pair.second
                     viewModelScope.launch(Dispatchers.IO) {
-                        localRepository.insertRecentlyPlayedList(pair.second.toTypedArray())
+                        localRepository.insertRecentlyPlayedList(pair.second)
                     }
                     true
                 }
@@ -88,40 +88,44 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun getQueue() {
-        viewModelScope.launch {
-            repository.userQueue.stateIn(scope = viewModelScope)
-                .collect {
-                    val pair = processQueue(it)
-                    _currentAlbum.value = pair.first
-                    _queueItemList.value = pair.second
-                    val image = pair.first.album?.images?.getImageUrlFromList(0)
-
-                    if (image != null) {
-                        _currentAlbumImageUrl.value = image
-                    }
-                }
-        }
-    }
-
     fun getCurrentlyPlaying() {
         viewModelScope.launch {
             repository.currentlyPlaying.stateIn(scope = viewModelScope)
                 .collect {
-                    _currentlyPlaying.value =
-                        processCurrentlyPlaying(it)!! // This will always return something
+                    val playing = processCurrentlyPlaying(it)!! // This will always return something
+                    _currentlyPlaying.value = playing
+
+                    // image_url
+                    // artist
+                    // album
+                    // song title
+                    // release date
+
+                    if(playing) {
+                        // if true add to db
+                        // show in UI
+                    } else {
+                        // else if false
+                        //get from db
+                        // show in ui
+
+                        // if no song in db
+                        // show default
+                    }
                 }
         }
     }
 
     fun getLastPlayedSongId() {
         if (_recentlyPlayed.value.isNotEmpty()) {
-            val id = _recentlyPlayed.value[0].track.album.id
+            val id = _recentlyPlayed.value[0].track?.album?.id
             viewModelScope.launch {
-                repository.getAlbumInfo(id).stateIn(scope = viewModelScope)
-                    .collect {
-                        _album.value = processAlbumData(it)
-                    }
+                if (id != null) {
+                    repository.getAlbumInfo(id).stateIn(scope = viewModelScope)
+                        .collect {
+                            _album.value = processAlbumData(it)
+                        }
+                }
             }
         }
     }
@@ -144,11 +148,6 @@ class MainViewModel @Inject constructor(
         _releaseDate.value = releaseDate
     }
 
-    fun getRetryInterval(): Flow<Int> {
-        println("MainViewModel retry")
-        return localRepository.getRetryIntervalSeconds()
-    }
-
     suspend fun retryIntervalHasExpired(): Boolean {
         val currentTime = System.currentTimeMillis() % 60
         var insertionTime = 0L
@@ -168,14 +167,10 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Default) {
             val recentlyPlayed = mutableListOf<RecentlyPlayedItem>()
             it.forEach {
-                println("MainViewModel ${it.track.name}")
+                println("MainViewModel ${it.track?.name}")
                 recentlyPlayed.add(it)
             }
             //_recentlyPlayed.value = recentlyPlayed
         }
-    }
-
-    companion object {
-        var getRecentlyPlayedItem = true
     }
 }

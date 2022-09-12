@@ -9,9 +9,9 @@ class RecentlyPlayed : ArrayList<RecentlyPlayedItem>()
 @Entity(tableName = "recently_played_item")
 data class RecentlyPlayedItem(
     @PrimaryKey val id: Int,
-    @ColumnInfo(name = "context") val context: Context,
-    @ColumnInfo(name = "played_at") val played_at: String,
-    @ColumnInfo(name = "track") val track: Track
+    @ColumnInfo(name = "context") val context: Context?,
+    @ColumnInfo(name = "played_at") val played_at: String?,
+    @ColumnInfo(name = "track") val track: Track?
 )
 
 data class Context(

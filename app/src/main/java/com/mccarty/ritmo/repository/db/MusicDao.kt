@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MusicDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertRecentlyPlayedItem(item: RecentlyPlayedItem)
+    suspend fun insertRecentlyPlayedItems(item: List<RecentlyPlayedItem>)
 
     @Query("SELECT * FROM recently_played_item ORDER BY track ASC")
     fun getRecentlyPlayed(): Flow<Array<RecentlyPlayedItem>>

@@ -1,13 +1,10 @@
 package com.mccarty.ritmo.ui.screens
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -23,6 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.ui.material.surface.Surface
 import com.codelab.android.datastore.AlbumPreference
 import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.R
@@ -35,218 +38,94 @@ import kotlinx.coroutines.flow.collect
 
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
-fun MainScreen(model: MainViewModel) {
-    val currentAlbum: CurrentlyPlaying by model.currentAlbum.collectAsStateWithLifecycle()
-    val currentAlbumImageUrl: String by model.currentAlbumImageUrl.collectAsStateWithLifecycle()
+fun MainScreen(
+    model: MainViewModel,
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController(),
+) {
+//    val currentAlbum: CurrentlyPlaying by model.currentAlbum.collectAsStateWithLifecycle()
+//    val currentAlbumImageUrl: String by model.currentAlbumImageUrl.collectAsStateWithLifecycle()
     val recentlyPlayed: List<RecentlyPlayedItem> by model.recentlyPlayed.collectAsStateWithLifecycle()
     val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
-    val queueItems: List<CurrentQueueItem> by model.queueItemList.collectAsStateWithLifecycle()
-    val album: AlbumXX by model.album.collectAsStateWithLifecycle()
-    val currentlyPlaying: Boolean  by model.currentlyPlaying.collectAsStateWithLifecycle()
-
-    val lastPlayedArtist = model.artistName.observeAsState().value
-    val lastPlayedAlbum = model.albumName.observeAsState().value
-    val lastImageUrl = model.imageUrl.observeAsState().value
-    val lastReleaseDate = model.releaseDate.observeAsState().value
+//    val queueItems: List<CurrentQueueItem> by model.queueItemList.collectAsStateWithLifecycle()
+//    val album: AlbumXX by model.album.collectAsStateWithLifecycle()
+//    val currentlyPlaying: Boolean by model.currentlyPlaying.collectAsStateWithLifecycle()
+//
+//    val lastPlayedArtist = model.artistName.observeAsState().value
+//    val lastPlayedAlbum = model.albumName.observeAsState().value
+//    val lastImageUrl = model.imageUrl.observeAsState().value
+//    val lastReleaseDate = model.releaseDate.observeAsState().value
+//
+//    val navController = rememberNavController()
+//
+//    NavHost(navController = navController, startDestination = "song_details") {
+//        composable("song_details") { SongDetails(navController = navController) }
+//    }
+//
 
     LazyColumn(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Currently Playing
-        if(currentlyPlaying) {
-            item {
-                GlideImage(
-                    imageModel = currentAlbumImageUrl,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .size(300.dp)
-                )
-            }
-            item {
-                Text(
-                    text = stringResource(R.string.currently_playing),
-                    color = MaterialTheme.colors.primary,
-                    fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 40.dp)
-                        .fillMaxWidth(),
-                )
-            }
-        } else { // Last album played
-            if(album.images.isNotEmpty()) {
-                item {
-                    GlideImage(
-                        imageModel = lastImageUrl,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .size(300.dp)
-                    )
-                }
-                if(album.artists.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = album.artists[0].name,
-                            fontStyle = FontStyle.Normal,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            modifier = Modifier
-                                .paddingFromBaseline(top = 40.dp)
-                                .fillMaxWidth(),
-                        )
-                    }
-                    item {
-                        Text(
-                            text = album.name,
-                            fontStyle = FontStyle.Normal,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 14.sp,
-                            modifier = Modifier
-                                .paddingFromBaseline(top = 25.dp)
-                                .fillMaxWidth(),
-                        )
-                    }
-                }
-            } else {
-                item {
-                    GlideImage(
-                        imageModel = lastImageUrl,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .size(300.dp)
-                    )
-                }
-                item {
-                    Text(
-                        text = lastPlayedArtist.toString(),
-                        fontStyle = FontStyle.Normal,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        modifier = Modifier
-                            .paddingFromBaseline(top = 40.dp)
-                            .fillMaxWidth(),
-                    )
-                }
-                item {
-                    Text(
-                        text = lastPlayedAlbum.toString(),
-                        fontStyle = FontStyle.Normal,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .paddingFromBaseline(top = 25.dp)
-                            .fillMaxWidth(),
-                    )
-                }
-                item {
-                    Text(
-                        text = lastReleaseDate.toString(),
-                        fontStyle = FontStyle.Normal,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .paddingFromBaseline(top = 25.dp)
-                            .fillMaxWidth(),
-                    )
-                }
-            }
-        }
-        for(artist in currentAlbum.artists) {
-            item {
-                Text(
-                    text = artist.name,
-                    fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 25.dp)
-                        .fillMaxWidth(),
-                )
-            }
-        }
-        if(currentAlbum.artists.isNotEmpty()) {
-            item {
-                Text(
-                    text = currentAlbum.name,
-                    fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 25.dp)
-                        .fillMaxWidth(),
-                )
-            }
-            item {
-                Text(
-                    text = "${currentAlbum.album?.name}",
-                    fontWeight = FontWeight.Normal,
-                    fontStyle = FontStyle.Normal,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 25.dp)
-                        .fillMaxWidth(),
-                )
-            }
-            item {
-                Text(
-                    text = "${currentAlbum.album?.release_date}",
-                    fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 16.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 25.dp)
-                        .fillMaxWidth(),
-                )
-                Divider(
-                    thickness = 2.dp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 40.dp)
-                        .fillMaxWidth(),)
-            }
-        }
 
-        if(queueItems.isNotEmpty()) {
-            // Queue
-            item {
-                Text(
-                    text = stringResource(R.string.music_queue),
-                    color = MaterialTheme.colors.primary,
-                    fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 40.dp)
-                        .fillMaxWidth(),
-                )
-            }
+        // Header
+        item {
+            GlideImage(
+                imageModel = "",
+                contentScale = ContentScale.Fit,
+                placeHolder = ImageBitmap.imageResource(id = R.drawable.default_music),
+                modifier = Modifier
+                    .size(300.dp)
+            )
         }
-        for(item in queueItems) {
-            item {
-                Text(
-                    text = item.name,
-                    fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 40.dp)
-                        .fillMaxWidth(),
-                )
-                Text(
-                    text = item.album.name,
-                    fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 25.dp)
-                        .fillMaxWidth(),
-                )
-            }
+        item {
+            Text(
+                text = "",
+                fontStyle = FontStyle.Normal,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
+            )
         }
+        item {
+            Text(
+                text = "",
+                fontStyle = FontStyle.Normal,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
+            )
+        }
+        item {
+            Text(
+                text = "",
+                fontStyle = FontStyle.Normal,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
+            )
+        }
+        item {
+            Text(
+                text = "",
+                fontStyle = FontStyle.Normal,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .paddingFromBaseline(top = 25.dp)
+                    .fillMaxWidth(),
+            )
+        }
+        // End Header
 
         // Recently Played
-        if(recentlyPlayed.isNotEmpty()) {
+        if (recentlyPlayed.isNotEmpty()) {
             item {
                 Divider(
                     thickness = 2.dp,
@@ -268,38 +147,38 @@ fun MainScreen(model: MainViewModel) {
                 )
             }
         }
-        for(item in recentlyPlayed) {
+        for (item in recentlyPlayed) {
             item {
-                Text(
-                    text = item.track.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                Card(
                     modifier = Modifier
-                        .paddingFromBaseline(top = 40.dp)
-                        .fillMaxWidth(),
-                )
-                Text(
-                    text = item.track.album.name,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 25.dp)
-                        .fillMaxWidth(),
-                )
+                        .fillMaxWidth()
+                        .clickable(onClick = {
+                            navController.navigate("song_details")
+                        }),
+                ) {
+                    Column() {
+                        Text(
+                            text = "${item?.track?.name}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .paddingFromBaseline(top = 40.dp)
+                                .fillMaxWidth(),
+                        )
+                        Text(
+                            text = "${item.track?.album?.name}",
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .paddingFromBaseline(top = 25.dp)
+                                .fillMaxWidth()
+                        )
+                    }
+                }
             }
-        }
-        if(recentlyPlayed.isNotEmpty()) {
-            item {
-                Divider(
-                    thickness = 2.dp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 40.dp)
-                        .fillMaxWidth(),
-                )
-            }
-        }
+        } // End recently played
 
         // Playlists
-        if(playLists.isNotEmpty()) {
+        if (playLists.isNotEmpty()) {
             item {
                 Text(
                     text = stringResource(id = R.string.playlists),
@@ -313,35 +192,45 @@ fun MainScreen(model: MainViewModel) {
                 )
             }
         }
-        for(item in playLists) {
+        for (item in playLists) {
             item {
-                Text(
-                    text = item.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                Card(
                     modifier = Modifier
-                        .paddingFromBaseline(top = 40.dp)
-                        .fillMaxWidth(),
-                )
-                if (item.description.isNotEmpty()) {
-                    Text(
-                        text = item.description,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        modifier = Modifier
-                            .paddingFromBaseline(top = 25.dp)
-                            .fillMaxWidth(),
-                    )
+                        .fillMaxWidth()
+                        .clickable(onClick = {
+                            navController.navigate("song_details") // TODO: go to playlist
+                        }),
+                ) {
+                    Column() {
+                        Text(
+                            text = item.name,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .paddingFromBaseline(top = 40.dp)
+                                .fillMaxWidth(),
+                        )
+                        if (item.description.isNotEmpty()) {
+                            Text(
+                                text = item.description,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 14.sp,
+                                modifier = Modifier
+                                    .paddingFromBaseline(top = 25.dp)
+                                    .fillMaxWidth(),
+                            )
+                        }
+                        Text(
+                            text = "${stringResource(R.string.total_tracks)} ${item.tracks.total}",
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .paddingFromBaseline(top = 25.dp)
+                                .fillMaxWidth(),
+                        )
+                    }
                 }
-                Text(
-                    text = "${stringResource(R.string.total_tracks)} ${item.tracks.total}",
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 25.dp)
-                        .fillMaxWidth(),
-                )
             }
-        }
+        }  // End Playlists
     }
 }

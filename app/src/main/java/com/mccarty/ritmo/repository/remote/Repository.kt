@@ -6,7 +6,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.codelab.android.datastore.AlbumPreference
 import com.google.gson.JsonObject
-import com.mccarty.ritmo.MainViewModel.Companion.getRecentlyPlayedItem
 import com.mccarty.ritmo.api.ApiService
 import com.mccarty.ritmo.data.AlbumPreferenceSerializer
 import com.mccarty.ritmo.model.Context
