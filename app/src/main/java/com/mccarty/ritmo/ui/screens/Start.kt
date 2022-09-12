@@ -16,7 +16,7 @@ fun StartScreen() {
 
     NavHost(navController = navController, startDestination = "main_screen") {
         composable("main_screen") {
-            MainScreen(navController = navController, model = mainViewModel)
+            MainScreen(model = mainViewModel, navController = navController)
         }
         composable("song_details") {
             SongDetailsScreen()

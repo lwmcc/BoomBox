@@ -55,8 +55,8 @@ fun MainScreen(
             Text(
                 text = mainMusicHeader.artistName,
                 fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Normal,
-                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
                 modifier = Modifier
                     .paddingFromBaseline(top = 25.dp)
                     .fillMaxWidth(),
@@ -134,6 +134,15 @@ fun MainScreen(
                                 .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth()
                         )
+                        if(item.track?.artists?.isNotEmpty() == true) {
+                            Text(
+                                text = "${item.track.artists.get(0).name}",
+                                fontSize = 12.sp,
+                                modifier = Modifier
+                                    .paddingFromBaseline(top = 25.dp)
+                                    .fillMaxWidth()
+                            )
+                        }
                     }
                 }
             }
