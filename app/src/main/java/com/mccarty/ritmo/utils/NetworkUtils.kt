@@ -6,9 +6,11 @@ import android.net.NetworkCapabilities
 
 fun hasNetworkConnection(context: Context): Boolean {
 
-    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val connectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     connectivityManager.let {
-        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
         return capabilities?.let {
             capabilities.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR) ||
