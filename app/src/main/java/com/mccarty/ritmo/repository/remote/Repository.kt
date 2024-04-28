@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.api.ApiService
-import com.mccarty.ritmo.model.Recent
+import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -32,7 +32,7 @@ class Repository @Inject constructor(
         emit(recentlyPlayed)
     }
 
-    suspend fun recentlyPlayedMusic(): Flow<NetworkRequest<Any>>  = flow {
+    suspend fun recentlyPlayedMusic(): Flow<NetworkRequest<RecentlyPlayedItem>>  = flow {
         emit(retrofit.create(ApiService::class.java).fetchRecentlyPlayedTracks())
     }
 
@@ -53,11 +53,11 @@ class Repository @Inject constructor(
     }
 
     val currentlyPlayingTrack: Flow<Response<JsonObject>> = flow {
-        while(true) {
-            val playing = retrofit.create(ApiService::class.java).getCurrentlyPlayingTrack()
-            emit(playing)
-            delay(refreshInterval)
-        }
+        emit(retrofit.create(ApiService::class.java).getCurrentlyPlayingTrack())
+    }
+
+    val currentlyPlayingTrack2: Flow<NetworkRequest<Any>> = flow {
+        emit(retrofit.create(ApiService::class.java).getCurrentlyPlayingTrack2())
     }
 
     fun getAlbumInfo(id: String): Flow<Response<JsonObject>> {
