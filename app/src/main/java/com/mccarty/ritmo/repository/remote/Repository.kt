@@ -1,13 +1,18 @@
 package com.mccarty.ritmo.repository.remote
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.api.ApiService
+import com.mccarty.ritmo.model.Recent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.json.JSONException
 import retrofit2.Response
 import retrofit2.Retrofit
+import java.lang.NullPointerException
 import javax.inject.Inject
 
 class Repository @Inject constructor(
@@ -22,11 +27,13 @@ class Repository @Inject constructor(
     private val tenMinuteInterval: Long = 600_000
 
     val recentlyPlayed: Flow<Response<JsonObject>> = flow {
-        while(true) {
-            val recentlyPlayed = retrofit.create(ApiService::class.java).getRecentlyPlayedTracks()
-            emit(recentlyPlayed)
-            delay(refreshInterval)
-        }
+        val recentlyPlayed = retrofit.create(ApiService::class.java)
+            .getRecentlyPlayedTracks() // TODO: don't create this twice
+        emit(recentlyPlayed)
+    }
+
+    suspend fun recentlyPlayedMusic(): Flow<NetworkRequest<Any>>  = flow {
+        emit(retrofit.create(ApiService::class.java).fetchRecentlyPlayedTracks())
     }
 
     val playLists: Flow<Response<JsonObject>> = flow {

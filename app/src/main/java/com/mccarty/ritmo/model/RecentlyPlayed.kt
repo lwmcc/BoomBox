@@ -57,3 +57,28 @@ data class Artist(
 data class ExternalUrlsXX(
     val spotify: String = ""
 )
+
+data class Recent(
+    val cursors: Cursors,
+    val href: String,
+    val items: List<Item>,
+    val limit: Int,
+    val next: String,
+    val total: Int
+)
+
+data class Cursors(
+    val after: String,
+    val before: String
+)
+
+class LinkedFrom
+
+data class RestrictionsX(
+    val reason: String
+)
+
+data class Followers(
+    val href: String,
+    val total: Int
+)

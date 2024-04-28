@@ -1,7 +1,10 @@
 package com.mccarty.ritmo
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.repository.local.LocalRepository
@@ -10,13 +13,23 @@ import com.mccarty.ritmo.utils.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import java.io.IOException
 import javax.inject.Inject
+import kotlin.jvm.Throws
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val repository: Repository,
     private val localRepository: LocalRepository,
 ) : ViewModel() {
+
+    sealed class RecentlyPlayedMusicState {
+        data object Pending: RecentlyPlayedMusicState()
+        data class Success<T: Any>(val data: T): RecentlyPlayedMusicState()
+
+        data object  Error: RecentlyPlayedMusicState()
+
+    }
 
     private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
     val recentlyPlayed: StateFlow<List<TrackV2Item>> = _recentlyPlayed
@@ -45,15 +58,17 @@ class MainViewModel @Inject constructor(
     private var _mainMusicHeader = MutableStateFlow(MainMusicHeader())
     val mainMusicHeader: StateFlow<MainMusicHeader> = _mainMusicHeader
 
+    private var _hasInternetConnection = MutableLiveData<Boolean>()
+    val hasInternetConnection: LiveData<Boolean> = _hasInternetConnection
+
     fun getRecentlyPlayed() {
         viewModelScope.launch {
             repository.recentlyPlayed.stateIn(scope = viewModelScope)
                 .first {
                     val list = processRecentlyPlayed(it)
+                    println("MainViewModel ***** OG ${it.body()}")
                     _recentlyPlayed.value = list
-                    //viewModelScope.launch(Dispatchers.IO) {
-                    //    localRepository.insertRecentlyPlayedList(list) // TODO: changed model
-                    //}
+                    //localRepository.insertRecentlyPlayedList(list) // TODO: changed model
                     true
                 }
         }
@@ -83,7 +98,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun getCurrentlyPlaying() {
+    fun
+            getCurrentlyPlaying() {
         viewModelScope.launch {
             repository.currentlyPlayingTrack.stateIn(scope = viewModelScope)
                 .collect {
@@ -128,9 +144,37 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun setAuthToken(token: String) {
+    fun hasInternetConnection(connection: Boolean) {
+        if(!connection) {
+            _mainMusicHeader.value = MainMusicHeader().apply {
+                this.artistName = "No Internet Connection"
+            }
+        }
+        _hasInternetConnection.value = connection
+    }
+
+    @Throws(IOException::class)
+    fun setAuthToken(context: MainActivity, token: String) {
         ApiClient.apply {
+            this.context = context
             this.token = token
+        }
+        fetchRecentlyPlayedMusic()
+    }
+
+    fun fetchRecentlyPlayedMusic() {
+        RecentlyPlayedMusicState.Pending
+        viewModelScope.launch {
+            repository.recentlyPlayedMusic().collect {
+                when(it) {
+                    is NetworkRequest.Error -> {
+                        RecentlyPlayedMusicState.Error
+                    }
+                    is NetworkRequest.Success -> {
+                        RecentlyPlayedMusicState.Success(it.data)
+                    }
+                }
+            }
         }
     }
 }

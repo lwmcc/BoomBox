@@ -5,8 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,7 +22,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -27,7 +30,6 @@ import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.*
 import com.skydoves.landscapist.glide.GlideImage
 
-@OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun MainScreen(
     model: MainViewModel,
@@ -44,14 +46,14 @@ fun MainScreen(
 
         // Header
         item {
-            GlideImage(
+/*            GlideImage(
                 imageModel = mainMusicHeader.imageUrl,
                 contentScale = ContentScale.Fit,
                 placeHolder = ImageBitmap.imageResource(R.drawable.default_music),
                 error = ImageBitmap.imageResource(R.drawable.default_music),
                 modifier = Modifier
                     .size(300.dp)
-            )
+            )*/
         }
         item {
             Text(
@@ -93,7 +95,7 @@ fun MainScreen(
             item {
                 Text(
                     text = stringResource(R.string.recently_played),
-                    color = MaterialTheme.colors.primary,
+                    color = MaterialTheme.colorScheme.primary,
                     fontStyle = FontStyle.Normal,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
@@ -110,7 +112,8 @@ fun MainScreen(
                         .fillMaxWidth()
                         .clickable(onClick = {
                             navController.navigate("song_details")
-                        }).padding(5.dp),
+                        })
+                        .padding(5.dp),
                     shape = MaterialTheme.shapes.small,
                 ) {
                     Column() {
@@ -148,7 +151,7 @@ fun MainScreen(
             item {
                 Text(
                     text = stringResource(id = R.string.playlists),
-                    color = MaterialTheme.colors.primary,
+                    color =  MaterialTheme.colorScheme.primary,
                     fontStyle = FontStyle.Normal,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,

@@ -5,7 +5,6 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 
 fun hasNetworkConnection(context: Context): Boolean {
-
     val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     connectivityManager.let {
@@ -14,10 +13,9 @@ fun hasNetworkConnection(context: Context): Boolean {
 
         return capabilities?.let {
             capabilities.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                    capabilities.hasCapability(NetworkCapabilities.TRANSPORT_WIFI) ||
+                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
                     capabilities.hasCapability(NetworkCapabilities.TRANSPORT_ETHERNET)
         } ?: false
     }
-
     return false
 }

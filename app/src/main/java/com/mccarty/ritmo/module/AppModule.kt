@@ -2,6 +2,7 @@ package com.mccarty.ritmo.module
 
 import android.app.Application
 import android.content.Context
+import com.mccarty.networkrequest.network.NetworkRequestAdapterFactory
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.module.Constants.BASE_SPOTIFY_URL
 import com.mccarty.ritmo.repository.db.AppDatabase
@@ -20,6 +21,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
 
 @Module
@@ -50,6 +52,7 @@ class AppModule {
             .baseUrl(BASE_SPOTIFY_URL)
             .client(getOkHttp())
             .addConverterFactory(GsonConverterFactory.create())
+            .addCallAdapterFactory(NetworkRequestAdapterFactory.create())
             .build()
     }
 
@@ -57,16 +60,16 @@ class AppModule {
     @Singleton
     fun providetDispatcher() = Dispatchers
 
-    object RequestInterceptor : Interceptor {
-        var token = ""
-        override fun intercept(chain: Interceptor.Chain): Response {
-            val request = chain.request()
-                .newBuilder()
-                .addHeader(CONTENT_TYPE_SPOTIFY, APPLICATION_JSON_SPOTIFY)
-                .addHeader(AUTHORIZATION_SPOTIFY, token)
-                .build()
-            return chain.proceed(request)
-        }
-    }
+//    object RequestInterceptor : Interceptor {
+//        var token = ""
+//        override fun intercept(chain: Interceptor.Chain): Response {
+//            val request = chain.request()
+//                .newBuilder()
+//                .addHeader(CONTENT_TYPE_SPOTIFY, APPLICATION_JSON_SPOTIFY)
+//                .addHeader(AUTHORIZATION_SPOTIFY, token)
+//                .build()
+//            return chain.proceed(request)
+//        }
+//    }
 
 }

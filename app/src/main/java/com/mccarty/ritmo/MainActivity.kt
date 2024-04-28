@@ -7,8 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -21,6 +21,7 @@ import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -37,7 +38,7 @@ class MainActivity : ComponentActivity() {
             BoomBoxTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
+                    color = MaterialTheme.colorScheme.background
                 ) {
                     StartScreen()
                 }
@@ -54,7 +55,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        if(savedInstanceState == null) {
+        if (savedInstanceState == null) {
             val request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN)
             AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
         }
@@ -81,20 +82,18 @@ class MainActivity : ComponentActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, intent)
         val response = AuthorizationClient.getResponse(resultCode, data)
-
-        if(requestCode != null && response?.accessToken != null) {
+        if (requestCode != null && response?.accessToken != null) {
             if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
-                model.setAuthToken(response.accessToken)
+                model.setAuthToken(this, response.accessToken)
 
-                lifecycleScope.launch {
+/*                lifecycleScope.launch {
                     repeatOnLifecycle(Lifecycle.State.STARTED) {
                         model.getCurrentlyPlaying()
                         model.getRecentlyPlayed()
                         model.getLastPlayedSongId()
                         model.getPlaylists()
                     }
-                }
-
+                }*/
             } else if (requestCode == AUTH_CODE_REQUEST_CODE) {
                 accessCode = response.code
             }
@@ -103,5 +102,9 @@ class MainActivity : ComponentActivity() {
 
     private fun getRedirectUri(): Uri? {
         return Uri.parse(REDIRECT_URI)
+    }
+
+    interface AuthTokenSet {
+        fun fetchRecentlyPlayed()
     }
 }

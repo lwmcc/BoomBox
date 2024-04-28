@@ -1,6 +1,5 @@
 package com.mccarty.ritmo.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
@@ -18,15 +17,15 @@ import androidx.compose.ui.unit.sp
 import com.mccarty.ritmo.R
 
 @Composable
-fun SongDetailsScreen() {
+fun ErrorScreen() {
     LazyColumn(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         item {
             Text(
-                text = "Larry Song details",
-                color =  MaterialTheme.colorScheme.primary,
+                text = "ERROR SCREEN",
+                color = MaterialTheme.colorScheme.primary,
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
