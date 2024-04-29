@@ -1,6 +1,5 @@
 package com.mccarty.ritmo
 
-import androidx.compose.MutableState
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -29,15 +28,25 @@ class MainViewModel @Inject constructor(
     sealed class RecentlyPlayedMusicState {
         data object Pending: RecentlyPlayedMusicState()
         data class Success<T: RecentlyPlayedItem>(val data: T): RecentlyPlayedMusicState()
-
         data object  Error: RecentlyPlayedMusicState()
     }
 
     sealed class PlaylistState {
         data object Pending: PlaylistState()
-        data class Success<T: PlaylistData.Playlist>(val data: T): PlaylistState()
-
+        data class Success<T: PlaylistData.PlaylistItem>(val data: T): PlaylistState()
         data object  Error: PlaylistState()
+    }
+
+    sealed class LastPlayedSongState {
+        data object Pending: LastPlayedSongState()
+        data class Success<T: AlbumXX>(val data: T): LastPlayedSongState()
+        data object  Error: LastPlayedSongState()
+    }
+
+    sealed class CurrentlyPayingTrackState {
+        data object Pending: CurrentlyPayingTrackState()
+        data class Success<T: CurrentlyPlayingTrack>(val data: T): CurrentlyPayingTrackState()
+        data object  Error: CurrentlyPayingTrackState()
     }
 
     private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
@@ -76,6 +85,12 @@ class MainViewModel @Inject constructor(
     private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
     val playlist: StateFlow<PlaylistState> = _playlist.asStateFlow()
 
+    private var _lastPlayedSong = MutableStateFlow<LastPlayedSongState>(LastPlayedSongState.Pending)
+    val lastPlayedSong: StateFlow<LastPlayedSongState> = _lastPlayedSong.asStateFlow()
+
+    private var _currentlyPlayingTrack = MutableStateFlow<CurrentlyPayingTrackState>(CurrentlyPayingTrackState.Pending)
+    val currentlyPlayingTrack: StateFlow<CurrentlyPayingTrackState> = _currentlyPlayingTrack.asStateFlow()
+
     fun getRecentlyPlayed() {
         viewModelScope.launch {
             repository.recentlyPlayed.stateIn(scope = viewModelScope)
@@ -104,22 +119,13 @@ class MainViewModel @Inject constructor(
         return list
     }
 
-    fun getPlaylists() {
+    fun fetchPlaylist() {
         viewModelScope.launch {
-            repository.playLists.stateIn(scope = viewModelScope)
-                .collect {
-                    _playLists.value = processPlaylist(it)
-                }
-        }
-    }
-
-    fun getCurrentlyPlaying2() {
-        viewModelScope.launch {
-            repository.currentlyPlayingTrack2.collect {
-                when(it) {
-                    is NetworkRequest.Error -> TODO()
+            repository.fetchPlayList.collect {
+                when(it){
+                    is NetworkRequest.Error -> PlaylistState.Error
                     is NetworkRequest.Success -> {
-
+                        _playlist.value = PlaylistState.Success(it.data)
                     }
                 }
             }
@@ -146,6 +152,30 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun fetchCurrentlyPlaying() {
+        viewModelScope.launch {
+            repository.fetchCurrentlyPlayingTrack.collect {
+                when (it) {
+                    is NetworkRequest.Error -> CurrentlyPayingTrackState.Error
+                    is NetworkRequest.Success -> {
+                        CurrentlyPayingTrackState.Success(it.data)
+                        val isPlaying = it.data.is_playing
+                        val item = it.data.item
+                        _currentlyPlaying.value = isPlaying
+                        if (isPlaying) {
+                            _mainMusicHeader.value = MainMusicHeader().apply {
+                                this.imageUrl = item.album.images[0].url ?: ""
+                                this.artistName = item.album.artists[0].name ?: ""
+                                this.albumName = item.album.name ?: ""
+                                this.songName = item.name ?: ""
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun setMainHeader(isPlaying: Boolean, list: List<TrackV2Item>) {
         if(!isPlaying && list.isNotEmpty()) {
             _mainMusicHeader.value = MainMusicHeader().apply {
@@ -157,27 +187,20 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun getLastPlayedSongId() {
+    fun fetchLastPlayedSong() {
+        _lastPlayedSong.value = LastPlayedSongState.Pending
         if (_recentlyPlayed.value.isNotEmpty()) {
-            val id = _recentlyPlayed.value[0].track?.album?.id
-            viewModelScope.launch {
-                if (id != null) {
-                    repository.getAlbumInfo(id).stateIn(scope = viewModelScope)
-                        .collect {
-                            _album.value = processAlbumData(it)
+            _recentlyPlayed.value[0].track?.album?.id?.let { id ->
+                viewModelScope.launch {
+                    repository.fetchAlbumInfo(id).collect {
+                        when(it) {
+                            is NetworkRequest.Error -> _lastPlayedSong.value = LastPlayedSongState.Error
+                            is NetworkRequest.Success -> _lastPlayedSong.value = LastPlayedSongState.Success(it.data)
                         }
+                    }
                 }
             }
         }
-    }
-
-    fun hasInternetConnection(connection: Boolean) {
-        if(!connection) {
-            _mainMusicHeader.value = MainMusicHeader().apply {
-                this.artistName = "No Internet Connection"
-            }
-        }
-        _hasInternetConnection.value = connection
     }
 
     @Throws(IOException::class)
@@ -186,9 +209,10 @@ class MainViewModel @Inject constructor(
             this.context = context
             this.token = token
         }
+        fetchCurrentlyPlaying()
         fetchRecentlyPlayedMusic()
+        fetchLastPlayedSong()
         fetchPlaylist()
-       // getPlaylists()
     }
 
     fun fetchRecentlyPlayedMusic() {
@@ -200,22 +224,7 @@ class MainViewModel @Inject constructor(
                 when (it) {
                     is NetworkRequest.Error -> _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Error
                     is NetworkRequest.Success -> {
-                        println("MainViewModel ***** RE ${it.data}")
                         _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(it.data)
-                    }
-                }
-            }
-        }
-    }
-
-    fun fetchPlaylist() {
-        viewModelScope.launch {
-            repository.playList.collect {
-                when(it){
-                    is NetworkRequest.Error -> PlaylistState.Error
-                    is NetworkRequest.Success -> {
-                        println("MainViewModel ***** ${it.data}")
-                        _playlist.value = PlaylistState.Success(it.data)
                     }
                 }
             }

@@ -86,7 +86,8 @@ class MainActivity : ComponentActivity() {
             if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
                 model.setAuthToken(this, response.accessToken)
 
-/*                lifecycleScope.launch {
+                // TODO: moved methods to VM, will populate UI from there
+/*               lifecycleScope.launch {
                     repeatOnLifecycle(Lifecycle.State.STARTED) {
                         model.getCurrentlyPlaying()
                         model.getRecentlyPlayed()

@@ -1,19 +1,21 @@
 package com.mccarty.ritmo.repository.remote
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.api.ApiService
+import com.mccarty.ritmo.model.AlbumXX
+import com.mccarty.ritmo.model.CurrentlyPlayingTrack
+import com.mccarty.ritmo.model.Item
+import com.mccarty.ritmo.model.Playlist
+import com.mccarty.ritmo.model.PlaylistItem
 import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import org.json.JSONException
 import retrofit2.Response
 import retrofit2.Retrofit
-import java.lang.NullPointerException
 import javax.inject.Inject
 
 class Repository @Inject constructor(
@@ -21,7 +23,6 @@ class Repository @Inject constructor(
     private val retrofit: Retrofit
     ) {
 
-    // TODO: pass in constructor?
     private val refreshInterval: Long = 5000
     private val twentySecondInterval: Long = 20_000
     private val fiveMinuteInterval: Long = 300_000
@@ -41,33 +42,34 @@ class Repository @Inject constructor(
             emit(retrofit.create(ApiService::class.java).getUserPlaylists())
     }
 
-    val playList: Flow<NetworkRequest<PlaylistData.Playlist>> = flow {
-        emit(retrofit.create(ApiService::class.java).fetchUserPlaylist())
+    val fetchPlayList: Flow<NetworkRequest<PlaylistData.PlaylistItem>> = flow {
+        emit(retrofit.create(ApiService::class.java).fetchPlayList())
     }
 
+
     val userQueue: Flow<Response<JsonObject>> = flow {
-        while(true) {
             val queue = retrofit.create(ApiService::class.java).getUsersQueue()
             emit(queue)
-            delay(fiveMinuteInterval)
-        }
     }
 
     val currentlyPlayingTrack: Flow<Response<JsonObject>> = flow {
         emit(retrofit.create(ApiService::class.java).getCurrentlyPlayingTrack())
     }
 
+    val fetchCurrentlyPlayingTrack: Flow<NetworkRequest<CurrentlyPlayingTrack>> = flow {
+        emit(retrofit.create(ApiService::class.java).fetchCurrentlyPlayingTrack())
+    }
+
     val currentlyPlayingTrack2: Flow<NetworkRequest<Any>> = flow {
         emit(retrofit.create(ApiService::class.java).getCurrentlyPlayingTrack2())
     }
 
-    fun getAlbumInfo(id: String): Flow<Response<JsonObject>> {
-        return flow {
-            while(true) {
-                val album = retrofit.create(ApiService::class.java).getAlbum(id)
-                emit(album)
-                delay(refreshInterval)
-            }
-        }
+    fun getAlbumInfo(id: String): Flow<Response<JsonObject>> = flow {
+        val album = retrofit.create(ApiService::class.java).getAlbum(id)
+        emit(album)
+    }
+
+    fun fetchAlbumInfo(id: String): Flow<NetworkRequest<AlbumXX>> = flow {
+        emit(retrofit.create(ApiService::class.java).fetchAlbum(id))
     }
 }

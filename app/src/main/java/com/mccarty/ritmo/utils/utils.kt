@@ -18,6 +18,7 @@ import java.lang.NumberFormatException
 
 fun processPlaylist(response: Response<JsonObject>): List<PlaylistItem> {
     return if (response.isSuccessful) {
+        println("MainViewModel ***** Array ${response.body()}")
         try {
             val items = response.body()?.getAsJsonArray(ITEMS)
             val jsonArray = items?.asJsonArray
