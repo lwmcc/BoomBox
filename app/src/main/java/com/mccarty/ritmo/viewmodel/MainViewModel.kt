@@ -38,7 +38,7 @@ class MainViewModel @Inject constructor(
     }
 
     sealed class LastPlayedSongState {
-        data object Pending: LastPlayedSongState()
+        data class Pending(val pending: Boolean): LastPlayedSongState()
         data class Success<T: AlbumXX>(val data: T): LastPlayedSongState()
         data object  Error: LastPlayedSongState()
     }
@@ -85,7 +85,7 @@ class MainViewModel @Inject constructor(
     private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
     val playlist: StateFlow<PlaylistState> = _playlist.asStateFlow()
 
-    private var _lastPlayedSong = MutableStateFlow<LastPlayedSongState>(LastPlayedSongState.Pending)
+    private var _lastPlayedSong = MutableStateFlow<LastPlayedSongState>(LastPlayedSongState.Pending(true))
     val lastPlayedSong: StateFlow<LastPlayedSongState> = _lastPlayedSong.asStateFlow()
 
     private var _currentlyPlayingTrack = MutableStateFlow<CurrentlyPayingTrackState>(CurrentlyPayingTrackState.Pending)
@@ -188,7 +188,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun fetchLastPlayedSong() {
-        _lastPlayedSong.value = LastPlayedSongState.Pending
+        _lastPlayedSong.value = LastPlayedSongState.Pending(true)
         if (_recentlyPlayed.value.isNotEmpty()) {
             _recentlyPlayed.value[0].track?.album?.id?.let { id ->
                 viewModelScope.launch {
@@ -200,6 +200,8 @@ class MainViewModel @Inject constructor(
                     }
                 }
             }
+        } else {
+            _lastPlayedSong.value = LastPlayedSongState.Pending(false)
         }
     }
 
@@ -209,10 +211,10 @@ class MainViewModel @Inject constructor(
             this.context = context
             this.token = token
         }
-        fetchCurrentlyPlaying()
-        fetchRecentlyPlayedMusic()
+        //fetchCurrentlyPlaying()
+        //fetchRecentlyPlayedMusic()
         fetchLastPlayedSong()
-        fetchPlaylist()
+        //fetchPlaylist()
     }
 
     fun fetchRecentlyPlayedMusic() {
