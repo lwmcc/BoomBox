@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.api.ApiService
+import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -37,11 +38,11 @@ class Repository @Inject constructor(
     }
 
     val playLists: Flow<Response<JsonObject>> = flow {
-        while(true) {
-            val playLists = retrofit.create(ApiService::class.java).getUserPlaylists()
-            emit(playLists)
-            delay(tenMinuteInterval)
-        }
+            emit(retrofit.create(ApiService::class.java).getUserPlaylists())
+    }
+
+    val playList: Flow<NetworkRequest<PlaylistData.Playlist>> = flow {
+        emit(retrofit.create(ApiService::class.java).fetchUserPlaylist())
     }
 
     val userQueue: Flow<Response<JsonObject>> = flow {

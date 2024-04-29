@@ -2,6 +2,7 @@ package com.mccarty.ritmo.api
 
 import com.google.gson.JsonObject
 import com.mccarty.networkrequest.network.NetworkRequest
+import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import retrofit2.Response
 import retrofit2.http.GET
@@ -10,6 +11,9 @@ import retrofit2.http.Path
 interface ApiService {
     @GET("/v1/me/playlists")
     suspend fun getUserPlaylists(): Response<JsonObject>
+
+    @GET("/v1/me/playlists")
+    suspend fun fetchUserPlaylist(): NetworkRequest<PlaylistData.Playlist>
 
     @GET("/v1/me/player/recently-played")
     suspend fun getRecentlyPlayedTracks(): Response<JsonObject>

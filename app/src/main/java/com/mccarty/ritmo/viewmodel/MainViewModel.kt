@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.*
+import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import com.mccarty.ritmo.repository.local.LocalRepository
 import com.mccarty.ritmo.repository.remote.Repository
@@ -28,7 +29,15 @@ class MainViewModel @Inject constructor(
     sealed class RecentlyPlayedMusicState {
         data object Pending: RecentlyPlayedMusicState()
         data class Success<T: RecentlyPlayedItem>(val data: T): RecentlyPlayedMusicState()
+
         data object  Error: RecentlyPlayedMusicState()
+    }
+
+    sealed class PlaylistState {
+        data object Pending: PlaylistState()
+        data class Success<T: PlaylistData.Playlist>(val data: T): PlaylistState()
+
+        data object  Error: PlaylistState()
     }
 
     private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
@@ -63,6 +72,9 @@ class MainViewModel @Inject constructor(
 
     private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Pending)
     val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic.asStateFlow()
+
+    private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
+    val playlist: StateFlow<PlaylistState> = _playlist.asStateFlow()
 
     fun getRecentlyPlayed() {
         viewModelScope.launch {
@@ -175,6 +187,8 @@ class MainViewModel @Inject constructor(
             this.token = token
         }
         fetchRecentlyPlayedMusic()
+        fetchPlaylist()
+       // getPlaylists()
     }
 
     fun fetchRecentlyPlayedMusic() {
@@ -184,11 +198,24 @@ class MainViewModel @Inject constructor(
                 _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Error
             }.collect {
                 when (it) {
-                    is NetworkRequest.Error -> {
-                        _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Error
-                    }
+                    is NetworkRequest.Error -> _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Error
                     is NetworkRequest.Success -> {
+                        println("MainViewModel ***** RE ${it.data}")
                         _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(it.data)
+                    }
+                }
+            }
+        }
+    }
+
+    fun fetchPlaylist() {
+        viewModelScope.launch {
+            repository.playList.collect {
+                when(it){
+                    is NetworkRequest.Error -> PlaylistState.Error
+                    is NetworkRequest.Success -> {
+                        println("MainViewModel ***** ${it.data}")
+                        _playlist.value = PlaylistState.Success(it.data)
                     }
                 }
             }
