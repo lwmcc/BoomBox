@@ -18,10 +18,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import javax.inject.Inject
 
-class Repository @Inject constructor(
-    private val dispatchers: Dispatchers,
-    private val retrofit: Retrofit
-    ) {
+open class Repository @Inject constructor(private val retrofit: Retrofit): RepositoryInt {
 
     private val refreshInterval: Long = 5000
     private val twentySecondInterval: Long = 20_000
@@ -34,7 +31,7 @@ class Repository @Inject constructor(
         emit(recentlyPlayed)
     }
 
-    suspend fun recentlyPlayedMusic(): Flow<NetworkRequest<RecentlyPlayedItem>>  = flow {
+    override suspend fun recentlyPlayedMusic(): Flow<NetworkRequest<RecentlyPlayedItem>>  = flow {
         emit(retrofit.create(ApiService::class.java).fetchRecentlyPlayedTracks())
     }
 

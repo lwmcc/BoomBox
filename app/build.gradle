@@ -82,6 +82,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
     implementation 'androidx.test:core-ktx:1.5.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
 
     // Compose
     def nav_version = '2.7.7'
@@ -164,6 +166,13 @@ dependencies {
     kaptTest 'com.google.dagger:hilt-compiler:2.51.1'
 
     implementation project(':NetworkRequest')
+
+    testImplementation 'junit:junit:4.12'
+
+    testImplementation 'org.mockito:mockito-core:2.24.5'
+    androidTestImplementation 'org.mockito:mockito-android:2.24.5'
+
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0'
 }
 
 // Allow references to generated code

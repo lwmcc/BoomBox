@@ -11,6 +11,7 @@ import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import com.mccarty.ritmo.repository.local.LocalRepository
 import com.mccarty.ritmo.repository.remote.Repository
+import com.mccarty.ritmo.repository.remote.RepositoryInt
 import com.mccarty.ritmo.utils.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -22,7 +23,7 @@ import kotlin.jvm.Throws
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val repository: Repository,
-    private val localRepository: LocalRepository,
+    private val repositoryInt: RepositoryInt,
 ) : ViewModel() {
 
     sealed class RecentlyPlayedMusicState {
@@ -211,16 +212,16 @@ class MainViewModel @Inject constructor(
             this.context = context
             this.token = token
         }
-        //fetchCurrentlyPlaying()
-        //fetchRecentlyPlayedMusic()
+        fetchCurrentlyPlaying()
+        fetchRecentlyPlayedMusic()
         fetchLastPlayedSong()
-        //fetchPlaylist()
+        fetchPlaylist()
     }
 
     fun fetchRecentlyPlayedMusic() {
         _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Pending
         viewModelScope.launch {
-            repository.recentlyPlayedMusic().catch {
+            repositoryInt.recentlyPlayedMusic().catch {
                 _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Error
             }.collect {
                 when (it) {
