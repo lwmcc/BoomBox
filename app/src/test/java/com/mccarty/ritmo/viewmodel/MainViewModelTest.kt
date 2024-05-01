@@ -9,6 +9,7 @@ import com.mccarty.ritmo.model.Copyright
 import com.mccarty.ritmo.model.ExternalIds
 import com.mccarty.ritmo.model.ExternalUrlsX
 import com.mccarty.ritmo.model.Image
+import com.mccarty.ritmo.model.RecentlyPlayedTrack
 import com.mccarty.ritmo.model.Tracks
 import com.mccarty.ritmo.MainViewModel.RecentlyPlayedMusicState.Success as RecentlyPlayedMusicStateSuccess
 import com.mccarty.ritmo.model.payload.Cursors
@@ -38,83 +39,84 @@ class MainViewModelTest {
     @get:Rule
     val coroutineRule = CoroutineRule()
 
-    val recentlyPlayedItem = RecentlyPlayedItem(
-        cursors = Cursors(
-            after = "",
-            before = "",
-        ),
-        href = "",
-        items = emptyList(),
-        limit = 1,
-        next = "",
-        total = 1,
-    )
-
     @Test
-    fun `assert playlist`() = runTest {
+    fun `assert instanceOf RecentlyPlayedMusicState`() = runTest {
         val mockRepository =  mock(Repository::class.java)
         val repositoryFake = RepositoryFake()
         val viewModel = MainViewModel(mockRepository, repositoryFake)
 
         viewModel.fetchRecentlyPlayedMusic()
-        repositoryFake.emit(NetworkRequestSuccess(recentlyPlayedItem))
 
         assertThat(viewModel.recentlyPlayedMusic.value, instanceOf(RecentlyPlayedMusicStateSuccess::class.java))
     }
 
-    val album = AlbumXX(
-        album_type = "LP",
-        artists = emptyList(), // : List<Artist>
-        available_markets = emptyList(), //  List<String>
-        copyrights = emptyList(), //  List<Copyright>
-        external_ids = ExternalIds(isrc = "some irc"),
-        external_urls = ExternalUrlsX(spotify = "some string"),
-        genres = emptyList(), // List<Any>
-        href = "https://www.google.com",
-        id = "007",
-        images = emptyList(), // : List<Image>
-        label = "Intersxope",
-        name = "Simply The Best",
-        popularity = 5,
-        release_date = "",
-        release_date_precision = "",
-        total_tracks = 10,
-        tracks = Tracks(
-            href = "some tracks",
-            total = 10,
-        ),
-        type = "album",
-        uri = "https://www.google.com",
-    )
-
     @Test
-    fun `my test`() = runTest {
+    fun `assert instanceOf LastPlayedSongState`() = runTest {
         val mockRepository =  mock(Repository::class.java)
-        val repositoryFake = RepositoryFake2()
+        val repositoryFake = RepositoryFake()
 
         val viewModel = MainViewModel(mockRepository, repositoryFake)
         viewModel.fetchLastPlayedSong()
-
-        repositoryFake.emit(NetworkRequestSuccess(album))
 
         assertThat(viewModel.lastPlayedSong.value, instanceOf(MainViewModel.LastPlayedSongState.Success::class.java))
     }
 
     class RepositoryFake: RepositoryInt {
-        private val flow = MutableSharedFlow<com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>>()
-        suspend fun emit(value: com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>) = flow.emit(value)
-        override suspend fun recentlyPlayedMusic(): Flow<com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>> = flow
-        override suspend fun fetchAlbumInfo(id: String): Flow<com.mccarty.networkrequest.network.NetworkRequest<AlbumXX>> {
-            return emptyFlow()
+        override suspend fun fetchRecentlyPlayedMusic(): Flow<com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>> {
+            return flow {
+                emit(
+                    NetworkRequestSuccess(
+                        RecentlyPlayedItem(
+                            cursors = Cursors(
+                                after = "",
+                                before = "",
+                            ),
+                            href = "",
+                            items = emptyList(),
+                            limit = 1,
+                            next = "",
+                            total = 1,
+                        )
+                    )
+                )
+            }
         }
-    }
 
-    class RepositoryFake2: RepositoryInt {
-        private val flow = MutableSharedFlow<com.mccarty.networkrequest.network.NetworkRequest<AlbumXX>>()
-        suspend fun emit(value: com.mccarty.networkrequest.network.NetworkRequest<AlbumXX>) = flow.emit(value)
-        override suspend fun recentlyPlayedMusic(): Flow<com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>> {
-            return emptyFlow()
+        override suspend fun fetchRecentlyPlayedTracks(): Flow<com.mccarty.networkrequest.network.NetworkRequest<List<RecentlyPlayedTrack>>> {
+            TODO("Not yet implemented")
         }
-        override suspend fun fetchAlbumInfo(id: String): Flow<com.mccarty.networkrequest.network.NetworkRequest<AlbumXX>> = flow
+
+        override suspend fun fetchAlbumInfo(id: String): Flow<com.mccarty.networkrequest.network.NetworkRequest<AlbumXX>> {
+            return flow {
+                emit(
+                    NetworkRequestSuccess(
+                        AlbumXX(
+                            album_type = "LP",
+                            artists = emptyList(), // : List<Artist>
+                            available_markets = emptyList(), //  List<String>
+                            copyrights = emptyList(), //  List<Copyright>
+                            external_ids = ExternalIds(isrc = "some irc"),
+                            external_urls = ExternalUrlsX(spotify = "some string"),
+                            genres = emptyList(), // List<Any>
+                            href = "https://www.google.com",
+                            id = "007",
+                            images = emptyList(), // : List<Image>
+                            label = "Intersxope",
+                            name = "Simply The Best",
+                            popularity = 5,
+                            release_date = "",
+                            release_date_precision = "",
+                            total_tracks = 10,
+                            tracks = Tracks(
+                                href = "some tracks",
+                                total = 10,
+                            ),
+                            type = "album",
+                            uri = "https://www.google.com",
+                        )
+                    )
+                )
+            }
+        }
     }
 }

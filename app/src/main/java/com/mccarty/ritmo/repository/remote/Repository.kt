@@ -8,6 +8,7 @@ import com.mccarty.ritmo.model.CurrentlyPlayingTrack
 import com.mccarty.ritmo.model.Item
 import com.mccarty.ritmo.model.Playlist
 import com.mccarty.ritmo.model.PlaylistItem
+import com.mccarty.ritmo.model.RecentlyPlayedTrack
 import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +32,11 @@ open class Repository @Inject constructor(private val retrofit: Retrofit): Repos
         emit(recentlyPlayed)
     }
 
-    override suspend fun recentlyPlayedMusic(): Flow<NetworkRequest<RecentlyPlayedItem>>  = flow {
+    override suspend fun fetchRecentlyPlayedTracks(): Flow<NetworkRequest<List<RecentlyPlayedTrack>>> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun fetchRecentlyPlayedMusic(): Flow<NetworkRequest<RecentlyPlayedItem>>  = flow {
         emit(retrofit.create(ApiService::class.java).fetchRecentlyPlayedTracks())
     }
 

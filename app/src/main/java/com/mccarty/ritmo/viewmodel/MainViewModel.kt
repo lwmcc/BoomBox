@@ -97,12 +97,23 @@ class MainViewModel @Inject constructor(
             repository.recentlyPlayed.stateIn(scope = viewModelScope)
                 .first {
                     val list = processRecentlyPlayed(it)
-                    println("MainViewModel ***** OG ${it.body()}")
                     _recentlyPlayed.value = list
                     //localRepository.insertRecentlyPlayedList(list) // TODO: changed model
                     true
                 }
         }
+    }
+
+    fun fetchRecentlyPlayed() {
+        viewModelScope.launch {
+            repositoryInt.fetchRecentlyPlayedMusic().first {
+                when(it) {
+                    is NetworkRequest.Error -> TODO()
+                    is NetworkRequest.Success ->  TODO()
+                }
+            }
+        }
+
     }
 
     // TODO: remove duplicate code
@@ -221,7 +232,7 @@ class MainViewModel @Inject constructor(
     fun fetchRecentlyPlayedMusic() {
         _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Pending
         viewModelScope.launch {
-            repositoryInt.recentlyPlayedMusic().catch {
+            repositoryInt.fetchRecentlyPlayedMusic().catch {
                 _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Error
             }.collect {
                 when (it) {
