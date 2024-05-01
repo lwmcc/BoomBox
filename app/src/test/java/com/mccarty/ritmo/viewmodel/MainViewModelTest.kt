@@ -3,6 +3,13 @@ package com.mccarty.ritmo.viewmodel
 import android.net.NetworkRequest
 import com.mccarty.networkrequest.network.NetworkRequest.Success as NetworkRequestSuccess
 import com.mccarty.ritmo.MainViewModel
+import com.mccarty.ritmo.model.AlbumXX
+import com.mccarty.ritmo.model.Artist
+import com.mccarty.ritmo.model.Copyright
+import com.mccarty.ritmo.model.ExternalIds
+import com.mccarty.ritmo.model.ExternalUrlsX
+import com.mccarty.ritmo.model.Image
+import com.mccarty.ritmo.model.Tracks
 import com.mccarty.ritmo.MainViewModel.RecentlyPlayedMusicState.Success as RecentlyPlayedMusicStateSuccess
 import com.mccarty.ritmo.model.payload.Cursors
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem
@@ -11,6 +18,9 @@ import com.mccarty.ritmo.repository.remote.RepositoryInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -20,7 +30,9 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 class MainViewModelTest {
     @get:Rule
@@ -50,9 +62,59 @@ class MainViewModelTest {
         assertThat(viewModel.recentlyPlayedMusic.value, instanceOf(RecentlyPlayedMusicStateSuccess::class.java))
     }
 
+    val album = AlbumXX(
+        album_type = "LP",
+        artists = emptyList(), // : List<Artist>
+        available_markets = emptyList(), //  List<String>
+        copyrights = emptyList(), //  List<Copyright>
+        external_ids = ExternalIds(isrc = "some irc"),
+        external_urls = ExternalUrlsX(spotify = "some string"),
+        genres = emptyList(), // List<Any>
+        href = "https://www.google.com",
+        id = "007",
+        images = emptyList(), // : List<Image>
+        label = "Intersxope",
+        name = "Simply The Best",
+        popularity = 5,
+        release_date = "",
+        release_date_precision = "",
+        total_tracks = 10,
+        tracks = Tracks(
+            href = "some tracks",
+            total = 10,
+        ),
+        type = "album",
+        uri = "https://www.google.com",
+    )
+
+    @Test
+    fun `my test`() = runTest {
+        val mockRepository =  mock(Repository::class.java)
+        val repositoryFake = RepositoryFake2()
+
+        val viewModel = MainViewModel(mockRepository, repositoryFake)
+        viewModel.fetchLastPlayedSong()
+
+        repositoryFake.emit(NetworkRequestSuccess(album))
+
+        assertThat(viewModel.lastPlayedSong.value, instanceOf(MainViewModel.LastPlayedSongState.Success::class.java))
+    }
+
     class RepositoryFake: RepositoryInt {
         private val flow = MutableSharedFlow<com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>>()
         suspend fun emit(value: com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>) = flow.emit(value)
         override suspend fun recentlyPlayedMusic(): Flow<com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>> = flow
+        override suspend fun fetchAlbumInfo(id: String): Flow<com.mccarty.networkrequest.network.NetworkRequest<AlbumXX>> {
+            return emptyFlow()
+        }
+    }
+
+    class RepositoryFake2: RepositoryInt {
+        private val flow = MutableSharedFlow<com.mccarty.networkrequest.network.NetworkRequest<AlbumXX>>()
+        suspend fun emit(value: com.mccarty.networkrequest.network.NetworkRequest<AlbumXX>) = flow.emit(value)
+        override suspend fun recentlyPlayedMusic(): Flow<com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>> {
+            return emptyFlow()
+        }
+        override suspend fun fetchAlbumInfo(id: String): Flow<com.mccarty.networkrequest.network.NetworkRequest<AlbumXX>> = flow
     }
 }

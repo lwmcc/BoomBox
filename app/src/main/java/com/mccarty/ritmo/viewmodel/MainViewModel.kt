@@ -193,7 +193,7 @@ class MainViewModel @Inject constructor(
         if (_recentlyPlayed.value.isNotEmpty()) {
             _recentlyPlayed.value[0].track?.album?.id?.let { id ->
                 viewModelScope.launch {
-                    repository.fetchAlbumInfo(id).collect {
+                    repositoryInt.fetchAlbumInfo(id).collect {
                         when(it) {
                             is NetworkRequest.Error -> _lastPlayedSong.value = LastPlayedSongState.Error
                             is NetworkRequest.Success -> _lastPlayedSong.value = LastPlayedSongState.Success(it.data)
