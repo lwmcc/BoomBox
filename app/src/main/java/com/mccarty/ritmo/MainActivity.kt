@@ -20,6 +20,7 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -33,7 +34,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             BoomBoxTheme {
                 Surface(
@@ -47,10 +47,8 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.currentlyPlaying.collect { isPlaying ->
-                    model.recentlyPlayed.collect { list ->
-                        model.setMainHeader(isPlaying, list)
-                    }
+                model.recentlyPlayed.collect { list ->
+                    model.setMainHeader(async { model.currentlyPlaying.value }.await(), list)
                 }
             }
         }

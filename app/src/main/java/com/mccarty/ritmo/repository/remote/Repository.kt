@@ -5,14 +5,8 @@ import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.api.ApiService
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
-import com.mccarty.ritmo.model.Item
-import com.mccarty.ritmo.model.Playlist
-import com.mccarty.ritmo.model.PlaylistItem
-import com.mccarty.ritmo.model.RecentlyPlayedTrack
 import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.Response
@@ -32,16 +26,20 @@ open class Repository @Inject constructor(private val retrofit: Retrofit): Repos
         emit(recentlyPlayed)
     }
 
-    override suspend fun fetchRecentlyPlayedTracks(): Flow<NetworkRequest<List<RecentlyPlayedTrack>>> {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun fetchRecentlyPlayedMusic(): Flow<NetworkRequest<RecentlyPlayedItem>>  = flow {
-        emit(retrofit.create(ApiService::class.java).fetchRecentlyPlayedTracks())
+    override suspend fun fetchRecentlyPlayedItem(): Flow<NetworkRequest<RecentlyPlayedItem>>  = flow {
+        emit(retrofit.create(ApiService::class.java).fetchRecentlyPlayedItem())
     }
 
     override suspend fun fetchAlbumInfo(id: String): Flow<NetworkRequest<AlbumXX>> = flow {
         emit(retrofit.create(ApiService::class.java).fetchAlbum(id))
+    }
+
+    override suspend fun fetchCurrentlyPlayingTrack(): Flow<NetworkRequest<CurrentlyPlayingTrack>> = flow {
+        emit(retrofit.create(ApiService::class.java).fetchCurrentlyPlayingTrack())
+    }
+
+    override suspend fun fetchPlayList(): Flow<NetworkRequest<PlaylistData.PlaylistItem>> = flow {
+
     }
 
     val playLists: Flow<Response<JsonObject>> = flow {
@@ -66,9 +64,9 @@ open class Repository @Inject constructor(private val retrofit: Retrofit): Repos
         emit(retrofit.create(ApiService::class.java).fetchCurrentlyPlayingTrack())
     }
 
-    val currentlyPlayingTrack2: Flow<NetworkRequest<Any>> = flow {
+/*    val currentlyPlayingTrack2: Flow<NetworkRequest<Any>> = flow {
         emit(retrofit.create(ApiService::class.java).getCurrentlyPlayingTrack2())
-    }
+    }*/
 
     fun getAlbumInfo(id: String): Flow<Response<JsonObject>> = flow {
         val album = retrofit.create(ApiService::class.java).getAlbum(id)

@@ -21,7 +21,7 @@ interface ApiService {
     suspend fun getRecentlyPlayedTracks(): Response<JsonObject>
 
     @GET("/v1/me/player/recently-played")
-    suspend fun fetchRecentlyPlayedTracks(): NetworkRequest<RecentlyPlayedItem>
+    suspend fun fetchRecentlyPlayedItem(): NetworkRequest<RecentlyPlayedItem>
 
     @GET("/v1/me/player/queue")
     suspend fun getUsersQueue(): Response<JsonObject>
@@ -38,6 +38,6 @@ interface ApiService {
     @GET("/v1/me/player/currently-playing")
     suspend fun fetchCurrentlyPlayingTrack(): NetworkRequest<CurrentlyPlayingTrack>
 
-    @GET("/v1/me/player/currently-playing")
-    suspend fun getCurrentlyPlayingTrack2(): NetworkRequest<Any>
+    //@GET("/v1/me/player/currently-playing")
+    //suspend fun getCurrentlyPlayingTrack2(): NetworkRequest<Any>
 }

@@ -6,6 +6,7 @@ import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.Artist
 import com.mccarty.ritmo.model.Copyright
+import com.mccarty.ritmo.model.CurrentlyPlayingTrack
 import com.mccarty.ritmo.model.ExternalIds
 import com.mccarty.ritmo.model.ExternalUrlsX
 import com.mccarty.ritmo.model.Image
@@ -13,6 +14,7 @@ import com.mccarty.ritmo.model.RecentlyPlayedTrack
 import com.mccarty.ritmo.model.Tracks
 import com.mccarty.ritmo.MainViewModel.RecentlyPlayedMusicState.Success as RecentlyPlayedMusicStateSuccess
 import com.mccarty.ritmo.model.payload.Cursors
+import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.repository.remote.RepositoryInt
@@ -82,7 +84,7 @@ class MainViewModelTest {
             }
         }
 
-        override suspend fun fetchRecentlyPlayedTracks(): Flow<com.mccarty.networkrequest.network.NetworkRequest<List<RecentlyPlayedTrack>>> {
+        override suspend fun fetchRecentlyPlayedItem(): Flow<com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>> {
             TODO("Not yet implemented")
         }
 
@@ -117,6 +119,14 @@ class MainViewModelTest {
                     )
                 )
             }
+        }
+
+        override suspend fun fetchCurrentlyPlayingTrack(): Flow<com.mccarty.networkrequest.network.NetworkRequest<CurrentlyPlayingTrack>> {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun fetchPlayList(): Flow<com.mccarty.networkrequest.network.NetworkRequest<PlaylistData.PlaylistItem>> {
+            TODO("Not yet implemented")
         }
     }
 }
