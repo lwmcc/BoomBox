@@ -35,20 +35,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            BoomBoxTheme {
+            // TODO: not working with material 3
+            //BoomBoxTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     StartScreen()
                 }
-            }
+           // }
         }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 model.recentlyPlayed.collect { list ->
-                    model.setMainHeader(async { model.currentlyPlaying.value }.await(), list)
+                    val isPlaying = async { model.currentlyPlaying.value }.await()
+                    model.setMainHeader(isPlaying, list)
                 }
             }
         }

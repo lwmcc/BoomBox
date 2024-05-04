@@ -82,8 +82,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
     implementation 'androidx.test:core-ktx:1.5.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
 
     // Compose
     def nav_version = '2.7.7'
@@ -122,14 +122,16 @@ dependencies {
     // Landscapist
     implementation 'com.github.skydoves:landscapist-glide:2.3.3'
 
+    implementation 'com.github.bumptech.glide:compose:1.0.0-beta01'
+
     implementation 'com.google.accompanist:accompanist-systemuicontroller:0.34.0'
 
     // Proto Datastore
-    implementation("androidx.datastore:datastore:1.1.0")
+    implementation("androidx.datastore:datastore:1.1.1")
     implementation 'com.google.protobuf:protobuf-javalite:4.26.1'
 
     // Preference Datastore
-    implementation("androidx.datastore:datastore-preferences:1.1.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 
     // Room Db
     //val room_version = "2.4.3"
@@ -153,7 +155,6 @@ dependencies {
     // Moshi
     implementation("com.squareup.moshi:moshi:1.15.1")
 
-
     implementation 'com.google.dagger:hilt-android:2.51.1'
     kapt 'com.google.dagger:hilt-compiler:2.51.1'
 
@@ -167,7 +168,7 @@ dependencies {
 
     implementation project(':NetworkRequest')
 
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.2'
 
     testImplementation 'org.mockito:mockito-core:2.24.5'
     androidTestImplementation 'org.mockito:mockito-android:2.24.5'

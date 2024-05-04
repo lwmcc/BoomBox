@@ -25,11 +25,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage as GlideImage
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.*
 import com.skydoves.landscapist.glide.GlideImage
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun MainScreen(
     model: MainViewModel,
@@ -46,14 +49,11 @@ fun MainScreen(
 
         // Header
         item {
-/*            GlideImage(
-                imageModel = mainMusicHeader.imageUrl,
-                contentScale = ContentScale.Fit,
-                placeHolder = ImageBitmap.imageResource(R.drawable.default_music),
-                error = ImageBitmap.imageResource(R.drawable.default_music),
-                modifier = Modifier
-                    .size(300.dp)
-            )*/
+            GlideImage(
+                model = mainMusicHeader.imageUrl,
+                contentDescription = "",
+                modifier = Modifier.size(300.dp),
+            )
         }
         item {
             Text(
