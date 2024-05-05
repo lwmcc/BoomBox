@@ -1,5 +1,6 @@
 package com.mccarty.ritmo.ui.screens
 
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -27,10 +29,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage as GlideImage
+import com.mccarty.ritmo.MainViewModel.RecentlyPlayedMusicState.Success as Success
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.*
 import com.skydoves.landscapist.glide.GlideImage
+import java.net.URL
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -38,9 +42,10 @@ fun MainScreen(
     model: MainViewModel,
     navController: NavHostController = rememberNavController(),
 ) {
-    val recentlyPlayed: List<TrackV2Item> by model.recentlyPlayed.collectAsStateWithLifecycle()
+    val recentlyPlayedMusic by model.recentlyPlayedMusic.collectAsStateWithLifecycle()
     val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
-    val mainMusicHeader: MainMusicHeader by model.mainMusicHeader.collectAsStateWithLifecycle()
+    val musicHeader by model.musicHeader.collectAsStateWithLifecycle()
+    val musicHeaderImageUrl by model.musicHeaderImageUrl.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier.padding(horizontal = 25.dp),
@@ -50,14 +55,15 @@ fun MainScreen(
         // Header
         item {
             GlideImage(
-                model = mainMusicHeader.imageUrl,
+                model = musicHeaderImageUrl,
                 contentDescription = "",
                 modifier = Modifier.size(300.dp),
             )
         }
+
         item {
             Text(
-                text = mainMusicHeader.artistName,
+                text = musicHeader.artistName,
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
@@ -68,7 +74,7 @@ fun MainScreen(
         }
         item {
             Text(
-                text = mainMusicHeader.albumName,
+                text = musicHeader.albumName,
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
@@ -79,7 +85,7 @@ fun MainScreen(
         }
         item {
             Text(
-                text = mainMusicHeader.songName,
+                text = musicHeader.songName,
                 fontStyle = FontStyle.Normal,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
@@ -90,61 +96,73 @@ fun MainScreen(
         }
         // End Header
 
-        // Recently Played
-        if (recentlyPlayed.isNotEmpty()) {
-            item {
-                Text(
-                    text = stringResource(R.string.recently_played),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 40.dp)
-                        .fillMaxWidth(),
-                )
+        when(recentlyPlayedMusic) {
+            is MainViewModel.RecentlyPlayedMusicState.Pending -> {
+                println("MainScreen ***** PENDING")
             }
-        }
-        for (item in recentlyPlayed) {
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = {
-                            navController.navigate("song_details")
-                        })
-                        .padding(5.dp),
-                    shape = MaterialTheme.shapes.small,
-                ) {
-                    Column() {
+            is Success<*> -> {
+                val recent = (recentlyPlayedMusic as Success<*>).data.items
+
+                if (recent.isNotEmpty()) {
+                    item {
                         Text(
-                            text = "${item.track?.name}",
+                            text = stringResource(R.string.recently_played),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontStyle = FontStyle.Normal,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
+                            fontSize = 16.sp,
                             modifier = Modifier
-                                .paddingFromBaseline(top = 25.dp)
+                                .paddingFromBaseline(top = 40.dp)
                                 .fillMaxWidth(),
                         )
-                        Text(
-                            text = "${item.track?.album?.name}",
-                            fontSize = 14.sp,
-                            modifier = Modifier
-                                .paddingFromBaseline(top = 25.dp)
-                                .fillMaxWidth()
-                        )
-                        if (item.track?.artists?.isNotEmpty() == true) {
-                            Text(
-                                text = "${item.track.artists.get(0).name}",
-                                fontSize = 12.sp,
-                                modifier = Modifier
-                                    .paddingFromBaseline(top = 25.dp)
-                                    .fillMaxWidth()
-                            )
-                        }
                     }
                 }
+
+                for (item in recent) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(onClick = {
+                                    navController.navigate("song_details")
+                                })
+                                .padding(5.dp),
+                            shape = MaterialTheme.shapes.small,
+                        ) {
+                            Column() {
+                                Text(
+                                    text = "${item.track?.name}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier
+                                        .paddingFromBaseline(top = 25.dp)
+                                        .fillMaxWidth(),
+                                )
+                                Text(
+                                    text = "${item.track?.album?.name}",
+                                    fontSize = 14.sp,
+                                    modifier = Modifier
+                                        .paddingFromBaseline(top = 25.dp)
+                                        .fillMaxWidth()
+                                )
+                                if (item.track?.artists?.isNotEmpty() == true) {
+                                    Text(
+                                        text = "${item.track.artists.get(0).name}",
+                                        fontSize = 12.sp,
+                                        modifier = Modifier
+                                            .paddingFromBaseline(top = 25.dp)
+                                            .fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } // End recently played
+
+            } else -> {
+                println("MainScreen ***** ERROR")
             }
-        } // End recently played
+        }
 
         // Playlists
         if (playLists.isNotEmpty()) {

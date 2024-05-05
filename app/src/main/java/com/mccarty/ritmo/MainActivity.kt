@@ -14,15 +14,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
+import com.mccarty.ritmo.model.MusicHeader
 import com.mccarty.ritmo.ui.screens.StartScreen
-import com.mccarty.ritmo.ui.theme.BoomBoxTheme
+import com.spotify.android.appremote.api.ConnectionParams
+import com.spotify.android.appremote.api.Connector
+import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -46,20 +47,56 @@ class MainActivity : ComponentActivity() {
            // }
         }
 
-        lifecycleScope.launch {
+/*        lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 model.recentlyPlayed.collect { list ->
-                    val isPlaying = async { model.currentlyPlaying.value }.await()
-                    model.setMainHeader(isPlaying, list)
+                    //val isPlaying = async { model.currentlyPlaying.value }.await()
+                    //model.setMainHeader(true, list)
+                    //model.setImageforHeader(list)
                 }
             }
-        }
+
+    }*/
 
         if (savedInstanceState == null) {
             val request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN)
             AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
         }
+
+        val connectionParams = ConnectionParams.Builder(CLIENT_ID)
+            .setRedirectUri(REDIRECT_URI)
+            .showAuthView(true)
+            .build()
+
+        SpotifyAppRemote.connect(this, connectionParams, object : Connector.ConnectionListener {
+            override fun onConnected(appRemote: SpotifyAppRemote) {
+                appRemote.playerApi.subscribeToPlayerState().setEventCallback {
+
+                    val isPlaying = !it.isPaused
+                    if(isPlaying) {
+                        model.fetchLastPlayedSong()
+                    }
+
+                    model.setMusicHeader(MusicHeader().apply {
+                        this.imageUrl = it.track.imageUri ?: null
+                        this.artistName = it.track.artist.name ?: ""
+                        this.albumName = it.track.album.name ?: ""
+                        this.songName = it.track.name ?: ""
+                    })
+                }
+
+                //Log.d("MainActivity", "Connected! Yay!")
+                // Now you can start interacting with App Remote
+                //connected()
+            }
+
+            override fun onFailure(throwable: Throwable) {
+                println("SpotifyBroadcastReceiver ***** ${throwable.message}")
+            }
+        })
+
     }
+
 
     private fun getAuthenticationRequest(type: AuthorizationResponse.Type): AuthorizationRequest? {
         return AuthorizationRequest.Builder(
@@ -85,6 +122,7 @@ class MainActivity : ComponentActivity() {
         if (requestCode != null && response?.accessToken != null) {
             if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
                 model.setAuthToken(this, response.accessToken)
+
 
                 // TODO: moved methods to VM, will populate UI from there
 /*               lifecycleScope.launch {

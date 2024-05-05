@@ -31,7 +31,7 @@ open class Repository @Inject constructor(private val retrofit: Retrofit): Repos
     }
 
     override suspend fun fetchAlbumInfo(id: String): Flow<NetworkRequest<AlbumXX>> = flow {
-        emit(retrofit.create(ApiService::class.java).fetchAlbum(id))
+        emit(retrofit.create(ApiService::class.java).fetchAlbumInfo(id))
     }
 
     override suspend fun fetchCurrentlyPlayingTrack(): Flow<NetworkRequest<CurrentlyPlayingTrack>> = flow {
@@ -63,10 +63,6 @@ open class Repository @Inject constructor(private val retrofit: Retrofit): Repos
     val fetchCurrentlyPlayingTrack: Flow<NetworkRequest<CurrentlyPlayingTrack>> = flow {
         emit(retrofit.create(ApiService::class.java).fetchCurrentlyPlayingTrack())
     }
-
-/*    val currentlyPlayingTrack2: Flow<NetworkRequest<Any>> = flow {
-        emit(retrofit.create(ApiService::class.java).getCurrentlyPlayingTrack2())
-    }*/
 
     fun getAlbumInfo(id: String): Flow<Response<JsonObject>> = flow {
         val album = retrofit.create(ApiService::class.java).getAlbum(id)

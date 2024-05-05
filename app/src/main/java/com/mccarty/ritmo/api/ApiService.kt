@@ -30,14 +30,11 @@ interface ApiService {
     suspend fun getAlbum(@Path("id") id: String): Response<JsonObject>
 
     @GET("/v1/albums/{id}")
-    suspend fun fetchAlbum(@Path("id") id: String): NetworkRequest<AlbumXX>
+    suspend fun fetchAlbumInfo(@Path("id") id: String): NetworkRequest<AlbumXX>
 
     @GET("/v1/me/player/currently-playing")
     suspend fun getCurrentlyPlayingTrack(): Response<JsonObject>
 
     @GET("/v1/me/player/currently-playing")
     suspend fun fetchCurrentlyPlayingTrack(): NetworkRequest<CurrentlyPlayingTrack>
-
-    //@GET("/v1/me/player/currently-playing")
-    //suspend fun getCurrentlyPlayingTrack2(): NetworkRequest<Any>
 }
