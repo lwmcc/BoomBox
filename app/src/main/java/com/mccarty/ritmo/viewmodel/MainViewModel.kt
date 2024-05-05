@@ -104,7 +104,6 @@ class MainViewModel @Inject constructor(
     private var _rec = MutableStateFlow<Recently>(Recently.Success("larry"))
     val rec: StateFlow<Recently> = _rec.asStateFlow()
 
-
     private fun fetchPlaylist() {
         viewModelScope.launch {
             repository.fetchPlayList().collect {

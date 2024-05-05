@@ -35,15 +35,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            // TODO: not working with material 3
-            //BoomBoxTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    StartScreen()
-                }
-           // }
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                StartScreen()
+            }
         }
 
         if (savedInstanceState == null) {
@@ -54,12 +51,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        val connectionParams = ConnectionParams.Builder(CLIENT_ID)
-            .setRedirectUri(REDIRECT_URI)
-            .showAuthView(true)
-            .build()
-
-        SpotifyAppRemote.connect(this, connectionParams, object : Connector.ConnectionListener {
+        SpotifyAppRemote.connect(this, ConnectionParams.Builder(CLIENT_ID).apply {
+            setRedirectUri(REDIRECT_URI)
+            showAuthView(true)
+        }.build(), object : Connector.ConnectionListener {
             override fun onConnected(appRemote: SpotifyAppRemote) {
                 spotifyAppRemote = appRemote
                 connect()
