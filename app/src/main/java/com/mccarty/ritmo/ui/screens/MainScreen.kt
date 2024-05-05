@@ -45,56 +45,20 @@ fun MainScreen(
     val recentlyPlayedMusic by model.recentlyPlayedMusic.collectAsStateWithLifecycle()
     val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
     val musicHeader by model.musicHeader.collectAsStateWithLifecycle()
-    val musicHeaderImageUrl by model.musicHeaderImageUrl.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-
-        // Header
         item {
-            GlideImage(
-                model = musicHeaderImageUrl,
-                contentDescription = "",
-                modifier = Modifier.size(300.dp),
+            MainHeader(
+                imageUrl = musicHeader.imageUrl.toString(),
+                artistName = musicHeader.artistName,
+                albumName = musicHeader.albumName,
+                songName = musicHeader.songName,
+                modifier = Modifier,
             )
         }
-
-        item {
-            Text(
-                text = musicHeader.artistName,
-                fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                modifier = Modifier
-                    .paddingFromBaseline(top = 25.dp)
-                    .fillMaxWidth(),
-            )
-        }
-        item {
-            Text(
-                text = musicHeader.albumName,
-                fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Normal,
-                fontSize = 14.sp,
-                modifier = Modifier
-                    .paddingFromBaseline(top = 25.dp)
-                    .fillMaxWidth(),
-            )
-        }
-        item {
-            Text(
-                text = musicHeader.songName,
-                fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Normal,
-                fontSize = 14.sp,
-                modifier = Modifier
-                    .paddingFromBaseline(top = 25.dp)
-                    .fillMaxWidth(),
-            )
-        }
-        // End Header
 
         when(recentlyPlayedMusic) {
             is MainViewModel.RecentlyPlayedMusicState.Pending -> {

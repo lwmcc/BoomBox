@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.model.MusicHeader
 import com.mccarty.ritmo.ui.screens.StartScreen
@@ -23,14 +20,16 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    val AUTH_TOKEN_REQUEST_CODE = 0x10
-    val AUTH_CODE_REQUEST_CODE = 0x11
-    val REDIRECT_URI = "com.mccarty.ritmo://auth"
+    private val AUTH_TOKEN_REQUEST_CODE = 0x10
+    private val AUTH_CODE_REQUEST_CODE = 0x11
+    private  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
+    private val IMAGE_URL = "https://i.scdn.co/image/"
     private var accessCode = ""
+    private var spotifyAppRemote: SpotifyAppRemote? = null
+
     private val model: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,22 +46,14 @@ class MainActivity : ComponentActivity() {
            // }
         }
 
-/*        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.recentlyPlayed.collect { list ->
-                    //val isPlaying = async { model.currentlyPlaying.value }.await()
-                    //model.setMainHeader(true, list)
-                    //model.setImageforHeader(list)
-                }
-            }
-
-    }*/
-
         if (savedInstanceState == null) {
             val request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN)
             AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
         }
+    }
 
+    override fun onStart() {
+        super.onStart()
         val connectionParams = ConnectionParams.Builder(CLIENT_ID)
             .setRedirectUri(REDIRECT_URI)
             .showAuthView(true)
@@ -70,33 +61,43 @@ class MainActivity : ComponentActivity() {
 
         SpotifyAppRemote.connect(this, connectionParams, object : Connector.ConnectionListener {
             override fun onConnected(appRemote: SpotifyAppRemote) {
-                appRemote.playerApi.subscribeToPlayerState().setEventCallback {
-
-                    val isPlaying = !it.isPaused
-                    if(isPlaying) {
-                        model.fetchLastPlayedSong()
-                    }
-
-                    model.setMusicHeader(MusicHeader().apply {
-                        this.imageUrl = it.track.imageUri ?: null
-                        this.artistName = it.track.artist.name ?: ""
-                        this.albumName = it.track.album.name ?: ""
-                        this.songName = it.track.name ?: ""
-                    })
-                }
-
-                //Log.d("MainActivity", "Connected! Yay!")
-                // Now you can start interacting with App Remote
-                //connected()
+                spotifyAppRemote = appRemote
+                connect()
             }
 
             override fun onFailure(throwable: Throwable) {
+                // TODO: log this
                 println("SpotifyBroadcastReceiver ***** ${throwable.message}")
             }
         })
-
     }
 
+    override fun onStop() {
+        super.onStop()
+        disconnect()
+    }
+
+    private fun connect() {
+        spotifyAppRemote?.let {
+            it.playerApi.subscribeToPlayerState().setEventCallback {
+                model.setMusicHeader(MusicHeader().apply {
+                    this.imageUrl = StringBuilder().apply {
+                        append(IMAGE_URL)
+                        append(it.track.imageUri.toString().drop(22).dropLast(2))
+                    }.toString()
+                    this.artistName = it.track.artist.name ?: ""
+                    this.albumName = it.track.album.name ?: ""
+                    this.songName = it.track.name ?: ""
+                })
+            }
+        }
+    }
+
+    private fun disconnect() {
+        spotifyAppRemote?.let {
+            SpotifyAppRemote.disconnect(it)
+        }
+    }
 
     private fun getAuthenticationRequest(type: AuthorizationResponse.Type): AuthorizationRequest? {
         return AuthorizationRequest.Builder(
@@ -119,20 +120,9 @@ class MainActivity : ComponentActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, intent)
         val response = AuthorizationClient.getResponse(resultCode, data)
-        if (requestCode != null && response?.accessToken != null) {
+        if (response?.accessToken != null) {
             if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
                 model.setAuthToken(this, response.accessToken)
-
-
-                // TODO: moved methods to VM, will populate UI from there
-/*               lifecycleScope.launch {
-                    repeatOnLifecycle(Lifecycle.State.STARTED) {
-                        model.getCurrentlyPlaying()
-                        model.getRecentlyPlayed()
-                        model.getLastPlayedSongId()
-                        model.getPlaylists()
-                    }
-                }*/
             } else if (requestCode == AUTH_CODE_REQUEST_CODE) {
                 accessCode = response.code
             }
@@ -141,9 +131,5 @@ class MainActivity : ComponentActivity() {
 
     private fun getRedirectUri(): Uri? {
         return Uri.parse(REDIRECT_URI)
-    }
-
-    interface AuthTokenSet {
-        fun fetchRecentlyPlayed()
     }
 }
