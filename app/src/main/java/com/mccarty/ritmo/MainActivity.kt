@@ -127,4 +127,8 @@ class MainActivity : ComponentActivity() {
     private fun getRedirectUri(): Uri? {
         return Uri.parse(REDIRECT_URI)
     }
+
+    companion object {
+        val TRACK_ID = "trackId"
+    }
 }

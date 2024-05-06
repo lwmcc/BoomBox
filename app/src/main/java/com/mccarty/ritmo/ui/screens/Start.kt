@@ -1,12 +1,13 @@
 package com.mccarty.ritmo.ui.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.mccarty.ritmo.MainActivity.Companion.TRACK_ID
 import com.mccarty.ritmo.MainViewModel
 
 // The screen shown on app start
@@ -20,8 +21,14 @@ fun StartScreen() {
         composable("main_screen") {
             MainScreen(model = mainViewModel, navController = navController)
         }
-        composable("song_details") {
-            SongDetailsScreen()
+        composable(
+            "song_details/{id}",
+            //arguments = listOf(navArgument("id") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            SongDetailsScreen(
+                model = mainViewModel,
+                trackId = backStackEntry.arguments?.getString("id"),
+            )
         }
         composable("playlist_screen") {
             PlaylistScreen()

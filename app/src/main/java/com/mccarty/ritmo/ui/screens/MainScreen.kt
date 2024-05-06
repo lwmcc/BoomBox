@@ -30,9 +30,11 @@ import androidx.navigation.compose.rememberNavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage as GlideImage
 import com.mccarty.ritmo.MainViewModel.RecentlyPlayedMusicState.Success as Success
+import com.mccarty.ritmo.MainViewModel.PlaylistState.Success as PlaylistSuccess
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.*
+import com.mccarty.ritmo.model.payload.Item
 import com.skydoves.landscapist.glide.GlideImage
 import java.net.URL
 
@@ -43,7 +45,7 @@ fun MainScreen(
     navController: NavHostController = rememberNavController(),
 ) {
     val recentlyPlayedMusic by model.recentlyPlayedMusic.collectAsStateWithLifecycle()
-    val playLists: List<PlaylistItem> by model.playLists.collectAsStateWithLifecycle()
+    val playList by model.playlist.collectAsStateWithLifecycle()
     val musicHeader by model.musicHeader.collectAsStateWithLifecycle()
 
     LazyColumn(
@@ -60,17 +62,36 @@ fun MainScreen(
             )
         }
 
-        when(recentlyPlayedMusic) {
+        when (recentlyPlayedMusic) {
             is MainViewModel.RecentlyPlayedMusicState.Pending -> {
                 println("MainScreen ***** PENDING")
             }
-            is Success<*> -> {
-                val recent = (recentlyPlayedMusic as Success<*>).data.items
 
-                if (recent.isNotEmpty()) {
+            is Success<*> -> {
+                item {
+                    MediaList((recentlyPlayedMusic as Success<*>).data.items) {
+                        navController.navigate("song_details/${it.track.id}")
+                    }
+                }
+            }
+
+            else -> {
+                println("MainScreen ***** ERROR")
+            }
+        }
+
+        when (playList) {
+            is MainViewModel.PlaylistState.Pending -> {
+                println("MainScreen ***** PLAYLIST PENDING")
+            }
+
+            is PlaylistSuccess -> {
+                val playlist = (playList as MainViewModel.PlaylistState.Success).playList
+
+                if (playlist.isNotEmpty()) {
                     item {
                         Text(
-                            text = stringResource(R.string.recently_played),
+                            text = stringResource(id = R.string.playlists),
                             color = MaterialTheme.colorScheme.primary,
                             fontStyle = FontStyle.Normal,
                             fontWeight = FontWeight.Bold,
@@ -81,109 +102,53 @@ fun MainScreen(
                         )
                     }
                 }
-
-                for (item in recent) {
+                for (item in playlist) {
                     item {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(5.dp)
                                 .clickable(onClick = {
-                                    navController.navigate("song_details")
-                                })
-                                .padding(5.dp),
+                                    navController.navigate("playlist_screen")
+                                }),
                             shape = MaterialTheme.shapes.small,
                         ) {
                             Column() {
                                 Text(
-                                    text = "${item.track?.name}",
+                                    text = item.name,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp,
                                     modifier = Modifier
                                         .paddingFromBaseline(top = 25.dp)
                                         .fillMaxWidth(),
                                 )
+                                if (item.description.isNotEmpty()) {
+                                    Text(
+                                        text = item.description,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 14.sp,
+                                        modifier = Modifier
+                                            .paddingFromBaseline(top = 25.dp)
+                                            .fillMaxWidth(),
+                                    )
+                                }
                                 Text(
-                                    text = "${item.track?.album?.name}",
+                                    text = "${stringResource(R.string.total_tracks)} ${item.tracks.total}",
+                                    fontWeight = FontWeight.Normal,
                                     fontSize = 14.sp,
                                     modifier = Modifier
                                         .paddingFromBaseline(top = 25.dp)
-                                        .fillMaxWidth()
+                                        .fillMaxWidth(),
                                 )
-                                if (item.track?.artists?.isNotEmpty() == true) {
-                                    Text(
-                                        text = "${item.track.artists.get(0).name}",
-                                        fontSize = 12.sp,
-                                        modifier = Modifier
-                                            .paddingFromBaseline(top = 25.dp)
-                                            .fillMaxWidth()
-                                    )
-                                }
                             }
                         }
                     }
-                } // End recently played
-
-            } else -> {
-                println("MainScreen ***** ERROR")
-            }
-        }
-
-        // Playlists
-        if (playLists.isNotEmpty()) {
-            item {
-                Text(
-                    text = stringResource(id = R.string.playlists),
-                    color =  MaterialTheme.colorScheme.primary,
-                    fontStyle = FontStyle.Normal,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 40.dp)
-                        .fillMaxWidth(),
-                )
-            }
-        }
-        for (item in playLists) {
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(5.dp)
-                        .clickable(onClick = {
-                            navController.navigate("playlist_screen")
-                        }),
-                    shape = MaterialTheme.shapes.small,
-                ) {
-                    Column() {
-                        Text(
-                            text = item.name,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            modifier = Modifier
-                                .paddingFromBaseline(top = 25.dp)
-                                .fillMaxWidth(),
-                        )
-                        if (item.description.isNotEmpty()) {
-                            Text(
-                                text = item.description,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 14.sp,
-                                modifier = Modifier
-                                    .paddingFromBaseline(top = 25.dp)
-                                    .fillMaxWidth(),
-                            )
-                        }
-                        Text(
-                            text = "${stringResource(R.string.total_tracks)} ${item.tracks.total}",
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 14.sp,
-                            modifier = Modifier
-                                .paddingFromBaseline(top = 25.dp)
-                                .fillMaxWidth(),
-                        )
-                    }
                 }
             }
-        }  // End Playlists
+
+            else -> {
+                println("MainScreen ***** PLAYLIST ERROR")
+            }
+        }
     }
 }

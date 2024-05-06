@@ -2,9 +2,11 @@ package com.mccarty.ritmo
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
+import com.mccarty.ritmo.MainActivity.Companion.TRACK_ID
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.model.payload.Item
@@ -20,6 +22,7 @@ import kotlin.jvm.Throws
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val repository: Repository,
 ) : ViewModel() {
 
@@ -37,7 +40,7 @@ class MainViewModel @Inject constructor(
 
     sealed class PlaylistState {
         data object Pending: PlaylistState()
-        data class Success<T: PlaylistData.PlaylistItem>(val data: T): PlaylistState()
+        data class Success(val playList:  List<PlaylistData.Item>): PlaylistState()
         data object  Error: PlaylistState()
     }
 
@@ -53,6 +56,8 @@ class MainViewModel @Inject constructor(
         data object  Error: CurrentlyPayingTrackState()
     }
 
+    //private val trackId: String = checkNotNull(savedStateHandle["id"])
+
     private val _albumId = MutableStateFlow("null")
     val albumId: StateFlow<String> = _albumId
 
@@ -65,8 +70,8 @@ class MainViewModel @Inject constructor(
     private var _recentlyPlayedCached = MutableStateFlow<List<RecentlyPlayedItem>>(emptyList())
     val recentlyPlayedCached: StateFlow<List<RecentlyPlayedItem>> = _recentlyPlayedCached
 
-    private var _playLists = MutableStateFlow<List<PlaylistItem>>(emptyList())
-    val playLists: StateFlow<List<PlaylistItem>> = _playLists
+    //private var _playLists = MutableStateFlow<List<PlaylistItem>>(emptyList())
+    //val playLists: StateFlow<List<PlaylistItem>> = _playLists
 
     private var _queueItemList = MutableStateFlow<List<CurrentQueueItem>>(emptyList())
     val queueItemList: StateFlow<List<CurrentQueueItem>> = _queueItemList
@@ -110,7 +115,7 @@ class MainViewModel @Inject constructor(
                 when(it){
                     is NetworkRequest.Error -> PlaylistState.Error
                     is NetworkRequest.Success -> {
-                        _playlist.value = PlaylistState.Success(it.data)
+                        _playlist.value = PlaylistState.Success(it.data.items)
                     }
                 }
             }
@@ -188,5 +193,9 @@ class MainViewModel @Inject constructor(
 
     fun setImageforHeader(list: List<Item>) {
         _musicHeaderImageUrl.value = list.firstOrNull()?.track?.album?.images?.firstOrNull()?.url
+    }
+
+    fun getTrackId() {
+        println("SongDetailsScreen ***** ${"id"}")
     }
 }

@@ -39,7 +39,7 @@ open class MusicRepository @Inject constructor(private val retrofit: Retrofit): 
     }
 
     override suspend fun fetchPlayList(): Flow<NetworkRequest<PlaylistData.PlaylistItem>> = flow {
-
+        emit(retrofit.create(ApiService::class.java).fetchPlayList())
     }
 
     val playLists: Flow<Response<JsonObject>> = flow {
