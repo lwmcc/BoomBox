@@ -124,11 +124,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     private fun getRedirectUri(): Uri? {
         return Uri.parse(REDIRECT_URI)
     }
 
     companion object {
-        val TRACK_ID = "trackId"
+        val TRACK_ID_KEY = "trackId"
+        val MAIN_SCREEN_KEY = "main_screen"
+        val PLAYLIST_SCREEN_KEY = "playlist_screen"
+        val SONG_DETAILS_KEY = "song_details/"
     }
 }

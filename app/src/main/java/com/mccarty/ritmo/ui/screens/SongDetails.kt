@@ -20,7 +20,6 @@ fun SongDetailsScreen(
     model: MainViewModel,
     trackId: String?,
 ) {
-    //val id = mainViewModel.getTrackId()
     LazyColumn(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

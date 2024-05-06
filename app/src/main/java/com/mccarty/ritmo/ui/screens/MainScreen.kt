@@ -28,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.mccarty.ritmo.MainActivity
 import com.bumptech.glide.integration.compose.GlideImage as GlideImage
 import com.mccarty.ritmo.MainViewModel.RecentlyPlayedMusicState.Success as Success
 import com.mccarty.ritmo.MainViewModel.PlaylistState.Success as PlaylistSuccess
@@ -70,7 +71,7 @@ fun MainScreen(
             is Success<*> -> {
                 item {
                     MediaList((recentlyPlayedMusic as Success<*>).data.items) {
-                        navController.navigate("song_details/${it.track.id}")
+                        navController.navigate("${MainActivity.SONG_DETAILS_KEY}${it.track.id}")
                     }
                 }
             }

@@ -1,6 +1,5 @@
 package com.mccarty.ritmo.ui.screens
 
-import androidx.compose.Composable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,7 +21,7 @@ import com.mccarty.ritmo.model.payload.Item
 @androidx.compose.runtime.Composable
 fun MediaList(
     list: List<Item>,
-    onClick: (Item) -> Unit,
+    onTrackClick: (Item) -> Unit,
 ) {
 
     if (list.isNotEmpty()) {
@@ -43,7 +42,7 @@ fun MediaList(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = {
-                    onClick(it)
+                    onTrackClick(it)
                 })
                 .padding(5.dp),
             shape = MaterialTheme.shapes.small,

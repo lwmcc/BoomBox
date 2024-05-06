@@ -15,11 +15,6 @@ import javax.inject.Inject
 
 open class MusicRepository @Inject constructor(private val retrofit: Retrofit): Repository {
 
-    private val refreshInterval: Long = 5000
-    private val twentySecondInterval: Long = 20_000
-    private val fiveMinuteInterval: Long = 300_000
-    private val tenMinuteInterval: Long = 600_000
-
     val recentlyPlayed: Flow<Response<JsonObject>> = flow {
         val recentlyPlayed = retrofit.create(ApiService::class.java)
             .getRecentlyPlayedTracks() // TODO: don't create this twice
@@ -42,9 +37,9 @@ open class MusicRepository @Inject constructor(private val retrofit: Retrofit): 
         emit(retrofit.create(ApiService::class.java).fetchPlayList())
     }
 
-    val playLists: Flow<Response<JsonObject>> = flow {
-            emit(retrofit.create(ApiService::class.java).getUserPlaylists())
-    }
+    //val playLists: Flow<Response<JsonObject>> = flow {
+    //        emit(retrofit.create(ApiService::class.java).getUserPlaylists())
+    //}
 
     val fetchPlayList: Flow<NetworkRequest<PlaylistData.PlaylistItem>> = flow {
         emit(retrofit.create(ApiService::class.java).fetchPlayList())
@@ -56,9 +51,9 @@ open class MusicRepository @Inject constructor(private val retrofit: Retrofit): 
             emit(queue)
     }
 
-    val currentlyPlayingTrack: Flow<Response<JsonObject>> = flow {
+/*    val currentlyPlayingTrack: Flow<Response<JsonObject>> = flow {
         emit(retrofit.create(ApiService::class.java).getCurrentlyPlayingTrack())
-    }
+    }*/
 
     val fetchCurrentlyPlayingTrack: Flow<NetworkRequest<CurrentlyPlayingTrack>> = flow {
         emit(retrofit.create(ApiService::class.java).fetchCurrentlyPlayingTrack())

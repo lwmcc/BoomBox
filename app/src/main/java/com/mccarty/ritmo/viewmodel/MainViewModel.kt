@@ -1,15 +1,10 @@
 package com.mccarty.ritmo
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
-import com.mccarty.ritmo.MainActivity.Companion.TRACK_ID
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.*
-import com.mccarty.ritmo.model.payload.Item
 import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import com.mccarty.ritmo.repository.remote.Repository
@@ -22,7 +17,6 @@ import kotlin.jvm.Throws
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val repository: Repository,
 ) : ViewModel() {
 
@@ -64,32 +58,20 @@ class MainViewModel @Inject constructor(
     private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
     val recentlyPlayed: StateFlow<List<TrackV2Item>> = _recentlyPlayed
 
-    private var _recentlyPlayedItem = MutableStateFlow<List<Item>>(emptyList())
+/*    private var _recentlyPlayedItem = MutableStateFlow<List<Item>>(emptyList())
     val recentlyPlayedItem: StateFlow<List<Item>> = _recentlyPlayedItem
 
     private var _recentlyPlayedCached = MutableStateFlow<List<RecentlyPlayedItem>>(emptyList())
     val recentlyPlayedCached: StateFlow<List<RecentlyPlayedItem>> = _recentlyPlayedCached
 
-    //private var _playLists = MutableStateFlow<List<PlaylistItem>>(emptyList())
-    //val playLists: StateFlow<List<PlaylistItem>> = _playLists
-
     private var _queueItemList = MutableStateFlow<List<CurrentQueueItem>>(emptyList())
     val queueItemList: StateFlow<List<CurrentQueueItem>> = _queueItemList
 
     private var _currentAlbum = MutableStateFlow(CurrentlyPlaying())
-    val currentAlbum: StateFlow<CurrentlyPlaying> = _currentAlbum
-
-    private var _currentAlbumImageUrl = MutableStateFlow("")
-    val currentAlbumImageUrl: StateFlow<String> = _currentAlbumImageUrl
+    val currentAlbum: StateFlow<CurrentlyPlaying> = _currentAlbum*/
 
     private var _album = MutableStateFlow(AlbumXX())
     val album: StateFlow<AlbumXX> = _album
-
-    private var _currentlyPlaying = MutableStateFlow(false)
-    val currentlyPlaying: StateFlow<Boolean> = _currentlyPlaying
-
-    private var _hasInternetConnection = MutableLiveData<Boolean>()
-    val hasInternetConnection: LiveData<Boolean> = _hasInternetConnection
 
     private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Pending)
     val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
@@ -102,12 +84,6 @@ class MainViewModel @Inject constructor(
 
     private var _musicHeader = MutableStateFlow(MusicHeader())
     val musicHeader: StateFlow<MusicHeader> = _musicHeader
-
-    private var _musicHeaderImageUrl = MutableStateFlow<String?>(null)
-    val musicHeaderImageUrl: StateFlow<String?> = _musicHeaderImageUrl
-
-    private var _rec = MutableStateFlow<Recently>(Recently.Success("larry"))
-    val rec: StateFlow<Recently> = _rec.asStateFlow()
 
     private fun fetchPlaylist() {
         viewModelScope.launch {
@@ -145,7 +121,6 @@ class MainViewModel @Inject constructor(
                         when(it) {
                             is NetworkRequest.Error -> _lastPlayedSong.value = LastPlayedSongState.Error
                             is NetworkRequest.Success -> {
-                                _musicHeaderImageUrl.value = it.data.images.firstOrNull()?.url
                                 _lastPlayedSong.value = LastPlayedSongState.Success(it.data)
                             }
                         }
@@ -178,8 +153,6 @@ class MainViewModel @Inject constructor(
                 when (it) {
                     is NetworkRequest.Error -> _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Error
                     is NetworkRequest.Success -> {
-                        setImageforHeader(it.data.items)
-                        _recentlyPlayedItem.value = it.data.items
                         _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(it.data)
                     }
                 }
@@ -189,13 +162,5 @@ class MainViewModel @Inject constructor(
 
     fun setMusicHeader(header: MusicHeader) {
         _musicHeader.value = header
-    }
-
-    fun setImageforHeader(list: List<Item>) {
-        _musicHeaderImageUrl.value = list.firstOrNull()?.track?.album?.images?.firstOrNull()?.url
-    }
-
-    fun getTrackId() {
-        println("SongDetailsScreen ***** ${"id"}")
     }
 }
