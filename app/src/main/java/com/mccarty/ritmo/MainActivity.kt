@@ -3,6 +3,7 @@ package com.mccarty.ritmo
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -11,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
+import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.MusicHeader
 import com.mccarty.ritmo.ui.screens.StartScreen
 import com.spotify.android.appremote.api.ConnectionParams
@@ -20,16 +22,10 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.IOException
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val AUTH_TOKEN_REQUEST_CODE = 0x10
-    private val AUTH_CODE_REQUEST_CODE = 0x11
-    private  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
-    private val IMAGE_URL = "https://i.scdn.co/image/"
-    private var accessCode = ""
-    private var spotifyAppRemote: SpotifyAppRemote? = null
-
     private val model: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -117,13 +113,24 @@ class MainActivity : ComponentActivity() {
         val response = AuthorizationClient.getResponse(resultCode, data)
         if (response?.accessToken != null) {
             if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
-                model.setAuthToken(this, response.accessToken)
+                try {
+                    ApiClient.apply {
+                        this.context = this@MainActivity
+                        this.token = response.accessToken
+                    }
+                    model.fetchCurrentlyPlaying()
+                    model.fetchRecentlyPlayedMusic()
+                    model.fetchLastPlayedSong()
+                    model.fetchPlaylist()
+                } catch (ioe: IOException) {
+                    // TODO: show some error
+                    Log.e(TAG, "${ioe.message}")
+                }
             } else if (requestCode == AUTH_CODE_REQUEST_CODE) {
                 accessCode = response.code
             }
         }
     }
-
 
     private fun getRedirectUri(): Uri? {
         return Uri.parse(REDIRECT_URI)
@@ -134,5 +141,12 @@ class MainActivity : ComponentActivity() {
         val MAIN_SCREEN_KEY = "main_screen"
         val PLAYLIST_SCREEN_KEY = "playlist_screen"
         val SONG_DETAILS_KEY = "song_details/"
+        val TAG = MainActivity::class.qualifiedName
+        private val AUTH_TOKEN_REQUEST_CODE = 0x10
+        private val AUTH_CODE_REQUEST_CODE = 0x11
+        private  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
+        private val IMAGE_URL = "https://i.scdn.co/image/"
+        private var accessCode = ""
+        private var spotifyAppRemote: SpotifyAppRemote? = null
     }
 }

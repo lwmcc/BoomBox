@@ -36,31 +36,4 @@ open class MusicRepository @Inject constructor(private val retrofit: Retrofit): 
     override suspend fun fetchPlayList(): Flow<NetworkRequest<PlaylistData.PlaylistItem>> = flow {
         emit(retrofit.create(ApiService::class.java).fetchPlayList())
     }
-
-    //val playLists: Flow<Response<JsonObject>> = flow {
-    //        emit(retrofit.create(ApiService::class.java).getUserPlaylists())
-    //}
-
-    val fetchPlayList: Flow<NetworkRequest<PlaylistData.PlaylistItem>> = flow {
-        emit(retrofit.create(ApiService::class.java).fetchPlayList())
-    }
-
-
-    val userQueue: Flow<Response<JsonObject>> = flow {
-            val queue = retrofit.create(ApiService::class.java).getUsersQueue()
-            emit(queue)
-    }
-
-/*    val currentlyPlayingTrack: Flow<Response<JsonObject>> = flow {
-        emit(retrofit.create(ApiService::class.java).getCurrentlyPlayingTrack())
-    }*/
-
-    val fetchCurrentlyPlayingTrack: Flow<NetworkRequest<CurrentlyPlayingTrack>> = flow {
-        emit(retrofit.create(ApiService::class.java).fetchCurrentlyPlayingTrack())
-    }
-
-    fun getAlbumInfo(id: String): Flow<Response<JsonObject>> = flow {
-        val album = retrofit.create(ApiService::class.java).getAlbum(id)
-        emit(album)
-    }
 }

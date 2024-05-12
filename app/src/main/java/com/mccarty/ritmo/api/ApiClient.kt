@@ -24,17 +24,16 @@ class ApiClient {
         lateinit var context: Context
         var token = ""
         override fun intercept(chain: Interceptor.Chain): Response {
-
-            //if (hasNetworkConnection(context)) {
+            if (hasNetworkConnection(context)) {
                 val request = chain.request()
                     .newBuilder()
                     .addHeader(CONTENT_TYPE_SPOTIFY, APPLICATION_JSON_SPOTIFY)
                     .addHeader(AUTHORIZATION_SPOTIFY, "Bearer $token")
                     .build()
                 return chain.proceed(request)
-          /*  } else {
+            } else {
                 throw NoNetworkException()
-            }*/
+            }
         }
     }
 
