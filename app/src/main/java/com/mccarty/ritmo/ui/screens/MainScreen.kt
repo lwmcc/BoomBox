@@ -70,8 +70,9 @@ fun MainScreen(
 
             is Success<*> -> {
                 item {
-                    MediaList((recentlyPlayedMusic as Success<*>).data.items) {
-                        navController.navigate("${MainActivity.SONG_DETAILS_KEY}${it.track.id}")
+                    MediaList((recentlyPlayedMusic as Success<*>).data.items) { item, index ->
+                        //navController.navigate("${MainActivity.SONG_DETAILS_KEY}${item.track.id}")
+                        navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
                     }
                 }
             }

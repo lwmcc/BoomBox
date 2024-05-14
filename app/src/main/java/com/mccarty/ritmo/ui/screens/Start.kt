@@ -5,6 +5,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.mccarty.ritmo.MainActivity.Companion.INDEX_KEY
 import com.mccarty.ritmo.MainActivity.Companion.MAIN_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.SONG_DETAILS_KEY
@@ -21,11 +22,11 @@ fun StartScreen() {
             MainScreen(model = mainViewModel, navController = navController)
         }
         composable(
-            "$SONG_DETAILS_KEY{$TRACK_ID_KEY}",
+            "$SONG_DETAILS_KEY{$INDEX_KEY}",
         ) { backStackEntry ->
             SongDetailsScreen(
                 model = mainViewModel,
-                trackId = backStackEntry.arguments?.getString(TRACK_ID_KEY),
+                trackId = backStackEntry.arguments?.getString(INDEX_KEY),
             )
         }
         composable(PLAYLIST_SCREEN_KEY) {

@@ -21,7 +21,7 @@ import com.mccarty.ritmo.model.payload.Item
 @androidx.compose.runtime.Composable
 fun MediaList(
     list: List<Item>,
-    onTrackClick: (Item) -> Unit,
+    onTrackClick: (Item, Int) -> Unit,
 ) {
 
     if (list.isNotEmpty()) {
@@ -37,19 +37,19 @@ fun MediaList(
             )
     }
 
-    list.forEach {
+    list.forEachIndexed { index, item ->
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = {
-                    onTrackClick(it)
+                    onTrackClick(item, index)
                 })
                 .padding(5.dp),
             shape = MaterialTheme.shapes.small,
         ) {
             Column() {
                 Text(
-                    text = "${it.track?.name}",
+                    text = item.track.name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     modifier = Modifier
@@ -57,15 +57,15 @@ fun MediaList(
                         .fillMaxWidth(),
                 )
                 Text(
-                    text = "${it.track?.album?.name}",
+                    text = item.track.album.name,
                     fontSize = 14.sp,
                     modifier = Modifier
                         .paddingFromBaseline(top = 25.dp)
                         .fillMaxWidth()
                 )
-                if (it.track?.artists?.isNotEmpty() == true) {
+                if (item.track.artists.isNotEmpty()) {
                     Text(
-                        text = "${it.track.artists.get(0).name}",
+                        text = item.track.artists[0].name,
                         fontSize = 12.sp,
                         modifier = Modifier
                             .paddingFromBaseline(top = 25.dp)

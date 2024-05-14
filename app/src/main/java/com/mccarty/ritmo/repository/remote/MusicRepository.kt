@@ -15,12 +15,6 @@ import javax.inject.Inject
 
 open class MusicRepository @Inject constructor(private val retrofit: Retrofit): Repository {
 
-    val recentlyPlayed: Flow<Response<JsonObject>> = flow {
-        val recentlyPlayed = retrofit.create(ApiService::class.java)
-            .getRecentlyPlayedTracks() // TODO: don't create this twice
-        emit(recentlyPlayed)
-    }
-
     override suspend fun fetchRecentlyPlayedItem(): Flow<NetworkRequest<RecentlyPlayedItem>>  = flow {
         emit(retrofit.create(ApiService::class.java).fetchRecentlyPlayedItem())
     }

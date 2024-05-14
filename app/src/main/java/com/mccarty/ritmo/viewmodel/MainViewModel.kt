@@ -47,6 +47,7 @@ class MainViewModel @Inject constructor(
         data object  Error: CurrentlyPayingTrackState()
     }
 
+
     private val _albumId = MutableStateFlow("null")
     val albumId: StateFlow<String> = _albumId
 
@@ -97,20 +98,18 @@ class MainViewModel @Inject constructor(
 
     fun fetchLastPlayedSong() {
         _lastPlayedSong.value = LastPlayedSongState.Pending(true)
-        if (_recentlyPlayed.value.isNotEmpty()) {
-            _recentlyPlayed.value[0].track?.album?.id?.let { id ->
-                viewModelScope.launch {
-                    repository.fetchAlbumInfo(id).collect {
-                        when(it) {
-                            is NetworkRequest.Error -> _lastPlayedSong.value = LastPlayedSongState.Error
-                            is NetworkRequest.Success -> {
-                                _lastPlayedSong.value = LastPlayedSongState.Success(it.data)
-                            }
+        _recentlyPlayed.value.firstOrNull()?.track?.album?.id?.let { id ->
+            viewModelScope.launch {
+                repository.fetchAlbumInfo(id).collect {
+                    when (it) {
+                        is NetworkRequest.Error -> _lastPlayedSong.value = LastPlayedSongState.Error
+                        is NetworkRequest.Success -> {
+                            _lastPlayedSong.value = LastPlayedSongState.Success(it.data)
                         }
                     }
                 }
             }
-        } else {
+        } ?: run {
             _lastPlayedSong.value = LastPlayedSongState.Pending(false)
         }
     }
