@@ -26,7 +26,7 @@ fun StartScreen() {
         ) { backStackEntry ->
             SongDetailsScreen(
                 model = mainViewModel,
-                trackId = backStackEntry.arguments?.getString(INDEX_KEY),
+                index = backStackEntry.arguments?.getString(INDEX_KEY)?.toInt() ?: 0,
             )
         }
         composable(PLAYLIST_SCREEN_KEY) {
