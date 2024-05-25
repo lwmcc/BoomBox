@@ -1,32 +1,26 @@
 package com.mccarty.ritmo.module
 
-import android.app.Application
 import android.content.Context
 import com.mccarty.networkrequest.network.NetworkRequestAdapterFactory
 import com.mccarty.ritmo.api.ApiClient
+import com.mccarty.ritmo.api.ApiService
 import com.mccarty.ritmo.module.Constants.BASE_SPOTIFY_URL
 import com.mccarty.ritmo.repository.db.AppDatabase
 import com.mccarty.ritmo.repository.local.LocalRepository
-import com.mccarty.ritmo.repository.remote.Constants.APPLICATION_JSON_SPOTIFY
-import com.mccarty.ritmo.repository.remote.Constants.AUTHORIZATION_SPOTIFY
-import com.mccarty.ritmo.repository.remote.Constants.CONTENT_TYPE_SPOTIFY
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class AppModule {
+object AppModule {
 
     @Provides
     @Singleton
@@ -47,13 +41,13 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit {
+    fun provideRetrofit(): ApiService {
         return Retrofit.Builder()
             .baseUrl(BASE_SPOTIFY_URL)
             .client(getOkHttp())
             .addConverterFactory(GsonConverterFactory.create())
             .addCallAdapterFactory(NetworkRequestAdapterFactory.create())
-            .build()
+            .build().create(ApiService::class.java)
     }
 
     @Provides
