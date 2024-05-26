@@ -1,10 +1,5 @@
 package com.mccarty.ritmo.utils
 
-import android.content.res.AssetManager
-import android.content.res.Resources
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.drawable.Drawable
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.mccarty.ritmo.model.*

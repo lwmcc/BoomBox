@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -44,7 +45,7 @@ fun SongDetailsScreen(
                 val tracks = ((recentlyPlayedMusic as
                         MainViewModel.RecentlyPlayedMusicState.Success<*>).data.items)//.distinctBy { it.track.id }
                 val pagerState = rememberPagerState(pageCount = { tracks.size })
-                MediaDetails(pagerState, tracks, index)
+                MediaDetails(pagerState, tracks, index, model)
             }
 
             else -> {
@@ -56,7 +57,12 @@ fun SongDetailsScreen(
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
 @Composable
-fun MediaDetails(pagerState: PagerState, items: List<Item>, index: Int) {
+fun MediaDetails(
+    pagerState: PagerState,
+    items: List<Item>,
+    index: Int,
+    model: MainViewModel,
+    ) {
     VerticalPager(state = pagerState) { page ->
         val image = items[page].track.album.images[0].url
         if (image.isNotEmpty()) {
@@ -75,6 +81,15 @@ fun MediaDetails(pagerState: PagerState, items: List<Item>, index: Int) {
         Text("${items[page].track.explicit}")
         LaunchedEffect(key1 = 1) {
             pagerState.scrollToPage(index)
+/*            snapshotFlow { pagerState.currentPage }.collect { page ->
+                model.setArtistName(items[page].track.artists.firstOrNull()?.name)
+            }*/
+        }
+
+        LaunchedEffect(key1 = 2) {
+            snapshotFlow { pagerState.currentPage }.collect { page ->
+                model.setArtistName(items[page].track.artists.firstOrNull()?.name)
+            }
         }
     }
 }

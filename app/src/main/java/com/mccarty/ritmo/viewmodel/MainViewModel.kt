@@ -13,9 +13,7 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
-    private val repository: Repository,
-) : ViewModel() {
+class MainViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
 
     sealed class RecentlyPlayedMusicState {
         data object Pending: RecentlyPlayedMusicState()
@@ -69,6 +67,9 @@ class MainViewModel @Inject constructor(
     private var _musicHeader = MutableStateFlow(MusicHeader())
     val musicHeader: StateFlow<MusicHeader> = _musicHeader
 
+    private var _artistName = MutableStateFlow<String?>(null)
+    val artistName: StateFlow<String?> = _artistName
+
     fun fetchPlaylist() {
         viewModelScope.launch {
             repository.fetchPlayList().collect {
@@ -82,7 +83,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun fetchCurrentlyPlaying() {
+/*    fun fetchCurrentlyPlaying() {
         viewModelScope.launch {
             repository.fetchCurrentlyPlayingTrack().collect {
                 when (it) {
@@ -94,9 +95,9 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
-    }
+    }*/
 
-    fun fetchLastPlayedSong() {
+/*    fun fetchLastPlayedSong() {
         _lastPlayedSong.value = LastPlayedSongState.Pending(true)
         _recentlyPlayed.value.firstOrNull()?.track?.album?.id?.let { id ->
             viewModelScope.launch {
@@ -112,7 +113,7 @@ class MainViewModel @Inject constructor(
         } ?: run {
             _lastPlayedSong.value = LastPlayedSongState.Pending(false)
         }
-    }
+    }*/
 
     fun fetchRecentlyPlayedMusic() {
         _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Pending
@@ -127,10 +128,16 @@ class MainViewModel @Inject constructor(
                     }
                 }
             }
-        }
+        }   
     }
 
     fun setMusicHeader(header: MusicHeader) {
         _musicHeader.value = header
+    }
+
+    fun setArtistName(name: String?) {
+        if (name != null) {
+            _artistName.value = name
+        }
     }
 }

@@ -8,9 +8,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.MusicHeader
@@ -28,14 +34,31 @@ import java.io.IOException
 class MainActivity : ComponentActivity() {
     private val model: MainViewModel by viewModels()
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                StartScreen()
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        colors = topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            titleContentColor = MaterialTheme.colorScheme.primary,
+                        ),
+                        title = {
+                            val artist = model.artistName.collectAsStateWithLifecycle().value.toString()
+                            Text(artist)
+                        }
+                    )
+                }) { padding ->
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Column(modifier = Modifier.padding(top = padding.calculateTopPadding())) {
+                        StartScreen()
+                    }
+                }
             }
         }
 
@@ -71,15 +94,19 @@ class MainActivity : ComponentActivity() {
     private fun connect() {
         spotifyAppRemote?.let {
             it.playerApi.subscribeToPlayerState().setEventCallback {
+
+                val artistName = it.track.artist.name ?: null
+
                 model.setMusicHeader(MusicHeader().apply {
                     this.imageUrl = StringBuilder().apply {
                         append(IMAGE_URL)
                         append(it.track.imageUri.toString().drop(22).dropLast(2))
                     }.toString()
-                    this.artistName = it.track.artist.name ?: ""
+                    this.artistName = artistName ?: "" // TODO: set strings null
                     this.albumName = it.track.album.name ?: ""
                     this.songName = it.track.name ?: ""
                 })
+                model.setArtistName(artistName)
             }
         }
     }
@@ -118,9 +145,9 @@ class MainActivity : ComponentActivity() {
                         this.context = this@MainActivity
                         this.token = response.accessToken
                     }
-                    model.fetchCurrentlyPlaying()
+                    //model.fetchCurrentlyPlaying()
                     model.fetchRecentlyPlayedMusic()
-                    model.fetchLastPlayedSong()
+                    //model.fetchLastPlayedSong()
                     model.fetchPlaylist()
                 } catch (ioe: IOException) {
                     // TODO: show some error
