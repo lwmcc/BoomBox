@@ -70,6 +70,12 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     private var _artistName = MutableStateFlow<String?>(null)
     val artistName: StateFlow<String?> = _artistName
 
+    private var _playerIsPaused = MutableStateFlow<Boolean>(true)
+    val playerIsPaused: StateFlow<Boolean> = _playerIsPaused
+
+    private var _trackUri = MutableStateFlow<String?>(null)
+    val trackUri: StateFlow<String?> = _trackUri
+
     fun fetchPlaylist() {
         viewModelScope.launch {
             repository.fetchPlayList().collect {
@@ -138,6 +144,16 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     fun setArtistName(name: String?) {
         if (name != null) {
             _artistName.value = name
+        }
+    }
+
+    fun setCurrentlyPlayingState(isPaused: Boolean) {
+        _playerIsPaused.value = isPaused
+    }
+
+    fun setTrackUri(trackUri: String?) {
+        if (_trackUri.value != trackUri && _trackUri.value  != null) {
+            _trackUri.value = trackUri
         }
     }
 }

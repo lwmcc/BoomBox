@@ -2,10 +2,13 @@ package com.mccarty.ritmo.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
@@ -14,10 +17,13 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.model.payload.Item
 
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @androidx.compose.runtime.Composable
 fun MediaList(
     list: List<Item>,
@@ -45,32 +51,43 @@ fun MediaList(
                     onTrackClick(item, index)
                 })
                 .padding(5.dp),
-            shape = MaterialTheme.shapes.small,
+            shape = MaterialTheme.shapes.extraSmall,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
         ) {
-            Column() {
-                Text(
-                    text = item.track.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 25.dp)
-                        .fillMaxWidth(),
+            Row {
+                val imageUrl = item.track.album.images.firstOrNull()?.url
+                GlideImage(
+                    model = imageUrl,
+                    contentDescription = "", // TODO: add description
+                    modifier = Modifier.size(100.dp)
                 )
-                Text(
-                    text = item.track.album.name,
-                    fontSize = 14.sp,
-                    modifier = Modifier
-                        .paddingFromBaseline(top = 25.dp)
-                        .fillMaxWidth()
-                )
-                if (item.track.artists.isNotEmpty()) {
+
+                Column(modifier = Modifier.padding(start = 20.dp)) {
                     Text(
-                        text = item.track.artists[0].name,
-                        fontSize = 12.sp,
+                        text = item.track.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .paddingFromBaseline(top = 25.dp)
+                            .fillMaxWidth(),
+                    )
+                    Text(
+                        text = item.track.album.name,
+                        style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                             .paddingFromBaseline(top = 25.dp)
                             .fillMaxWidth()
                     )
+                    if (item.track.artists.isNotEmpty()) {
+                        Text(
+                            text = item.track.artists[0].name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .paddingFromBaseline(top = 25.dp)
+                                .fillMaxWidth()
+                        )
+                    }
                 }
             }
         }

@@ -2,11 +2,15 @@ package com.mccarty.ritmo.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,15 +18,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage
-import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.payload.Item
+import com.mccarty.ritmo.ui.MainImageHeader
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
 @Composable
@@ -66,19 +67,34 @@ fun MediaDetails(
     VerticalPager(state = pagerState) { page ->
         val image = items[page].track.album.images[0].url
         if (image.isNotEmpty()) {
-            GlideImage(
-                model = image,
-                contentDescription = "",
-                modifier = Modifier.size(300.dp),
+            MainImageHeader(
+                image,
+                400.dp,
+                50.dp,
+                50.dp,
+                Modifier,
             )
         }
 
-        Text("${items[page].track.name}")
-        Text("${items[page].track.album.name}")
-        items[page].track.artists.forEach { artist ->
-            Text("${artist.name}")
+        Spacer(modifier = Modifier.height(200.dp) )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "${items[page].track.name}",
+                style = MaterialTheme.typography.headlineMedium,
+            )
+            Text(
+                text = "${items[page].track.album.name}",
+                style = MaterialTheme.typography.titleLarge
+            )
+            items[page].track.artists.forEach { artist ->
+                Text(
+                    text = "${artist.name}",
+                    style = MaterialTheme.typography.titleSmall,
+                )
+            }
+            Text("${items[page].track.explicit}")
         }
-        Text("${items[page].track.explicit}")
+
         LaunchedEffect(key1 = 1) {
             pagerState.scrollToPage(index)
 /*            snapshotFlow { pagerState.currentPage }.collect { page ->

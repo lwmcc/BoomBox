@@ -16,7 +16,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.MusicHeader
@@ -28,28 +31,21 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.io.IOException
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val model: MainViewModel by viewModels()
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    private var spotifyAppRemote: SpotifyAppRemote? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             Scaffold(
                 topBar = {
-                    TopAppBar(
-                        colors = topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            titleContentColor = MaterialTheme.colorScheme.primary,
-                        ),
-                        title = {
-                            val artist = model.artistName.collectAsStateWithLifecycle().value.toString()
-                            Text(artist)
-                        }
-                    )
                 }) { padding ->
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -65,6 +61,16 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) {
             val request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN)
             AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.trackUri.collect {
+                    it?.let {
+                        model.fetchRecentlyPlayedMusic()
+                    }
+                }
+            }
         }
     }
 
@@ -93,20 +99,21 @@ class MainActivity : ComponentActivity() {
 
     private fun connect() {
         spotifyAppRemote?.let {
-            it.playerApi.subscribeToPlayerState().setEventCallback {
-
-                val artistName = it.track.artist.name ?: null
+            it.playerApi.subscribeToPlayerState().setEventCallback { playState ->
+                val artistName = playState.track.artist.name ?: null
 
                 model.setMusicHeader(MusicHeader().apply {
                     this.imageUrl = StringBuilder().apply {
                         append(IMAGE_URL)
-                        append(it.track.imageUri.toString().drop(22).dropLast(2))
+                        append(playState.track.imageUri.toString().drop(22).dropLast(2))
                     }.toString()
                     this.artistName = artistName ?: "" // TODO: set strings null
-                    this.albumName = it.track.album.name ?: ""
-                    this.songName = it.track.name ?: ""
+                    this.albumName = playState.track.album.name ?: ""
+                    this.songName = playState.track.name ?: ""
                 })
                 model.setArtistName(artistName)
+                model.setCurrentlyPlayingState(playState.isPaused)
+                model.setTrackUri(playState.track.uri)
             }
         }
     }
@@ -145,9 +152,9 @@ class MainActivity : ComponentActivity() {
                         this.context = this@MainActivity
                         this.token = response.accessToken
                     }
-                    //model.fetchCurrentlyPlaying()
-                    model.fetchRecentlyPlayedMusic()
-                    //model.fetchLastPlayedSong()
+                    //model.fetchCurrentlyPlaying() might not need this
+                    model.fetchRecentlyPlayedMusic() // TODO: called above
+                    //model.fetchLastPlayedSong() will use
                     model.fetchPlaylist()
                 } catch (ioe: IOException) {
                     // TODO: show some error
@@ -175,6 +182,5 @@ class MainActivity : ComponentActivity() {
         private  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
         private val IMAGE_URL = "https://i.scdn.co/image/"
         private var accessCode = ""
-        private var spotifyAppRemote: SpotifyAppRemote? = null
     }
 }

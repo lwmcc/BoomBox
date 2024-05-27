@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,10 +50,7 @@ fun MainScreen(
     val playList by model.playlist.collectAsStateWithLifecycle()
     val musicHeader by model.musicHeader.collectAsStateWithLifecycle()
 
-    LazyColumn(
-        modifier = Modifier.padding(horizontal = 25.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    LazyColumn {
         item {
             MainHeader(
                 imageUrl = musicHeader.imageUrl.toString(),
@@ -103,6 +101,7 @@ fun MainScreen(
                         )
                     }
                 }
+                // TODO: make reusable
                 for (item in playlist) {
                     item {
                         Card(
@@ -112,35 +111,45 @@ fun MainScreen(
                                 .clickable(onClick = {
                                     navController.navigate("playlist_screen")
                                 }),
-                            shape = MaterialTheme.shapes.small,
+                            shape = MaterialTheme.shapes.extraSmall,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            ),
                         ) {
-                            Column() {
-                                Text(
-                                    text = item.name,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
+                            val imageUrl = item.images.firstOrNull()?.url
+                            Row {
+                                GlideImage(
+                                    model = imageUrl,
+                                    contentDescription = "", // TODO: add description
                                     modifier = Modifier
-                                        .paddingFromBaseline(top = 25.dp)
-                                        .fillMaxWidth(),
+                                        .size(100.dp),
                                 )
-                                if (item.description.isNotEmpty()) {
+
+                                Column(modifier = Modifier.padding(start = 20.dp)) {
                                     Text(
-                                        text = item.description,
-                                        fontWeight = FontWeight.Normal,
-                                        fontSize = 14.sp,
+                                        text = item.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier
+                                            .paddingFromBaseline(top = 25.dp)
+                                            .fillMaxWidth(),
+                                    )
+                                    if (item.description.isNotEmpty()) {
+                                        Text(
+                                            text = item.description,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier
+                                                .paddingFromBaseline(top = 25.dp)
+                                                .fillMaxWidth(),
+                                        )
+                                    }
+                                    Text(
+                                        text = "${stringResource(R.string.total_tracks)} ${item.tracks.total}",
+                                        style = MaterialTheme.typography.bodyMedium,
                                         modifier = Modifier
                                             .paddingFromBaseline(top = 25.dp)
                                             .fillMaxWidth(),
                                     )
                                 }
-                                Text(
-                                    text = "${stringResource(R.string.total_tracks)} ${item.tracks.total}",
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 14.sp,
-                                    modifier = Modifier
-                                        .paddingFromBaseline(top = 25.dp)
-                                        .fillMaxWidth(),
-                                )
                             }
                         }
                     }

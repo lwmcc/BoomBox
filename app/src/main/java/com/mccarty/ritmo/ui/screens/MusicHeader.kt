@@ -2,10 +2,13 @@ package com.mccarty.ritmo.ui.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -13,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.mccarty.ritmo.ui.MainImageHeader
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -23,39 +27,34 @@ fun MainHeader(
     songName: String,
     modifier: Modifier = Modifier,
 ) {
-    Column {
-        GlideImage(
-            model = imageUrl,
-            contentDescription = "",
-            modifier = Modifier.size(300.dp),
-        )
-
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        MainImageHeader(
+            imageUrl,
+            400.dp,
+            50.dp,
+            50.dp,
+            modifier,
+            )
         Text(
             text = artistName,
-            fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            modifier = Modifier
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = modifier
                 .paddingFromBaseline(top = 25.dp)
                 .fillMaxWidth(),
         )
 
         Text(
             text = albumName,
-            fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.Normal,
-            fontSize = 14.sp,
-            modifier = Modifier
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = modifier
                 .paddingFromBaseline(top = 25.dp)
                 .fillMaxWidth(),
         )
     }
     Text(
         text = songName,
-        fontStyle = FontStyle.Normal,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        modifier = Modifier
+        style = MaterialTheme.typography.titleMedium,
+        modifier = modifier
             .paddingFromBaseline(top = 25.dp)
             .fillMaxWidth(),
     )
