@@ -11,5 +11,6 @@ interface Repository {
     suspend fun fetchRecentlyPlayedItem(): Flow<NetworkRequest<RecentlyPlayedItem>>
     suspend fun fetchAlbumInfo(id: String): Flow<NetworkRequest<AlbumXX>>
     suspend fun fetchCurrentlyPlayingTrack(): Flow<NetworkRequest<CurrentlyPlayingTrack>>
-    suspend fun fetchPlayList(): Flow<NetworkRequest<PlaylistData.PlaylistItem>>
+    suspend fun fetchPlayLists(): Flow<NetworkRequest<PlaylistData.PlaylistItem>>
+    suspend fun fetchPlayList(playlistId: String): Flow<NetworkRequest<PlaylistData.PlaylistItem>>
 }

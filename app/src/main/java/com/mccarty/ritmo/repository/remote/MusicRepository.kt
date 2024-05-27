@@ -8,7 +8,6 @@ import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import retrofit2.Retrofit
 import javax.inject.Inject
 
 open class MusicRepository @Inject constructor(private val apiService: ApiService): Repository {
@@ -25,7 +24,11 @@ open class MusicRepository @Inject constructor(private val apiService: ApiServic
         emit(apiService.fetchCurrentlyPlayingTrack())
     }
 
-    override suspend fun fetchPlayList(): Flow<NetworkRequest<PlaylistData.PlaylistItem>> = flow {
-        emit(apiService.fetchPlayList())
+    override suspend fun fetchPlayLists(): Flow<NetworkRequest<PlaylistData.PlaylistItem>> = flow {
+        emit(apiService.fetchPlayLists())
+    }
+
+    override suspend fun fetchPlayList(playlistId: String): Flow<NetworkRequest<PlaylistData.PlaylistItem>> = flow {
+        emit(apiService.fetchPlayList(playlistId))
     }
 }

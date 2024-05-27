@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -23,6 +24,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.MusicHeader
+import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.ui.screens.StartScreen
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
@@ -45,7 +47,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Scaffold(
-                topBar = {
+                bottomBar = {
+                    BottomAppBar(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ) {
+                        PlayerControls(onClick = model::playerAction)
+                    }
                 }) { padding ->
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -173,8 +181,9 @@ class MainActivity : ComponentActivity() {
     companion object {
         val TRACK_ID_KEY = "trackId"
         val INDEX_KEY = "index"
+        val PLAYLIST_ID_KEY = "playlist_id"
         val MAIN_SCREEN_KEY = "main_screen"
-        val PLAYLIST_SCREEN_KEY = "playlist_screen"
+        val PLAYLIST_SCREEN_KEY = "playlist_screen/"
         val SONG_DETAILS_KEY = "song_details/"
         val TAG = MainActivity::class.qualifiedName
         private val AUTH_TOKEN_REQUEST_CODE = 0x10

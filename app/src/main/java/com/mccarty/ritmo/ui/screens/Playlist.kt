@@ -1,22 +1,42 @@
 package com.mccarty.ritmo.ui.screens
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.mccarty.ritmo.model.Playlist
-import com.mccarty.ritmo.model.payload.Item
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mccarty.ritmo.MainActivity
+import com.mccarty.ritmo.MainViewModel
 
 @Composable
-fun PlaylistScreen() {
+fun PlaylistScreen(
+    model: MainViewModel,
+    playlistId: String,
+) {
+    model.fetchPlaylist(playlistId)
+    val playlist by model.playlist.collectAsStateWithLifecycle()
+
+    when(playlist) {
+        is MainViewModel.PlaylistState.Pending-> {
+            println("PlaylistScreen ***** PENDING")
+        }
+
+        is MainViewModel.PlaylistState.Success -> {
+            val playlist = (playlist as MainViewModel.PlaylistState.Success).playList
+
+
+            playlist.forEach {
+                println("***** 4${it.toString()}")
+            }
+
+/*            MediaPlayList(playlist) { item, index ->
+                println("***** CLICK ${item.toString()}")
+            }*/
+        }
+
+        else -> {
+            println("PlaylistScreen ***** ERROR")
+        }
+    }
+
 
 }

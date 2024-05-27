@@ -9,7 +9,10 @@ import retrofit2.http.Path
 
 interface ApiService {
     @GET("/v1/me/playlists")
-    suspend fun fetchPlayList(): NetworkRequest<PlaylistData.PlaylistItem>
+    suspend fun fetchPlayLists(): NetworkRequest<PlaylistData.PlaylistItem>
+
+    @GET("/v1/playlists/{playlist_id}/tracks")
+    suspend fun fetchPlayList(@Path("playlist_id") playlistIdd: String): NetworkRequest<PlaylistData.PlaylistItem>
 
     @GET("/v1/me/player/recently-played")
     suspend fun fetchRecentlyPlayedItem(): NetworkRequest<RecentlyPlayedItem>

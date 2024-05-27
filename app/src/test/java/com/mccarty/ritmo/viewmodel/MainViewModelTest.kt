@@ -1,5 +1,6 @@
 package com.mccarty.ritmo.viewmodel
 
+import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.networkrequest.network.NetworkRequest.Success as NetworkRequestSuccess
 import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.AlbumXX
@@ -10,7 +11,7 @@ import com.mccarty.ritmo.model.Tracks
 import com.mccarty.ritmo.model.payload.Album
 import com.mccarty.ritmo.model.payload.Context
 import com.mccarty.ritmo.MainViewModel.RecentlyPlayedMusicState.Success as RecentlyPlayedMusicStateSuccess
-import com.mccarty.ritmo.MainViewModel.PlaylistState.Success as PlaylistStateSuccess
+import com.mccarty.ritmo.MainViewModel.AllPlaylistsState.Success as PlaylistStateSuccess
 import com.mccarty.ritmo.model.payload.Cursors
 import com.mccarty.ritmo.model.payload.ExternalIds as PayloadExternalIds
 import com.mccarty.ritmo.model.payload.ExternalUrls
@@ -54,7 +55,7 @@ class MainViewModelTest {
         viewModel.fetchPlaylist()
 
         // Assert
-        assertThat(viewModel.playlist.value, instanceOf(PlaylistStateSuccess::class.java))
+        assertThat(viewModel.allPlaylists.value, instanceOf(PlaylistStateSuccess::class.java))
     }
 
     class RepositoryFake: Repository {
@@ -179,7 +180,7 @@ class MainViewModelTest {
             return flow { }
         }
 
-        override suspend fun fetchPlayList(): Flow<com.mccarty.networkrequest.network.NetworkRequest<PlaylistData.PlaylistItem>> {
+        override suspend fun fetchPlayLists(): Flow<com.mccarty.networkrequest.network.NetworkRequest<PlaylistData.PlaylistItem>> {
             return flow {
                 emit(
                     NetworkRequestSuccess(
@@ -195,6 +196,10 @@ class MainViewModelTest {
                     )
                 )
             }
+        }
+
+        override suspend fun fetchPlayList(playlistId: String): Flow<NetworkRequest<PlaylistData.PlaylistItem>> {
+            TODO("Not yet implemented")
         }
     }
 }

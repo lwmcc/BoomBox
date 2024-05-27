@@ -7,6 +7,7 @@ import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import com.mccarty.ritmo.repository.remote.Repository
+import com.mccarty.ritmo.viewmodel.PlayerAction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -27,9 +28,15 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         data object  Error: Recently()
     }
 
+    sealed class AllPlaylistsState {
+        data object Pending: AllPlaylistsState()
+        data class Success(val playLists: List<PlaylistData.Item>): AllPlaylistsState()
+        data object  Error: AllPlaylistsState()
+    }
+
     sealed class PlaylistState {
         data object Pending: PlaylistState()
-        data class Success(val playList:  List<PlaylistData.Item>): PlaylistState()
+        data class Success(val playList: List<PlaylistData.Item>): PlaylistState()
         data object  Error: PlaylistState()
     }
 
@@ -45,7 +52,6 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         data object  Error: CurrentlyPayingTrackState()
     }
 
-
     private val _albumId = MutableStateFlow("null")
     val albumId: StateFlow<String> = _albumId
 
@@ -57,6 +63,9 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
 
     private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Pending)
     val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
+
+    private var _allPlaylists = MutableStateFlow<AllPlaylistsState>(AllPlaylistsState.Pending)
+    val allPlaylists: StateFlow<AllPlaylistsState> = _allPlaylists
 
     private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
     val playlist: StateFlow<PlaylistState> = _playlist
@@ -76,12 +85,33 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     private var _trackUri = MutableStateFlow<String?>(null)
     val trackUri: StateFlow<String?> = _trackUri
 
+    private var _playListItems = MutableStateFlow<Map<String,String>>(emptyMap<String, String>())
+    val playListItems: StateFlow<Map<String,String>> = _playListItems
+
     fun fetchPlaylist() {
         viewModelScope.launch {
-            repository.fetchPlayList().collect {
+            repository.fetchPlayLists().collect {
                 when(it){
-                    is NetworkRequest.Error -> PlaylistState.Error
+                    is NetworkRequest.Error -> AllPlaylistsState.Error
                     is NetworkRequest.Success -> {
+                        _allPlaylists.value = AllPlaylistsState.Success(it.data.items)
+                    }
+                }
+            }
+        }
+    }
+
+    fun fetchPlaylist(playlistId: String) {
+        viewModelScope.launch {
+            repository.fetchPlayList(playlistId).collect {
+                // TODO: handle pending
+                when(it) {
+                    is NetworkRequest.Error -> {
+                        println("***** ${it.toString()}")
+                        // TODO: handle error
+                    }
+                    is NetworkRequest.Success -> {
+                        println("MainViewModel ***** ${it.toString()}")
                         _playlist.value = PlaylistState.Success(it.data.items)
                     }
                 }
@@ -154,6 +184,16 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     fun setTrackUri(trackUri: String?) {
         if (_trackUri.value != trackUri && _trackUri.value  != null) {
             _trackUri.value = trackUri
+        }
+    }
+
+    fun playerAction(action: PlayerAction) {
+        when(action) {
+            PlayerAction.Back -> println("MainViewModel ***** BACK")
+            PlayerAction.Pause -> println("MainViewModel ***** PAUSE")
+            PlayerAction.Play -> println("MainViewModel ***** PLAY")
+            is PlayerAction.Seek -> println("MainViewModel ***** SEEK")
+            PlayerAction.Skip -> println("MainViewModel ***** SKIP")
         }
     }
 }

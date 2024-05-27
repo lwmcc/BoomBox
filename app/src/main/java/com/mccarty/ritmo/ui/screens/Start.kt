@@ -7,9 +7,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.mccarty.ritmo.MainActivity.Companion.INDEX_KEY
 import com.mccarty.ritmo.MainActivity.Companion.MAIN_SCREEN_KEY
+import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_ID_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.SONG_DETAILS_KEY
-import com.mccarty.ritmo.MainActivity.Companion.TRACK_ID_KEY
 import com.mccarty.ritmo.MainViewModel
 
 @Composable
@@ -29,8 +29,13 @@ fun StartScreen() {
                 index = backStackEntry.arguments?.getString(INDEX_KEY)?.toInt() ?: 0,
             )
         }
-        composable(PLAYLIST_SCREEN_KEY) {
-            PlaylistScreen()
+        composable(
+            "$PLAYLIST_SCREEN_KEY{$PLAYLIST_ID_KEY}",
+            ) {  backStackEntry ->
+            PlaylistScreen(
+                model = mainViewModel,
+                playlistId = backStackEntry.arguments?.getString(PLAYLIST_ID_KEY) ?: "",
+                ) // TODO: null
         }
     }
 }
