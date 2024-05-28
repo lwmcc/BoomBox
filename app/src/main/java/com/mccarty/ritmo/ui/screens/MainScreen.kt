@@ -53,8 +53,10 @@ fun MainScreen(
             }
 
             is Success<*> -> {
+                val tracks = (recentlyPlayedMusic as Success<*>).data.items
                 item {
-                    MediaList((recentlyPlayedMusic as Success<*>).data.items) { item, index ->
+                    MediaList(tracks) { index ->
+                        // TODO: make collection of TrackDetails and use for details
                         navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
                     }
                 }

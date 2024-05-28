@@ -28,11 +28,11 @@ import com.mccarty.ritmo.model.payload.PlaylistItem
 @OptIn(ExperimentalGlideComposeApi::class)
 @androidx.compose.runtime.Composable
 fun MediaList(
-    list: List<Item>,
-    onTrackClick: (Item, Int) -> Unit,
+    tracks: List<Item>,
+    onTrackClick: (Int) -> Unit,
 ) {
 
-    if (list.isNotEmpty()) {
+    if (tracks.isNotEmpty()) {
             Text(
                 text = stringResource(R.string.recently_played),
                 color = MaterialTheme.colorScheme.primary,
@@ -45,12 +45,12 @@ fun MediaList(
             )
     }
 
-    list.forEachIndexed { index, item ->
+    tracks.forEachIndexed { index, item ->
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = {
-                    onTrackClick(item, index)
+                    onTrackClick(index)
                 })
                 .padding(5.dp),
             shape = MaterialTheme.shapes.extraSmall,
