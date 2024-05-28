@@ -31,11 +31,8 @@ fun StartScreen() {
         }
         composable(
             "$PLAYLIST_SCREEN_KEY{$PLAYLIST_ID_KEY}",
-            ) {  backStackEntry ->
-            PlaylistScreen(
-                model = mainViewModel,
-                playlistId = backStackEntry.arguments?.getString(PLAYLIST_ID_KEY) ?: "",
-                ) // TODO: null
+            ) {
+            PlaylistScreen(model = mainViewModel, navController = navController)
         }
     }
 }

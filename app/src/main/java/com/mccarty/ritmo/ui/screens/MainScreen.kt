@@ -95,6 +95,7 @@ fun MainScreen(
                                 .fillMaxWidth()
                                 .padding(5.dp)
                                 .clickable(onClick = {
+                                    model.fetchPlaylist(playlist[index].id)
                                     navController.navigate("${MainActivity.PLAYLIST_SCREEN_KEY}${playlist[index].id}")
                                 }),
                             shape = MaterialTheme.shapes.extraSmall,

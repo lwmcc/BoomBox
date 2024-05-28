@@ -2,6 +2,7 @@ package com.mccarty.ritmo.api
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
+import com.mccarty.ritmo.model.payload.Playlist
 import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import retrofit2.http.GET
@@ -12,7 +13,7 @@ interface ApiService {
     suspend fun fetchPlayLists(): NetworkRequest<PlaylistData.PlaylistItem>
 
     @GET("/v1/playlists/{playlist_id}/tracks")
-    suspend fun fetchPlayList(@Path("playlist_id") playlistIdd: String): NetworkRequest<PlaylistData.PlaylistItem>
+    suspend fun fetchPlayList(@Path("playlist_id") playlistIdd: String): NetworkRequest<Playlist>
 
     @GET("/v1/me/player/recently-played")
     suspend fun fetchRecentlyPlayedItem(): NetworkRequest<RecentlyPlayedItem>

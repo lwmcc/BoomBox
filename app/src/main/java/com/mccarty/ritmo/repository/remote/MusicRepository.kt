@@ -4,6 +4,7 @@ import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.api.ApiService
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
+import com.mccarty.ritmo.model.payload.Playlist
 import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +29,8 @@ open class MusicRepository @Inject constructor(private val apiService: ApiServic
         emit(apiService.fetchPlayLists())
     }
 
-    override suspend fun fetchPlayList(playlistId: String): Flow<NetworkRequest<PlaylistData.PlaylistItem>> = flow {
+    // PlaylistData
+    override suspend fun fetchPlayList(playlistId: String): Flow<NetworkRequest<Playlist>> = flow {
         emit(apiService.fetchPlayList(playlistId))
     }
 }

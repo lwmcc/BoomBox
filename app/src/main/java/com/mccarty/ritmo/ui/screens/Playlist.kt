@@ -1,18 +1,16 @@
 package com.mccarty.ritmo.ui.screens
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.MainViewModel
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun PlaylistScreen(
-    model: MainViewModel,
-    playlistId: String,
-) {
-    model.fetchPlaylist(playlistId)
+fun PlaylistScreen(model: MainViewModel, navController: NavHostController) {
     val playlist by model.playlist.collectAsStateWithLifecycle()
 
     when(playlist) {
@@ -21,20 +19,11 @@ fun PlaylistScreen(
         }
 
         is MainViewModel.PlaylistState.Success -> {
-            val playlist = (playlist as MainViewModel.PlaylistState.Success).playList
-
-
-            playlist.forEach {
-                println("***** 4${it.toString()}")
+            MediaPlayList((playlist as MainViewModel.PlaylistState.Success).data) { playListItem, index ->
+                navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
             }
-
-/*            MediaPlayList(playlist) { item, index ->
-                println("***** CLICK ${item.toString()}")
-            }*/
-        }
-
-        else -> {
-            println("PlaylistScreen ***** ERROR")
+        } else -> {
+            println("PLAYLIST ELSE")
         }
     }
 

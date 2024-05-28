@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.model.payload.PlaylistData
+import com.mccarty.ritmo.model.payload.PlaylistItem
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.viewmodel.PlayerAction
@@ -36,7 +37,8 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
 
     sealed class PlaylistState {
         data object Pending: PlaylistState()
-        data class Success(val playList: List<PlaylistData.Item>): PlaylistState()
+        //data class Success(val playList: List<PlaylistItem>): PlaylistState()
+        data class Success(val data: List<PlaylistItem>): PlaylistState()
         data object  Error: PlaylistState()
     }
 
@@ -111,7 +113,6 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
                         // TODO: handle error
                     }
                     is NetworkRequest.Success -> {
-                        println("MainViewModel ***** ${it.toString()}")
                         _playlist.value = PlaylistState.Success(it.data.items)
                     }
                 }
