@@ -75,6 +75,7 @@ fun PlayerControls(onClick: (PlayerAction) -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color.Black)
             ) {
                 Icon(
+                    // TODO: will have to change with state
                     painter = painterResource(R.drawable.back),
                     contentDescription = "Back",
                     modifier = Modifier.size(40.dp)
