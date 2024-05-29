@@ -7,4 +7,7 @@
     <string name="playlists">Playlists</string>
     <string name="recently_played">Recently Played</string>
     <string name="total_tracks">Total Tracks: </string>
+
+    // Icons
+    <string name="icon_view_more">View more</string>
 </resources>

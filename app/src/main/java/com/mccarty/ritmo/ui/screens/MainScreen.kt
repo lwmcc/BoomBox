@@ -55,10 +55,11 @@ fun MainScreen(
             is Success<*> -> {
                 val tracks = (recentlyPlayedMusic as Success<*>).data.items
                 item {
-                    MediaList(tracks) { index ->
-                        // TODO: make collection of TrackDetails and use for details
+                    MediaList(tracks, onTrackClick = { index ->
                         navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
-                    }
+                    }, onViewMoreClick = { action ->
+                        model.trackSelectAction(action)
+                    })
                 }
             }
 

@@ -8,11 +8,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +28,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.model.payload.Item
 import com.mccarty.ritmo.model.payload.PlaylistItem
+import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -30,19 +36,20 @@ import com.mccarty.ritmo.model.payload.PlaylistItem
 fun MediaList(
     tracks: List<Item>,
     onTrackClick: (Int) -> Unit,
+    onViewMoreClick: (TrackSelectAction) -> Unit,
 ) {
 
     if (tracks.isNotEmpty()) {
-            Text(
-                text = stringResource(R.string.recently_played),
-                color = MaterialTheme.colorScheme.primary,
-                fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                modifier = Modifier
-                    .paddingFromBaseline(top = 40.dp)
-                    .fillMaxWidth(),
-            )
+        Text(
+            text = stringResource(R.string.recently_played),
+            color = MaterialTheme.colorScheme.primary,
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
+            modifier = Modifier
+                .paddingFromBaseline(top = 40.dp)
+                .fillMaxWidth(),
+        )
     }
 
     tracks.forEachIndexed { index, item ->
@@ -58,7 +65,7 @@ fun MediaList(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
             ),
         ) {
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 val imageUrl = item.track.album.images.firstOrNull()?.url
                 GlideImage(
                     model = imageUrl,
@@ -66,7 +73,12 @@ fun MediaList(
                     modifier = Modifier.size(100.dp)
                 )
 
-                Column(modifier = Modifier.padding(start = 20.dp)) {
+                Column(
+                    modifier = Modifier
+                        .padding(start = 20.dp)
+                        .weight(1f),
+
+                    ) {
                     Text(
                         text = item.track.name,
                         style = MaterialTheme.typography.titleMedium,
@@ -91,6 +103,15 @@ fun MediaList(
                         )
                     }
                 }
+                Icon(
+                    Icons.Default.MoreVert,
+                    contentDescription = stringResource(
+                        id = R.string.icon_view_more,
+                    ),
+                    modifier = Modifier.clickable {
+                        onViewMoreClick(TrackSelectAction.DetailsSelect(item.track.id))
+                    }
+                )
             }
         }
     }
@@ -101,9 +122,10 @@ fun MediaList(
 fun MediaPlayList(
     list: List<PlaylistItem>,
     onTrackClick: (PlaylistItem, Int) -> Unit,
+    onViewMoreClick: (TrackSelectAction) -> Unit,
 ) {
     LazyColumn {
-        list.forEachIndexed { index, item  ->
+        list.forEachIndexed { index, item ->
             item {
                 Card(
                     modifier = Modifier
@@ -117,7 +139,7 @@ fun MediaPlayList(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     ),
                 ) {
-                    Row {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         val imageUrl = item.track.album.images.firstOrNull()?.url
                         GlideImage(
                             model = imageUrl,
@@ -125,7 +147,11 @@ fun MediaPlayList(
                             modifier = Modifier.size(100.dp)
                         )
 
-                        Column(modifier = Modifier.padding(start = 20.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .padding(start = 20.dp)
+                                .weight(1f),
+                        ) {
                             Text(
                                 text = item.track.name,
                                 style = MaterialTheme.typography.titleMedium,
@@ -150,6 +176,15 @@ fun MediaPlayList(
                                 )
                             }
                         }
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = stringResource(
+                                id = R.string.icon_view_more,
+                            ),
+                            modifier = Modifier.clickable {
+                                onViewMoreClick(TrackSelectAction.DetailsSelect(item.track.id))
+                            }
+                        )
                     }
                 }
             }

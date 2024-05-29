@@ -21,9 +21,15 @@ fun PlaylistScreen(model: MainViewModel, navController: NavHostController) {
         is MainViewModel.PlaylistState.Success -> {
             // TODO: make collection of TrackDetails and use for details
             val playListItem = (playlist as MainViewModel.PlaylistState.Success).data
-            MediaPlayList(playListItem) { playListItem, index ->
-                navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
-            }
+            MediaPlayList(
+                playListItem,
+                onTrackClick = { playListItem, index ->
+                    navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
+                },
+                onViewMoreClick = { action ->
+                    model.trackSelectAction(action)
+                },
+            )
         } else -> {
             println("PLAYLIST ELSE")
         }

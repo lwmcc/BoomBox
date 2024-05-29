@@ -198,4 +198,12 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
             PlayerAction.Skip -> println("MainViewModel ***** SKIP")
         }
     }
+
+    fun trackSelectAction(action: TrackSelectAction) {
+        when(action) {
+            is TrackSelectAction.DetailsSelect -> println("MainViewModel ***** DetailsSelect")
+            is TrackSelectAction.PlaylistTrackSelect -> println("MainViewModel ***** PlaylistTrackSelect")
+            is TrackSelectAction.RecentlyPlayedTrackSelect -> println("MainViewModel ***** RecentlyPlayedTrackSelect")
+        }
+    }
 }
