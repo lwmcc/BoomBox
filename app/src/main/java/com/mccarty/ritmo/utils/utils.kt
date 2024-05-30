@@ -10,6 +10,8 @@ import org.json.JSONException
 import retrofit2.Response
 import java.lang.NullPointerException
 import java.lang.NumberFormatException
+import com.mccarty.ritmo.model.payload.Item
+import com.mccarty.ritmo.model.payload.PlaylistItem as PItem
 
 fun processPlaylist(response: Response<JsonObject>): List<PlaylistItem> {
     return if (response.isSuccessful) {
@@ -139,4 +141,36 @@ fun List<Image>.getImageUrlFromList(index: Int): String {
 // TODO: generics??
 fun currentTimeSecondsd(time: Long): Long {
     return time / 60
+}
+
+fun List<Item>.createTrackDetailsFromItems(): List<TrackDetails> {
+    if (this.isEmpty()) {
+        return emptyList()
+    }
+    return this.map {
+        TrackDetails(
+            id = it.track.id,
+            images = it.track.album.images,
+            trackName = it.track.name,
+            albumName = it.track.album.name,
+            artists = it.track.artists,
+            explicit = it.track.explicit
+        )
+    }
+}
+
+fun List<PItem>.createTrackDetailsFromPlayListItems(): List<TrackDetails> {
+    if (this.isEmpty()) {
+        return emptyList()
+    }
+    return this.map {
+        TrackDetails(
+            id = it.track.id,
+            images = it.track.album.images,
+            trackName = it.track.name,
+            albumName = it.track.album.name,
+            artists = it.track.artists,
+            explicit = it.track.explicit,
+        )
+    }
 }

@@ -52,13 +52,14 @@ fun MainScreen(
                 println("MainScreen ***** PENDING")
             }
 
-            is Success<*> -> {
-                val tracks = (recentlyPlayedMusic as Success<*>).data.items
+            is Success -> {
+                val tracks = (recentlyPlayedMusic as Success).trackDetails
                 item {
-                    MediaList(tracks, onTrackClick = { index ->
+                    MediaList(tracks, onTrackClick = { index, tracks2 ->
+                        model.setPlayList(tracks2)
                         navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
                     }, onViewMoreClick = { action ->
-                        model.trackSelectAction(action)
+                        // TODO: add more action
                     })
                 }
             }

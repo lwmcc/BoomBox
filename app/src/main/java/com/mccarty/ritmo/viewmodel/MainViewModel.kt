@@ -5,9 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.model.*
 import com.mccarty.ritmo.model.payload.PlaylistData
-import com.mccarty.ritmo.model.payload.PlaylistItem
-import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import com.mccarty.ritmo.repository.remote.Repository
+import com.mccarty.ritmo.utils.createTrackDetailsFromItems
+import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.mccarty.ritmo.viewmodel.PlayerAction
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,9 +18,15 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
 
-    sealed class RecentlyPlayedMusicState {
+/*    sealed class RecentlyPlayedMusicState {
         data object Pending: RecentlyPlayedMusicState()
         data class Success<T: RecentlyPlayedItem>(val data: T): RecentlyPlayedMusicState()
+        data object  Error: RecentlyPlayedMusicState()
+    }*/
+
+    sealed class RecentlyPlayedMusicState {
+        data object Pending: RecentlyPlayedMusicState()
+        data class Success(val trackDetails: List<TrackDetails>): RecentlyPlayedMusicState()
         data object  Error: RecentlyPlayedMusicState()
     }
 
@@ -39,7 +45,7 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     sealed class PlaylistState {
         data object Pending: PlaylistState()
         //data class Success(val playList: List<PlaylistItem>): PlaylistState()
-        data class Success(val data: List<PlaylistItem>): PlaylistState()
+        data class Success(val trackDetails: List<TrackDetails>): PlaylistState()
         data object  Error: PlaylistState()
     }
 
@@ -64,14 +70,24 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     private var _album = MutableStateFlow(AlbumXX())
     val album: StateFlow<AlbumXX> = _album
 
+
     private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Pending)
     val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
+    //private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Pending)
+    //val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
+
+    private var _playLists = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
+    val playLists: StateFlow<PlaylistState> = _playLists
+
 
     private var _allPlaylists = MutableStateFlow<AllPlaylistsState>(AllPlaylistsState.Pending)
     val allPlaylists: StateFlow<AllPlaylistsState> = _allPlaylists
 
     private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
     val playlist: StateFlow<PlaylistState> = _playlist
+
+    private var _playlistTracks = MutableStateFlow<List<TrackDetails>>(emptyList())
+    val playlistTracks: StateFlow<List<TrackDetails>> = _playlistTracks
 
     private var _lastPlayedSong = MutableStateFlow<LastPlayedSongState>(LastPlayedSongState.Pending(true))
     val lastPlayedSong: StateFlow<LastPlayedSongState> = _lastPlayedSong
@@ -90,6 +106,9 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
 
     private var _playListItems = MutableStateFlow<Map<String,String>>(emptyMap<String, String>())
     val playListItems: StateFlow<Map<String,String>> = _playListItems
+
+    private var _trackDetails = MutableStateFlow<List<TrackDetails>>(emptyList())
+    val trackDetails: StateFlow<List<TrackDetails>> = _trackDetails
 
     fun fetchPlaylist() {
         viewModelScope.launch {
@@ -114,13 +133,14 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
                         // TODO: handle error
                     }
                     is NetworkRequest.Success -> {
-                        _playlist.value = PlaylistState.Success(it.data.items)
+                        _playLists.value = PlaylistState.Success(it.data.items.createTrackDetailsFromPlayListItems())
                     }
                 }
             }
         }
     }
 
+    // TODO: might use remote for this
 /*    fun fetchCurrentlyPlaying() {
         viewModelScope.launch {
             repository.fetchCurrentlyPlayingTrack().collect {
@@ -135,6 +155,7 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         }
     }*/
 
+    // TODO: might use remote for this
 /*    fun fetchLastPlayedSong() {
         _lastPlayedSong.value = LastPlayedSongState.Pending(true)
         _recentlyPlayed.value.firstOrNull()?.track?.album?.id?.let { id ->
@@ -160,9 +181,12 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
                 _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Error
             }.collect {
                 when (it) {
-                    is NetworkRequest.Error -> _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Error
+                    is NetworkRequest.Error -> _recentlyPlayedMusic.value =
+                        RecentlyPlayedMusicState.Error
+
                     is NetworkRequest.Success -> {
-                        _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(it.data)
+                        _recentlyPlayedMusic.value =
+                            RecentlyPlayedMusicState.Success(it.data.items.createTrackDetailsFromItems())
                     }
                 }
             }
@@ -202,8 +226,17 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     fun trackSelectAction(action: TrackSelectAction) {
         when(action) {
             is TrackSelectAction.DetailsSelect -> println("MainViewModel ***** DetailsSelect")
-            is TrackSelectAction.PlaylistTrackSelect -> println("MainViewModel ***** PlaylistTrackSelect")
-            is TrackSelectAction.RecentlyPlayedTrackSelect -> println("MainViewModel ***** RecentlyPlayedTrackSelect")
+            is TrackSelectAction.PlaylistTrackSelect -> {
+
+            }
+            is TrackSelectAction.RecentlyPlayedTrackSelect -> {
+
+
+            }
         }
+    }
+
+    fun setPlayList(tracks: List<TrackDetails>) {
+        _playlistTracks.value = tracks
     }
 }

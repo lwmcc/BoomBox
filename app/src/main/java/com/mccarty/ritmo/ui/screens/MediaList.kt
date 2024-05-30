@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.R
+import com.mccarty.ritmo.model.TrackDetails
 import com.mccarty.ritmo.model.payload.Item
 import com.mccarty.ritmo.model.payload.PlaylistItem
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
@@ -34,8 +34,8 @@ import com.mccarty.ritmo.viewmodel.TrackSelectAction
 @OptIn(ExperimentalGlideComposeApi::class)
 @androidx.compose.runtime.Composable
 fun MediaList(
-    tracks: List<Item>,
-    onTrackClick: (Int) -> Unit,
+    tracks: List<TrackDetails>,
+    onTrackClick: (Int, List<TrackDetails>) -> Unit,
     onViewMoreClick: (TrackSelectAction) -> Unit,
 ) {
 
@@ -52,86 +52,14 @@ fun MediaList(
         )
     }
 
-    tracks.forEachIndexed { index, item ->
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = {
-                    onTrackClick(index)
-                })
-                .padding(5.dp),
-            shape = MaterialTheme.shapes.extraSmall,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val imageUrl = item.track.album.images.firstOrNull()?.url
-                GlideImage(
-                    model = imageUrl,
-                    contentDescription = "", // TODO: add description
-                    modifier = Modifier.size(100.dp)
-                )
-
-                Column(
-                    modifier = Modifier
-                        .padding(start = 20.dp)
-                        .weight(1f),
-
-                    ) {
-                    Text(
-                        text = item.track.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier
-                            .paddingFromBaseline(top = 25.dp)
-                            .fillMaxWidth(),
-                    )
-                    Text(
-                        text = item.track.album.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .paddingFromBaseline(top = 25.dp)
-                            .fillMaxWidth()
-                    )
-                    if (item.track.artists.isNotEmpty()) {
-                        Text(
-                            text = item.track.artists[0].name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier
-                                .paddingFromBaseline(top = 25.dp)
-                                .fillMaxWidth()
-                        )
-                    }
-                }
-                Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = stringResource(
-                        id = R.string.icon_view_more,
-                    ),
-                    modifier = Modifier.clickable {
-                        onViewMoreClick(TrackSelectAction.DetailsSelect(item.track.id))
-                    }
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalGlideComposeApi::class)
-@androidx.compose.runtime.Composable
-fun MediaPlayList(
-    list: List<PlaylistItem>,
-    onTrackClick: (PlaylistItem, Int) -> Unit,
-    onViewMoreClick: (TrackSelectAction) -> Unit,
-) {
-    LazyColumn {
-        list.forEachIndexed { index, item ->
-            item {
+    Column {
+        //item {
+            tracks.forEachIndexed { index, track ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(onClick = {
-                            onTrackClick(item, index)
+                            onTrackClick(index, tracks)
                         })
                         .padding(5.dp),
                     shape = MaterialTheme.shapes.extraSmall,
@@ -140,7 +68,7 @@ fun MediaPlayList(
                     ),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        val imageUrl = item.track.album.images.firstOrNull()?.url
+                        val imageUrl = track.images.firstOrNull()?.url
                         GlideImage(
                             model = imageUrl,
                             contentDescription = "", // TODO: add description
@@ -151,24 +79,25 @@ fun MediaPlayList(
                             modifier = Modifier
                                 .padding(start = 20.dp)
                                 .weight(1f),
-                        ) {
+
+                            ) {
                             Text(
-                                text = item.track.name,
+                                text = track.trackName,
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier
                                     .paddingFromBaseline(top = 25.dp)
                                     .fillMaxWidth(),
                             )
                             Text(
-                                text = item.track.album.name,
+                                text = track.albumName,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
                                     .paddingFromBaseline(top = 25.dp)
                                     .fillMaxWidth()
                             )
-                            if (item.track.artists.isNotEmpty()) {
+                            if (track.artists.isNotEmpty()) {
                                 Text(
-                                    text = item.track.artists[0].name,
+                                    text = track.artists[0].name,
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier
                                         .paddingFromBaseline(top = 25.dp)
@@ -182,7 +111,89 @@ fun MediaPlayList(
                                 id = R.string.icon_view_more,
                             ),
                             modifier = Modifier.clickable {
-                                onViewMoreClick(TrackSelectAction.DetailsSelect(item.track.id))
+                                onViewMoreClick(TrackSelectAction.DetailsSelect(track.id))
+                            }
+                        )
+                    }
+                }
+            //}
+        }
+    }
+
+}
+
+/*
+@OptIn(ExperimentalGlideComposeApi::class)
+@androidx.compose.runtime.Composable
+fun MediaPlayList(
+    tracks: List<TrackDetails>,
+    onTrackClick: (Int) -> Unit,
+    onViewMoreClick: (TrackSelectAction) -> Unit,
+) {
+
+    tracks.forEach {
+        println("MediaPlayList ***** ${it.albumName}")
+    }
+
+    LazyColumn {
+        tracks.forEachIndexed { index, item ->
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = {
+                            onTrackClick(index)
+                        })
+                        .padding(5.dp),
+                    shape = MaterialTheme.shapes.extraSmall,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val imageUrl = item.images.firstOrNull()?.url
+                        GlideImage(
+                            model = imageUrl,
+                            contentDescription = "", // TODO: add description
+                            modifier = Modifier.size(100.dp)
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .padding(start = 20.dp)
+                                .weight(1f),
+                        ) {
+                            Text(
+                                text = item.trackName,
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier
+                                    .paddingFromBaseline(top = 25.dp)
+                                    .fillMaxWidth(),
+                            )
+                            Text(
+                                text = item.albumName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier
+                                    .paddingFromBaseline(top = 25.dp)
+                                    .fillMaxWidth()
+                            )
+                            if (item.artists.isNotEmpty()) {
+                                Text(
+                                    text = item.artists[0].name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier
+                                        .paddingFromBaseline(top = 25.dp)
+                                        .fillMaxWidth()
+                                )
+                            }
+                        }
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = stringResource(
+                                id = R.string.icon_view_more,
+                            ),
+                            modifier = Modifier.clickable {
+                                onViewMoreClick(TrackSelectAction.DetailsSelect(item.id))
                             }
                         )
                     }
@@ -191,4 +202,4 @@ fun MediaPlayList(
         }
     }
 
-}
+}*/

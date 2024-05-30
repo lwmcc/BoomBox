@@ -36,6 +36,7 @@ import androidx.ui.graphics.Color
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.R
+import com.mccarty.ritmo.model.TrackDetails
 import com.mccarty.ritmo.model.payload.Item
 import com.mccarty.ritmo.ui.MainImageHeader
 import com.mccarty.ritmo.viewmodel.PlayerAction
@@ -47,19 +48,26 @@ fun SongDetailsScreen(
     index: Int,
 ) {
     val recentlyPlayedMusic by model.recentlyPlayedMusic.collectAsStateWithLifecycle()
+    val tracks by model.playlistTracks.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        when(recentlyPlayedMusic) {
+
+        //val tracks = ((recentlyPlayedMusic as
+        //        MainViewModel.RecentlyPlayedMusicState.Success)).trackDetails//.distinctBy { it.track.id }
+        val pagerState = rememberPagerState(pageCount = { tracks.size })
+        MediaDetails(pagerState, tracks, index, model)
+
+/*        when(recentlyPlayedMusic) {
             is MainViewModel.RecentlyPlayedMusicState.Pending -> {
                 println("MainScreen ***** PENDING")
             }
 
-            is MainViewModel.RecentlyPlayedMusicState.Success<*> -> {
+            is MainViewModel.RecentlyPlayedMusicState.Success -> {
                 val tracks = ((recentlyPlayedMusic as
-                        MainViewModel.RecentlyPlayedMusicState.Success<*>).data.items)//.distinctBy { it.track.id }
+                        MainViewModel.RecentlyPlayedMusicState.Success)).trackDetails//.distinctBy { it.track.id }
                 val pagerState = rememberPagerState(pageCount = { tracks.size })
                 MediaDetails(pagerState, tracks, index, model)
             }
@@ -67,7 +75,7 @@ fun SongDetailsScreen(
             else -> {
                 println("MainScreen ***** ERROR")
             }
-        }
+        }*/
     }
 }
 
@@ -75,12 +83,12 @@ fun SongDetailsScreen(
 @Composable
 fun MediaDetails(
     pagerState: PagerState,
-    items: List<Item>,
+    items: List<TrackDetails>,
     index: Int,
     model: MainViewModel,
     ) {
     VerticalPager(state = pagerState) { page ->
-        val image = items[page].track.album.images[0].url
+        val image = items[page].images[0].url
         if (image.isNotEmpty()) {
             MainImageHeader(
                 image,
@@ -95,7 +103,7 @@ fun MediaDetails(
         Column(modifier = Modifier.fillMaxWidth()) {
             Row {
                 Text(
-                    text = "${items[page].track.name}",
+                    text = "${items[page].trackName}",
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.weight(1f)
                 )
@@ -130,16 +138,16 @@ fun MediaDetails(
                 }*/
             }
             Text(
-                text = "${items[page].track.album.name}",
+                text = "${items[page].albumName}",
                 style = MaterialTheme.typography.titleLarge
             )
-            items[page].track.artists.forEach { artist ->
+            items[page].artists.forEach { artist ->
                 Text(
                     text = "${artist.name}",
                     style = MaterialTheme.typography.titleSmall,
                 )
             }
-            Text("${items[page].track.explicit}")
+            Text("${items[page].explicit}")
         }
 
         LaunchedEffect(key1 = 1) {
@@ -151,7 +159,7 @@ fun MediaDetails(
 
         LaunchedEffect(key1 = 2) {
             snapshotFlow { pagerState.currentPage }.collect { page ->
-                model.setArtistName(items[page].track.artists.firstOrNull()?.name)
+                model.setArtistName(items[page].artists.firstOrNull()?.name)
             }
         }
     }

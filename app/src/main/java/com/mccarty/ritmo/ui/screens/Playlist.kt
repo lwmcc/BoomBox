@@ -1,5 +1,6 @@
 package com.mccarty.ritmo.ui.screens
 
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -12,24 +13,31 @@ import com.mccarty.ritmo.MainViewModel
 @Composable
 fun PlaylistScreen(model: MainViewModel, navController: NavHostController) {
     val playlist by model.playlist.collectAsStateWithLifecycle()
+    val playLists by model.playLists.collectAsStateWithLifecycle()
 
-    when(playlist) {
-        is MainViewModel.PlaylistState.Pending-> {
+
+    when(playLists) {
+        is MainViewModel.PlaylistState.Pending -> {
             println("PlaylistScreen ***** PENDING")
         }
 
         is MainViewModel.PlaylistState.Success -> {
             // TODO: make collection of TrackDetails and use for details
-            val playListItem = (playlist as MainViewModel.PlaylistState.Success).data
-            MediaPlayList(
-                playListItem,
-                onTrackClick = { playListItem, index ->
-                    navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
-                },
-                onViewMoreClick = { action ->
-                    model.trackSelectAction(action)
-                },
-            )
+            val tracks = (playLists as MainViewModel.PlaylistState.Success).trackDetails
+            LazyColumn {
+                item {
+                    MediaList(
+                        tracks,
+                        onTrackClick = { index, tracks2 ->
+                            model.setPlayList(tracks2)
+                            navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
+                        },
+                    ) { action ->
+                        // TODO: add more action
+                    }
+                }
+            }
+
         } else -> {
             println("PLAYLIST ELSE")
         }
