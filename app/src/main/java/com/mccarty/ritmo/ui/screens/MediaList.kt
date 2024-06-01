@@ -36,7 +36,8 @@ import com.mccarty.ritmo.viewmodel.TrackSelectAction
 fun MediaList(
     tracks: List<TrackDetails>,
     onTrackClick: (Int, List<TrackDetails>) -> Unit,
-    onViewMoreClick:(Int, List<TrackDetails>) -> Unit,
+    onViewMoreClick:(Boolean, Int, List<TrackDetails>) -> Unit,
+    onAction: (TrackSelectAction) -> Unit,
 ) {
 
     if (tracks.isNotEmpty()) {
@@ -60,6 +61,7 @@ fun MediaList(
                         .fillMaxWidth()
                         .clickable(onClick = {
                             onTrackClick(index, tracks)
+                            onAction(TrackSelectAction.TrackSelect(index, tracks))
                         })
                         .padding(5.dp),
                     shape = MaterialTheme.shapes.extraSmall,
@@ -111,7 +113,8 @@ fun MediaList(
                                 id = R.string.icon_view_more,
                             ),
                             modifier = Modifier.clickable {
-                                onViewMoreClick(index, tracks)
+                                onViewMoreClick(true, index, tracks)
+                                onAction(TrackSelectAction.ViewMoreSelect(index, tracks))
                             }
                         )
                     }
@@ -120,85 +123,3 @@ fun MediaList(
     }
 
 }
-
-/*
-@OptIn(ExperimentalGlideComposeApi::class)
-@androidx.compose.runtime.Composable
-fun MediaPlayList(
-    tracks: List<TrackDetails>,
-    onTrackClick: (Int) -> Unit,
-    onViewMoreClick: (TrackSelectAction) -> Unit,
-) {
-
-    tracks.forEach {
-        println("MediaPlayList ***** ${it.albumName}")
-    }
-
-    LazyColumn {
-        tracks.forEachIndexed { index, item ->
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = {
-                            onTrackClick(index)
-                        })
-                        .padding(5.dp),
-                    shape = MaterialTheme.shapes.extraSmall,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    ),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val imageUrl = item.images.firstOrNull()?.url
-                        GlideImage(
-                            model = imageUrl,
-                            contentDescription = "", // TODO: add description
-                            modifier = Modifier.size(100.dp)
-                        )
-
-                        Column(
-                            modifier = Modifier
-                                .padding(start = 20.dp)
-                                .weight(1f),
-                        ) {
-                            Text(
-                                text = item.trackName,
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .paddingFromBaseline(top = 25.dp)
-                                    .fillMaxWidth(),
-                            )
-                            Text(
-                                text = item.albumName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier
-                                    .paddingFromBaseline(top = 25.dp)
-                                    .fillMaxWidth()
-                            )
-                            if (item.artists.isNotEmpty()) {
-                                Text(
-                                    text = item.artists[0].name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier
-                                        .paddingFromBaseline(top = 25.dp)
-                                        .fillMaxWidth()
-                                )
-                            }
-                        }
-                        Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = stringResource(
-                                id = R.string.icon_view_more,
-                            ),
-                            modifier = Modifier.clickable {
-                                onViewMoreClick(TrackSelectAction.DetailsSelect(item.id))
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-}*/

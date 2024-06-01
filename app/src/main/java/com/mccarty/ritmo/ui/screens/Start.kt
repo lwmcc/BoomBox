@@ -13,11 +13,13 @@ import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.SONG_DETAILS_KEY
 import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.TrackDetails
+import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 @Composable
 fun StartScreen(
     navController: NavHostController,
-    onViewMoreClick: (Int, List<TrackDetails>) -> Unit
+    onViewMoreClick: (Boolean, Int) -> Unit,
+    onAction: (TrackSelectAction) -> Unit,
 ) {
     val mainViewModel: MainViewModel = viewModel()
 
@@ -26,9 +28,12 @@ fun StartScreen(
             MainScreen(
                 model = mainViewModel,
                 navController = navController,
-                onViewMoreClick = { index, tracks ->
-                    onViewMoreClick(index, tracks)
+                onViewMoreClick = { showBottom, index, tracks ->
+                    onViewMoreClick(showBottom, index)
                 },
+                onAction = {
+                    onAction(it)
+                }
             )
         }
         composable(
@@ -44,10 +49,12 @@ fun StartScreen(
         ) {
             PlaylistScreen(
                 model = mainViewModel,
-                navController = navController,
-                onViewMoreClick = { index, tracks ->
-                    onViewMoreClick(index, tracks)
+                onViewMoreClick = { showBottomSheet, index ->
+                    onViewMoreClick(showBottomSheet, index)
                 },
+                onAction = {
+                    onAction(it)
+                }
             )
         }
     }

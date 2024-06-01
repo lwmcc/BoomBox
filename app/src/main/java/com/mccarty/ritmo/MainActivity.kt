@@ -31,6 +31,8 @@ import com.mccarty.ritmo.model.MusicHeader
 import com.mccarty.ritmo.ui.BottomSheet
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.ui.screens.StartScreen
+import com.mccarty.ritmo.viewmodel.PlayerAction
+import com.mccarty.ritmo.viewmodel.TrackSelectAction
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
@@ -62,18 +64,27 @@ class MainActivity : ComponentActivity() {
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.primary,
                     ) {
-                        PlayerControls(onClick = model::playerAction)
+                        PlayerControls(onClick = this@MainActivity::playerAction)
                     }
                 }) { padding ->
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Column(modifier = Modifier.padding(top = padding.calculateTopPadding())) {
-                        StartScreen(navController) { index, tracks ->
-                            showBottomSheet = true
-                            trackIndex = index
-                        }
+                    Column(
+                        modifier = Modifier
+                            .padding(top = padding.calculateTopPadding())
+                    ) {
+                        StartScreen(
+                            navController,
+                            onViewMoreClick = { bottomSheet, index ->
+                                showBottomSheet = bottomSheet
+                                trackIndex = index
+                            },
+                            onAction = {
+                                trackSelectionAction(it)
+                            },
+                        )
                     }
                 }
 
@@ -140,6 +151,11 @@ class MainActivity : ComponentActivity() {
         disconnect()
     }
 
+    override fun onResume() {
+        super.onResume()
+        spotifyAppRemote
+    }
+
     private fun connect() {
         spotifyAppRemote?.let {
             it.playerApi.subscribeToPlayerState().setEventCallback { playState ->
@@ -154,7 +170,7 @@ class MainActivity : ComponentActivity() {
                     this.albumName = playState.track.album.name ?: ""
                     this.songName = playState.track.name ?: ""
                 })
-                model.setArtistName(artistName)
+                //TODO: model.setArtistName(artistName)
                 model.setCurrentlyPlayingState(playState.isPaused)
                 model.setTrackUri(playState.track.uri)
             }
@@ -226,5 +242,37 @@ class MainActivity : ComponentActivity() {
         private  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
         private val IMAGE_URL = "https://i.scdn.co/image/"
         private var accessCode = ""
+    }
+
+    interface Player {
+        fun pauseTrack(uri: String)
+    }
+
+    fun playerAction(action: PlayerAction) {
+        when(action) {
+            PlayerAction.Back -> println("MainViewModel ***** BACK")
+            PlayerAction.Pause -> {
+                spotifyAppRemote?.playerApi?.pause()
+            }
+            PlayerAction.Play -> {
+                spotifyAppRemote?.playerApi?.pause()
+            }
+            is PlayerAction.Seek -> println("MainViewModel ***** SEEK")
+            PlayerAction.Skip -> println("MainViewModel ***** SKIP")
+        }
+    }
+
+    fun trackSelectionAction(action: TrackSelectAction) {
+        when(action) {
+            is TrackSelectAction.DetailsSelect -> {}
+            is TrackSelectAction.PlaylistTrackSelect -> {}
+            is TrackSelectAction.RecentlyPlayedTrackSelect -> {}
+            is TrackSelectAction.TrackSelect -> {
+                println("MainActivity ***** TRACK SELECT")
+            }
+            is TrackSelectAction.ViewMoreSelect -> {
+                println("MainActivity ***** VIEW MORE SELECT")
+            }
+        }
     }
 }

@@ -20,7 +20,7 @@ data class Cursors(
 data class Item(
     val context: Context,
     val played_at: String,
-    val track: Track
+    val track: Track?
 )
 
 data class Context(
@@ -40,7 +40,7 @@ data class Track(
     val external_ids: ExternalIds,
     val external_urls: ExternalUrls,
     val href: String,
-    val id: String,
+    val id: String?,
     val is_local: Boolean,
     val is_playable: Boolean,
     val linked_from: LinkedFrom,

@@ -27,16 +27,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
 
-/*    sealed class RecentlyPlayedMusicState {
-        data object Pending: RecentlyPlayedMusicState()
-        data class Success<T: RecentlyPlayedItem>(val data: T): RecentlyPlayedMusicState()
-        data object  Error: RecentlyPlayedMusicState()
-    }*/
-
     sealed class RecentlyPlayedMusicState {
-        //data object Pending: RecentlyPlayedMusicState()
         data class Success(val trackDetails: List<TrackDetails> = emptyList()): RecentlyPlayedMusicState()
-        //data object  Error: RecentlyPlayedMusicState()
     }
 
     sealed class MainMusicState {
@@ -62,7 +54,7 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
 
     sealed class PlaylistState {
         data class Pending(val pending: Boolean): PlaylistState()
-        //data class Success(val playList: List<PlaylistItem>): PlaylistState()
+
         data class Success(val trackDetails: List<TrackDetails>): PlaylistState()
         data object  Error: PlaylistState()
     }
@@ -79,15 +71,11 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         data object  Error: CurrentlyPayingTrackState()
     }
 
-    private val _albumId = MutableStateFlow("null")
-    val albumId: StateFlow<String> = _albumId
-
     private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
     val recentlyPlayed: StateFlow<List<TrackV2Item>> = _recentlyPlayed
 
     private var _album = MutableStateFlow(AlbumXX())
     val album: StateFlow<AlbumXX> = _album
-
 
     private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Success(emptyList()))
     val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
@@ -113,20 +101,14 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     private var _musicHeader = MutableStateFlow(MusicHeader())
     val musicHeader: StateFlow<MusicHeader> = _musicHeader
 
-    private var _artistName = MutableStateFlow<String?>(null)
-    val artistName: StateFlow<String?> = _artistName
+    //private var _artistName = MutableStateFlow<String?>(null)
+    //val artistName: StateFlow<String?> = _artistName
 
     private var _playerIsPaused = MutableStateFlow<Boolean>(true)
     val playerIsPaused: StateFlow<Boolean> = _playerIsPaused
 
     private var _trackUri = MutableStateFlow<String?>(null)
     val trackUri: StateFlow<String?> = _trackUri
-
-    private var _playListItems = MutableStateFlow<Map<String,String>>(emptyMap<String, String>())
-    val playListItems: StateFlow<Map<String,String>> = _playListItems
-
-    private var _trackDetails = MutableStateFlow<List<TrackDetails>>(emptyList())
-    val trackDetails: StateFlow<List<TrackDetails>> = _trackDetails
 
     private suspend fun fetchAllPlaylists() {
         AllPlaylistsState.Pending(true)
@@ -181,11 +163,11 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         _musicHeader.value = header
     }
 
-    fun setArtistName(name: String?) {
+/*    fun setArtistName(name: String?) {
         if (name != null) {
             _artistName.value = name
         }
-    }
+    }*/
 
     fun setCurrentlyPlayingState(isPaused: Boolean) {
         _playerIsPaused.value = isPaused
@@ -215,12 +197,21 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
             }
             is TrackSelectAction.RecentlyPlayedTrackSelect -> {
 
-
+            }
+            is TrackSelectAction.TrackSelect -> {
+                println("MainViewModel ***** TRACK")
+            }
+            is TrackSelectAction.ViewMoreSelect -> {
+                println("MainViewModel ***** VIEW MORE")
             }
         }
     }
 
     fun setPlayList(tracks: List<TrackDetails>) {
         _playlistTracks.value = tracks
+    }
+
+    fun isPlaying() {
+
     }
 }

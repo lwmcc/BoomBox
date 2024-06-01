@@ -32,20 +32,20 @@ import com.mccarty.ritmo.R
 import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.TrackDetails
 import com.mccarty.ritmo.ui.CircleSpinner
+import com.mccarty.ritmo.ui.PlayList
+import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 @OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     model: MainViewModel,
-    onViewMoreClick: (Int, List<TrackDetails>) -> Unit,
+    onViewMoreClick: (Boolean, Int, List<TrackDetails>) -> Unit,
+    onAction: (TrackSelectAction) -> Unit,
     navController: NavHostController = rememberNavController(),
 ) {
     val recentlyPlayedMusic by model.recentlyPlayedMusic.collectAsStateWithLifecycle()
     val allPlayLists by model.allPlaylists.collectAsStateWithLifecycle()
     val musicHeader by model.musicHeader.collectAsStateWithLifecycle()
-
-    var recentPending = remember{ mutableStateOf(true) }
-    var playlistsPending = remember{ mutableStateOf(true) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -74,85 +74,24 @@ fun MainScreen(
                 item {
                     MediaList(
                         tracks,
-                        onTrackClick = { index, tracks2 ->
+                        onTrackClick = { index, tracks ->
                             // TODO: play track
                         },
-                        onViewMoreClick = { index, tracks ->
+                        onViewMoreClick = { showBottom, index, tracks ->
                             model.setPlayList(tracks)
-                            // showBottomSheet = true
-                            onViewMoreClick(index, tracks)
+                            onViewMoreClick(showBottom, index, tracks)
                         },
+                        onAction = {
+                           onAction(it)
+                        }
                     )
                 }
 
                 val playlist = (allPlayLists as MainViewModel.AllPlaylistsState.Success).playLists
-
-                if (playlist.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(id = R.string.playlists),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontStyle = FontStyle.Normal,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            modifier = Modifier
-                                .paddingFromBaseline(top = 40.dp)
-                                .fillMaxWidth(),
-                        )
-                    }
-                }
-                // TODO: make reusable
-                playlist.forEachIndexed { index, item ->
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp)
-                                .clickable(onClick = {
-                                    model.fetchPlaylist(playlist[index].id)
-                                    navController.navigate("${MainActivity.PLAYLIST_SCREEN_KEY}${playlist[index].id}")
-                                }),
-                            shape = MaterialTheme.shapes.extraSmall,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            ),
-                        ) {
-                            val imageUrl = item.images.firstOrNull()?.url
-                            Row {
-                                GlideImage(
-                                    model = imageUrl,
-                                    contentDescription = "", // TODO: add description
-                                    modifier = Modifier
-                                        .size(100.dp),
-                                )
-
-                                Column(modifier = Modifier.padding(start = 20.dp)) {
-                                    Text(
-                                        text = item.name,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier
-                                            .paddingFromBaseline(top = 25.dp)
-                                            .fillMaxWidth(),
-                                    )
-                                    if (item.description.isNotEmpty()) {
-                                        Text(
-                                            text = item.description,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            modifier = Modifier
-                                                .paddingFromBaseline(top = 25.dp)
-                                                .fillMaxWidth(),
-                                        )
-                                    }
-                                    Text(
-                                        text = "${stringResource(R.string.total_tracks)} ${item.tracks.total}",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier
-                                            .paddingFromBaseline(top = 25.dp)
-                                            .fillMaxWidth(),
-                                    )
-                                }
-                            }
-                        }
+                item {
+                    PlayList(playlist) { index ->
+                        model.fetchPlaylist(playlist[index].id)
+                        navController.navigate("${MainActivity.PLAYLIST_SCREEN_KEY}${playlist[index].id}")
                     }
                 }
             }

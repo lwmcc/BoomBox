@@ -13,7 +13,7 @@ data class PlaylistItem(
     val added_at: String,
     val added_by: AddedBy,
     val is_local: Boolean,
-    val track: Track
+    val track: Track?
 )
 
 data class AddedBy(

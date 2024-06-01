@@ -115,14 +115,14 @@ fun MediaDetails(
             Text("${tracks[page].explicit}")
         }
 
-        LaunchedEffect(key1 = 1) {
+        LaunchedEffect(key1 = index) {
             pagerState.scrollToPage(index)
         }
 
         LaunchedEffect(key1 = 2) {
             snapshotFlow { pagerState.currentPage }.collect { page ->
                 // TODO: don't pass in model
-                model.setArtistName(tracks[page].artists.firstOrNull()?.name)
+                //model.setArtistName(tracks[page].artists.firstOrNull()?.name)
             }
         }
     }

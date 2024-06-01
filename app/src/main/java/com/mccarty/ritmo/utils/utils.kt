@@ -147,14 +147,14 @@ fun List<Item>.createTrackDetailsFromItems(): List<TrackDetails> {
     if (this.isEmpty()) {
         return emptyList()
     }
-    return this.map {
+    return this.filter { it.track != null }.map {
         TrackDetails(
-            id = it.track.id,
-            images = it.track.album.images,
-            trackName = it.track.name,
-            albumName = it.track.album.name,
-            artists = it.track.artists,
-            explicit = it.track.explicit
+            id = it.track?.id ?: "",
+            images = it.track?.album?.images ?: emptyList(),
+            trackName = it.track?.name ?: "",
+            albumName = it.track?.album?.name?: "",
+            artists = it.track?.artists ?: emptyList(),
+            explicit = it.track?.explicit ?: true,
         )
     }
 }
@@ -163,14 +163,14 @@ fun List<PItem>.createTrackDetailsFromPlayListItems(): List<TrackDetails> {
     if (this.isEmpty()) {
         return emptyList()
     }
-    return this.map {
+    return this.filter { it.track != null }.map {
         TrackDetails(
-            id = it.track.id,
-            images = it.track.album.images,
-            trackName = it.track.name,
-            albumName = it.track.album.name,
-            artists = it.track.artists,
-            explicit = it.track.explicit,
+            id = it.track?.id ?: "",
+            images = it.track?.album?.images ?: emptyList(),
+            trackName = it.track?.name ?: "",
+            albumName = it.track?.album?.name?: "",
+            artists = it.track?.artists ?: emptyList(),
+            explicit = it.track?.explicit ?: true,
         )
     }
 }
