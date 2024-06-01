@@ -3,16 +3,25 @@ package com.mccarty.ritmo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
-import com.mccarty.ritmo.model.*
+import com.mccarty.ritmo.model.AlbumXX
+import com.mccarty.ritmo.model.CurrentlyPlayingTrack
+import com.mccarty.ritmo.model.MusicHeader
+import com.mccarty.ritmo.model.TrackDetails
+import com.mccarty.ritmo.model.TrackV2Item
 import com.mccarty.ritmo.model.payload.PlaylistData
+import com.mccarty.ritmo.model.payload.RecentlyPlayedItem
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.utils.createTrackDetailsFromItems
 import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.mccarty.ritmo.viewmodel.PlayerAction
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,9 +34,18 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     }*/
 
     sealed class RecentlyPlayedMusicState {
-        data object Pending: RecentlyPlayedMusicState()
-        data class Success(val trackDetails: List<TrackDetails>): RecentlyPlayedMusicState()
-        data object  Error: RecentlyPlayedMusicState()
+        //data object Pending: RecentlyPlayedMusicState()
+        data class Success(val trackDetails: List<TrackDetails> = emptyList()): RecentlyPlayedMusicState()
+        //data object  Error: RecentlyPlayedMusicState()
+    }
+
+    sealed class MainMusicState {
+        data object Pending: MainMusicState()
+        data class Success(
+            val trackDetails: List<TrackDetails> = emptyList(),
+            val playLists: List<PlaylistData.Item> = emptyList(),
+            ): MainMusicState()
+        data object  Error: MainMusicState()
     }
 
     sealed class Recently {
@@ -37,13 +55,13 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     }
 
     sealed class AllPlaylistsState {
-        data object Pending: AllPlaylistsState()
+        data class Pending(val pending: Boolean): AllPlaylistsState()
         data class Success(val playLists: List<PlaylistData.Item>): AllPlaylistsState()
         data object  Error: AllPlaylistsState()
     }
 
     sealed class PlaylistState {
-        data object Pending: PlaylistState()
+        data class Pending(val pending: Boolean): PlaylistState()
         //data class Success(val playList: List<PlaylistItem>): PlaylistState()
         data class Success(val trackDetails: List<TrackDetails>): PlaylistState()
         data object  Error: PlaylistState()
@@ -71,19 +89,19 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     val album: StateFlow<AlbumXX> = _album
 
 
-    private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Pending)
+    private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Success(emptyList()))
     val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
     //private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Pending)
     //val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
 
-    private var _playLists = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
+    private var _playLists = MutableStateFlow<PlaylistState>(PlaylistState.Pending(true))
     val playLists: StateFlow<PlaylistState> = _playLists
 
 
-    private var _allPlaylists = MutableStateFlow<AllPlaylistsState>(AllPlaylistsState.Pending)
+    private var _allPlaylists = MutableStateFlow<AllPlaylistsState>(AllPlaylistsState.Pending(true))
     val allPlaylists: StateFlow<AllPlaylistsState> = _allPlaylists
 
-    private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
+    private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending(true))
     val playlist: StateFlow<PlaylistState> = _playlist
 
     private var _playlistTracks = MutableStateFlow<List<TrackDetails>>(emptyList())
@@ -110,23 +128,23 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     private var _trackDetails = MutableStateFlow<List<TrackDetails>>(emptyList())
     val trackDetails: StateFlow<List<TrackDetails>> = _trackDetails
 
-    fun fetchPlaylist() {
-        viewModelScope.launch {
-            repository.fetchPlayLists().collect {
-                when(it){
-                    is NetworkRequest.Error -> AllPlaylistsState.Error
-                    is NetworkRequest.Success -> {
-                        _allPlaylists.value = AllPlaylistsState.Success(it.data.items)
-                    }
+    private suspend fun fetchAllPlaylists() {
+        AllPlaylistsState.Pending(true)
+        repository.fetchPlayLists().collect {
+            when (it) {
+                is NetworkRequest.Error -> AllPlaylistsState.Error
+                is NetworkRequest.Success -> {
+                    _allPlaylists.value = AllPlaylistsState.Success(it.data.items)
                 }
             }
         }
+        AllPlaylistsState.Pending(false)
     }
 
     fun fetchPlaylist(playlistId: String) {
+        PlaylistState.Pending(true)
         viewModelScope.launch {
             repository.fetchPlayList(playlistId).collect {
-                // TODO: handle pending
                 when(it) {
                     is NetworkRequest.Error -> {
                         println("***** ${it.toString()}")
@@ -138,58 +156,24 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
                 }
             }
         }
+        PlaylistState.Pending(false)
     }
 
-    // TODO: might use remote for this
-/*    fun fetchCurrentlyPlaying() {
-        viewModelScope.launch {
-            repository.fetchCurrentlyPlayingTrack().collect {
-                when (it) {
-                    is NetworkRequest.Error -> CurrentlyPayingTrackState.Error
-                    is NetworkRequest.Success -> {
-                        _albumId.value = it.data.item.album.id
-                        CurrentlyPayingTrackState.Success(it.data)
-                    }
-                }
-            }
-        }
-    }*/
-
-    // TODO: might use remote for this
-/*    fun fetchLastPlayedSong() {
-        _lastPlayedSong.value = LastPlayedSongState.Pending(true)
-        _recentlyPlayed.value.firstOrNull()?.track?.album?.id?.let { id ->
-            viewModelScope.launch {
-                repository.fetchAlbumInfo(id).collect {
-                    when (it) {
-                        is NetworkRequest.Error -> _lastPlayedSong.value = LastPlayedSongState.Error
-                        is NetworkRequest.Success -> {
-                            _lastPlayedSong.value = LastPlayedSongState.Success(it.data)
-                        }
-                    }
-                }
-            }
-        } ?: run {
-            _lastPlayedSong.value = LastPlayedSongState.Pending(false)
-        }
-    }*/
-
     fun fetchRecentlyPlayedMusic() {
-        _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Pending
         viewModelScope.launch {
             repository.fetchRecentlyPlayedItem().catch {
-                _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Error
+                _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(emptyList())
             }.collect {
                 when (it) {
                     is NetworkRequest.Error -> _recentlyPlayedMusic.value =
-                        RecentlyPlayedMusicState.Error
-
+                        RecentlyPlayedMusicState.Success(emptyList())
                     is NetworkRequest.Success -> {
                         _recentlyPlayedMusic.value =
                             RecentlyPlayedMusicState.Success(it.data.items.createTrackDetailsFromItems())
                     }
                 }
             }
+            fetchAllPlaylists()
         }   
     }
 

@@ -10,4 +10,7 @@
 
     // Icons
     <string name="icon_view_more">View more</string>
+
+    // Sheets
+    <string name="sheets_view_more">View more</string>
 </resources>

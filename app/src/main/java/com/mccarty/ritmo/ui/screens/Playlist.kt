@@ -8,10 +8,15 @@ import androidx.navigation.NavHostController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.MainViewModel
+import com.mccarty.ritmo.model.TrackDetails
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun PlaylistScreen(model: MainViewModel, navController: NavHostController) {
+fun PlaylistScreen(
+    model: MainViewModel,
+    onViewMoreClick: (Int, List<TrackDetails>) -> Unit,
+    navController: NavHostController,
+) {
     val playlist by model.playlist.collectAsStateWithLifecycle()
     val playLists by model.playLists.collectAsStateWithLifecycle()
 
@@ -32,9 +37,12 @@ fun PlaylistScreen(model: MainViewModel, navController: NavHostController) {
                             model.setPlayList(tracks2)
                             navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
                         },
-                    ) { action ->
-                        // TODO: add more action
-                    }
+                        onViewMoreClick = { index, tracks ->
+                            model.setPlayList(tracks)
+                            onViewMoreClick(index, tracks)
+                            //navController.navigate("${MainActivity.SONG_DETAILS_KEY}${index}")
+                        }
+                    )
                 }
             }
 

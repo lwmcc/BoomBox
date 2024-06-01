@@ -13,17 +13,22 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.compose.rememberNavController
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.MusicHeader
+import com.mccarty.ritmo.ui.BottomSheet
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.ui.screens.StartScreen
 import com.spotify.android.appremote.api.ConnectionParams
@@ -33,7 +38,6 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -43,9 +47,15 @@ class MainActivity : ComponentActivity() {
 
     private var spotifyAppRemote: SpotifyAppRemote? = null
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val sheetState = rememberModalBottomSheetState()
+            val scope = rememberCoroutineScope()
+            var showBottomSheet by remember { mutableStateOf(false) }
+            var trackIndex by remember { mutableIntStateOf(0) }
+            val navController = rememberNavController()
             Scaffold(
                 bottomBar = {
                     BottomAppBar(
@@ -60,9 +70,34 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column(modifier = Modifier.padding(top = padding.calculateTopPadding())) {
-                        StartScreen()
+                        StartScreen(navController) { index, tracks ->
+                            showBottomSheet = true
+                            trackIndex = index
+                        }
                     }
                 }
+
+                BottomSheet(
+                    showBottomSheet,
+                    sheetState = sheetState,
+                    text = getString(R.string.sheets_view_more),
+                    onDismiss = {
+                        // TODO: duplicate code
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showBottomSheet = false
+                            }
+                        }
+                    },
+                    onClick = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showBottomSheet = false
+                            }
+                        }
+                        navController.navigate("${MainActivity.SONG_DETAILS_KEY}${trackIndex}")
+                    },
+                )
             }
         }
 
@@ -163,7 +198,7 @@ class MainActivity : ComponentActivity() {
                     //model.fetchCurrentlyPlaying() might not need this
                     model.fetchRecentlyPlayedMusic() // TODO: called above
                     //model.fetchLastPlayedSong() will use
-                    model.fetchPlaylist()
+                    //model.fetchAllPlaylists() // TODO: call from fetchRecentlyPlayedMusic
                 } catch (ioe: IOException) {
                     // TODO: show some error
                     Log.e(TAG, "${ioe.message}")

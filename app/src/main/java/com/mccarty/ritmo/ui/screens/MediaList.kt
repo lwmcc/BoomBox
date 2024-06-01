@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
@@ -15,6 +14,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -32,11 +32,11 @@ import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 
 @OptIn(ExperimentalGlideComposeApi::class)
-@androidx.compose.runtime.Composable
+@Composable
 fun MediaList(
     tracks: List<TrackDetails>,
     onTrackClick: (Int, List<TrackDetails>) -> Unit,
-    onViewMoreClick: (TrackSelectAction) -> Unit,
+    onViewMoreClick:(Int, List<TrackDetails>) -> Unit,
 ) {
 
     if (tracks.isNotEmpty()) {
@@ -111,7 +111,7 @@ fun MediaList(
                                 id = R.string.icon_view_more,
                             ),
                             modifier = Modifier.clickable {
-                                onViewMoreClick(TrackSelectAction.DetailsSelect(track.id))
+                                onViewMoreClick(index, tracks)
                             }
                         )
                     }
