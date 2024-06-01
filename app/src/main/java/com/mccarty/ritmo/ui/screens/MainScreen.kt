@@ -31,6 +31,7 @@ import com.mccarty.ritmo.MainViewModel.AllPlaylistsState.Success as PlaylistSucc
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.TrackDetails
+import com.mccarty.ritmo.ui.CircleSpinner
 
 @OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -55,11 +56,7 @@ fun MainScreen(
         when (allPlayLists) {
             is MainViewModel.AllPlaylistsState.Pending -> {
                 item {
-                    CircularProgressIndicator(
-                        modifier = Modifier.width(64.dp),
-                        color = MaterialTheme.colorScheme.secondary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    )
+                    CircleSpinner(32.dp)
                 }
             }
 

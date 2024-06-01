@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Slider
@@ -140,23 +143,36 @@ fun BottomSheet(
             dragHandle = { BottomSheetDefaults.DragHandle() },
         ) {
             LazyColumn(
-                modifier = Modifier.padding(
-                    start = 48.dp,
-                    top = 8.dp,
-                    bottom = 48.dp,
-                ).fillMaxWidth()
+                modifier = Modifier
+                    .padding(
+                        start = 48.dp,
+                        top = 8.dp,
+                        bottom = 48.dp,
+                    )
+                    .fillMaxWidth()
             ) {
                 item {
                     Text(
                         text = text,
-                        modifier = Modifier.clickable {
-                            onClick()
-                        }.fillMaxWidth()
+                        modifier = Modifier
+                            .clickable {
+                                onClick()
+                            }
+                            .fillMaxWidth()
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+fun CircleSpinner(width: Dp = 64.dp) {
+    CircularProgressIndicator(
+        modifier = Modifier.width(width),
+        color = MaterialTheme.colorScheme.secondary,
+        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+    )
 }
 
 
