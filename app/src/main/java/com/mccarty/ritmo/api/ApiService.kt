@@ -2,6 +2,7 @@ package com.mccarty.ritmo.api
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
+import com.mccarty.ritmo.model.payload.PlaybackState
 import com.mccarty.ritmo.model.payload.Playlist
 import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
@@ -23,4 +24,7 @@ interface ApiService {
 
     @GET("/v1/me/player/currently-playing")
     suspend fun fetchCurrentlyPlayingTrack(): NetworkRequest<CurrentlyPlayingTrack>
+
+    @GET("/v1/me/player")
+    suspend fun fetchPlaybackState(): NetworkRequest<PlaybackState>
 }

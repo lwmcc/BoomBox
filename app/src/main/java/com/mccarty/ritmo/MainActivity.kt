@@ -40,6 +40,8 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -64,7 +66,7 @@ class MainActivity : ComponentActivity() {
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.primary,
                     ) {
-                        PlayerControls(onClick = this@MainActivity::playerAction)
+                        PlayerControls(onSlide = this@MainActivity::playerAction)
                     }
                 }) { padding ->
                 Surface(
@@ -84,6 +86,9 @@ class MainActivity : ComponentActivity() {
                             onAction = {
                                 trackSelectionAction(it)
                             },
+                            onPlayPauseClicked = {
+                                trackSelectionAction(it)
+                            }
                         )
                     }
                 }
@@ -166,10 +171,16 @@ class MainActivity : ComponentActivity() {
                     this.songName = playerState.track.name ?: ""
                 })
                 //TODO: model.setArtistName(artistName)
-                model.setCurrentlyPlayingState(playerState.isPaused)
                 model.setTrackUri(playerState.track.uri)
-
                 model.isPaused(playerState.isPaused)
+                model.playbackDuration(playerState.track.duration)
+
+                lifecycleScope.launch(Dispatchers.IO) {
+                    while (!playerState.isPaused) {
+                        model.fetchPlaybackState()
+                        delay(timeMillis = 1_000)
+                    }
+                }
             }
         }
     }
@@ -242,8 +253,11 @@ class MainActivity : ComponentActivity() {
     }
 
     fun playerAction(action: PlayerAction) {
-        when(action) {
-            PlayerAction.Back -> println("MainViewModel ***** BACK")
+        when (action) {
+            PlayerAction.Back -> {
+                spotifyAppRemote?.playerApi?.skipPrevious()
+            }
+
             PlayerAction.Play -> {
                 if (model.isPaused.value) {
                     spotifyAppRemote?.playerApi?.resume()
@@ -251,8 +265,14 @@ class MainActivity : ComponentActivity() {
                     spotifyAppRemote?.playerApi?.pause()
                 }
             }
-            is PlayerAction.Seek -> println("MainViewModel ***** SEEK")
-            PlayerAction.Skip -> println("MainViewModel ***** SKIP")
+
+            is PlayerAction.Seek -> {
+                spotifyAppRemote?.playerApi?.seekTo(action.position.toLong())
+            }
+
+            PlayerAction.Skip -> {
+                spotifyAppRemote?.playerApi?.skipNext()
+            }
         }
     }
 
@@ -266,6 +286,14 @@ class MainActivity : ComponentActivity() {
             }
             is TrackSelectAction.ViewMoreSelect -> {
                 println("MainActivity ***** VIEW MORE SELECT")
+            }
+
+            is TrackSelectAction.PlayTrackWithUri -> {
+                if (model.isPaused.value) {
+                    spotifyAppRemote?.playerApi?.play(action.playTrackWithUri)
+                } else {
+                    spotifyAppRemote?.playerApi?.pause()
+                }
             }
         }
     }

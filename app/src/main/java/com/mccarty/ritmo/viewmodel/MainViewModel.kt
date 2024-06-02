@@ -15,6 +15,7 @@ import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.mccarty.ritmo.viewmodel.PlayerAction
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -98,17 +99,17 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
     private var _musicHeader = MutableStateFlow(MusicHeader())
     val musicHeader: StateFlow<MusicHeader> = _musicHeader
 
-    //private var _artistName = MutableStateFlow<String?>(null)
-    //val artistName: StateFlow<String?> = _artistName
-
-    private var _playerIsPaused = MutableStateFlow<Boolean>(true)
-    val playerIsPaused: StateFlow<Boolean> = _playerIsPaused
-
     private var _trackUri = MutableStateFlow<String?>(null)
     val trackUri: StateFlow<String?> = _trackUri
 
     private var _isPaused = MutableStateFlow(true)
     val isPaused: StateFlow<Boolean> = _isPaused
+
+    private var _playbackDuration = MutableStateFlow(0L)
+    val playbackDuration: StateFlow<Long> = _playbackDuration
+
+    private var _playbackPosition = MutableStateFlow(0f)
+    val playbackPosition: StateFlow<Float> = _playbackPosition
 
     private suspend fun fetchAllPlaylists() {
         AllPlaylistsState.Pending(true)
@@ -159,34 +160,21 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
         }   
     }
 
+    suspend fun fetchPlaybackState() {
+        repository.fetchPlaybackState().collect {
+            when (it) {
+                is NetworkRequest.Error -> println("ERROR ***** ${it}")
+                is NetworkRequest.Success -> { _playbackPosition.value = it.data.progress_ms.toFloat() }
+            }
+        }
+    }
+
     fun setMusicHeader(header: MusicHeader) {
         _musicHeader.value = header
     }
 
-    fun setCurrentlyPlayingState(isPaused: Boolean) {
-        _playerIsPaused.value = isPaused
-    }
-
     fun setTrackUri(trackUri: String?) {
         _trackUri.value = trackUri
-    }
-
-    fun trackSelectAction(action: TrackSelectAction) {
-        when(action) {
-            is TrackSelectAction.DetailsSelect -> println("MainViewModel ***** DetailsSelect")
-            is TrackSelectAction.PlaylistTrackSelect -> {
-
-            }
-            is TrackSelectAction.RecentlyPlayedTrackSelect -> {
-
-            }
-            is TrackSelectAction.TrackSelect -> {
-                println("MainViewModel ***** TRACK")
-            }
-            is TrackSelectAction.ViewMoreSelect -> {
-                println("MainViewModel ***** VIEW MORE")
-            }
-        }
     }
 
     fun setPlayList(tracks: List<TrackDetails>) {
@@ -195,5 +183,13 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
 
     fun isPaused(isPaused: Boolean) {
         _isPaused.value = isPaused
+    }
+
+    fun playbackDuration(duration: Long) {
+        _playbackDuration.value = duration
+    }
+
+    fun playbackPosition(position: Float) {
+        _playbackPosition.value = position
     }
 }

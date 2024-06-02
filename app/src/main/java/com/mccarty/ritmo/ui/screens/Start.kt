@@ -20,6 +20,7 @@ fun StartScreen(
     navController: NavHostController,
     onViewMoreClick: (Boolean, Int) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
+    onPlayPauseClicked: (TrackSelectAction) -> Unit,
 ) {
     val mainViewModel: MainViewModel = viewModel()
 
@@ -42,6 +43,9 @@ fun StartScreen(
             SongDetailsScreen(
                 model = mainViewModel,
                 index = backStackEntry.arguments?.getString(INDEX_KEY)?.toInt() ?: 0,
+                onPlayPauseClicked = {
+                    onPlayPauseClicked(it)
+                }
             )
         }
         composable(

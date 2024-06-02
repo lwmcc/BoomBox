@@ -1,7 +1,6 @@
 package com.mccarty.ritmo.ui
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.IntegerRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,10 +26,8 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -76,17 +73,26 @@ fun MainImageHeader(
 @Composable
 fun PlayerControls(
     mainViewModel: MainViewModel = viewModel(),
-    onClick: (PlayerAction) -> Unit,
+    onSlide: (PlayerAction) -> Unit,
     ) {
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle()
-    var sliderPosition by remember { mutableFloatStateOf(0f) }
+    val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle()
+    val duration = mainViewModel.playbackDuration.collectAsStateWithLifecycle().value.toFloat()
+
+    val pos = remember { mutableFloatStateOf(position.value) }
+
     Column {
 
         Slider(
-            value = sliderPosition,
+            value = pos.value,
             onValueChange = {
-                sliderPosition = it
-                PlayerAction.Seek(it)
+                pos.value = it
+            },
+            valueRange = 0f..duration,
+            steps = 10,
+            onValueChangeFinished = {
+                mainViewModel.playbackPosition(pos.value)
+                onSlide(PlayerAction.Seek(pos.value))
             }
         )
         Row(
@@ -96,7 +102,7 @@ fun PlayerControls(
             ) {
             Button(
                 onClick = {
-                    onClick(PlayerAction.Back)
+                    onSlide(PlayerAction.Back)
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -114,7 +120,7 @@ fun PlayerControls(
 
             Button(
                 onClick = {
-                    onClick(PlayerAction.Play)
+                    onSlide(PlayerAction.Play)
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -131,7 +137,7 @@ fun PlayerControls(
 
             Button(
                 onClick = {
-                    onClick(PlayerAction.Skip)
+                    onSlide(PlayerAction.Skip)
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(

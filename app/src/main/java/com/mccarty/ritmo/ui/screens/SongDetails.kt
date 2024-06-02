@@ -41,24 +41,30 @@ import com.mccarty.ritmo.model.TrackDetails
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.ui.MainImageHeader
 import com.mccarty.ritmo.ui.playPauseIcon
+import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
 @Composable
 fun SongDetailsScreen(
     model: MainViewModel,
     index: Int,
+    onPlayPauseClicked: (TrackSelectAction) -> Unit,
 ) {
-    val recentlyPlayedMusic by model.recentlyPlayedMusic.collectAsStateWithLifecycle()
     val tracks by model.playlistTracks.collectAsStateWithLifecycle()
-    val isPauses = model.isPaused.collectAsStateWithLifecycle()
-    val trackUri = model.trackUri.collectAsStateWithLifecycle()
-
     Column(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val pagerState = rememberPagerState(pageCount = { tracks.size })
-        MediaDetails(pagerState, tracks, index, model)
+        MediaDetails(
+            pagerState,
+            tracks,
+            index,
+            model,
+            onPlayPauseClicked = {
+                onPlayPauseClicked(it)
+            }
+        )
     }
 }
 
@@ -69,11 +75,11 @@ fun MediaDetails(
     tracks: List<TrackDetails>,
     index: Int,
     model: MainViewModel,
+    onPlayPauseClicked: (TrackSelectAction) -> Unit,
     ) {
     val uri = model.trackUri.collectAsStateWithLifecycle()
     VerticalPager(state = pagerState) { page ->
         val image = tracks[page].images[0].url
-        //val uri = tracks[page].uri
         if (image.isNotEmpty()) {
             MainImageHeader(
                 image,
@@ -98,7 +104,7 @@ fun MediaDetails(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.tertiary)
                     .clickable {
-
+                        onPlayPauseClicked(TrackSelectAction.PlayTrackWithUri(tracks[page].uri))
                     },
                     contentAlignment = Alignment.Center,
                 ) {

@@ -10,4 +10,5 @@ sealed class TrackSelectAction { // TODO: change name
     data class DetailsSelect(val trackId: String): TrackSelectAction()
     data class TrackSelect(val index: Int, val tracks: List<TrackDetails>): TrackSelectAction()
     data class ViewMoreSelect(val index: Int, val tracks: List<TrackDetails>): TrackSelectAction()
+    data class PlayTrackWithUri(val playTrackWithUri: String): TrackSelectAction()
 }
