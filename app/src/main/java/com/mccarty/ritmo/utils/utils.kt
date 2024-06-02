@@ -138,11 +138,6 @@ fun List<Image>.getImageUrlFromList(index: Int): String {
     return imageUrl
 }
 
-// TODO: generics??
-fun currentTimeSecondsd(time: Long): Long {
-    return time / 60
-}
-
 fun List<Item>.createTrackDetailsFromItems(): List<TrackDetails> {
     if (this.isEmpty()) {
         return emptyList()
@@ -150,13 +145,14 @@ fun List<Item>.createTrackDetailsFromItems(): List<TrackDetails> {
     return this.filter { it.track != null }.map {
         TrackDetails(
             id = it.track?.id ?: "",
+            uri = it.track?.uri ?: "",
             images = it.track?.album?.images ?: emptyList(),
             trackName = it.track?.name ?: "",
             albumName = it.track?.album?.name?: "",
             artists = it.track?.artists ?: emptyList(),
             explicit = it.track?.explicit ?: true,
         )
-    }
+    }.distinctBy { it.id }
 }
 
 fun List<PItem>.createTrackDetailsFromPlayListItems(): List<TrackDetails> {
@@ -166,11 +162,12 @@ fun List<PItem>.createTrackDetailsFromPlayListItems(): List<TrackDetails> {
     return this.filter { it.track != null }.map {
         TrackDetails(
             id = it.track?.id ?: "",
+            uri = it.track?.uri ?: "",
             images = it.track?.album?.images ?: emptyList(),
             trackName = it.track?.name ?: "",
             albumName = it.track?.album?.name?: "",
             artists = it.track?.artists ?: emptyList(),
             explicit = it.track?.explicit ?: true,
         )
-    }
+    }.distinctBy { it.id }
 }

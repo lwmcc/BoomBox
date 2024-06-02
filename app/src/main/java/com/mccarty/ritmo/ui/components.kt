@@ -1,5 +1,7 @@
 package com.mccarty.ritmo.ui
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.IntegerRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,15 +26,15 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -40,14 +42,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-import com.mccarty.ritmo.MainActivity
+import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.model.payload.PlaylistData.Item as Item
 import com.mccarty.ritmo.viewmodel.PlayerAction
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -72,7 +74,11 @@ fun MainImageHeader(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayerControls(onClick: (PlayerAction) -> Unit) {
+fun PlayerControls(
+    mainViewModel: MainViewModel = viewModel(),
+    onClick: (PlayerAction) -> Unit,
+    ) {
+    val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle()
     var sliderPosition by remember { mutableFloatStateOf(0f) }
     Column {
 
@@ -116,11 +122,11 @@ fun PlayerControls(onClick: (PlayerAction) -> Unit) {
                     contentColor = Color.Black
                 )
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.play),
-                    contentDescription = "play or pause",
-                    modifier = Modifier.size(40.dp)
-                )
+                if (isPaused.value) {
+                    playPauseIcon(playPause = R.drawable.play)
+                } else {
+                    playPauseIcon(playPause = R.drawable.pause)
+                }
             }
 
             Button(
@@ -141,6 +147,33 @@ fun PlayerControls(onClick: (PlayerAction) -> Unit) {
             }
         }
     }
+}
+
+@Composable
+fun playPauseIcon(@DrawableRes playPause: Int) {
+    Icon(
+        painter = painterResource(playPause),
+        contentDescription = "play or pause",
+        modifier = Modifier.size(60.dp)
+    )
+}
+
+@Composable
+fun playPauseIcon(playPause: Painter) {
+    Icon(
+        painter = playPause,
+        contentDescription = "play or pause",
+        modifier = Modifier.size(60.dp)
+    )
+}
+
+@Composable
+fun playPauseIcon(playPause: ImageVector) {
+    Icon(
+        imageVector = playPause,
+        contentDescription = "play or pause",
+        modifier = Modifier.size(60.dp)
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

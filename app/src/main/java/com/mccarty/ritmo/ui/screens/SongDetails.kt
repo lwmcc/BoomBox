@@ -31,13 +31,16 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.MainViewModel
+import com.mccarty.ritmo.R
 import com.mccarty.ritmo.model.TrackDetails
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.ui.MainImageHeader
+import com.mccarty.ritmo.ui.playPauseIcon
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
 @Composable
@@ -47,6 +50,8 @@ fun SongDetailsScreen(
 ) {
     val recentlyPlayedMusic by model.recentlyPlayedMusic.collectAsStateWithLifecycle()
     val tracks by model.playlistTracks.collectAsStateWithLifecycle()
+    val isPauses = model.isPaused.collectAsStateWithLifecycle()
+    val trackUri = model.trackUri.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier.padding(horizontal = 25.dp),
@@ -65,8 +70,10 @@ fun MediaDetails(
     index: Int,
     model: MainViewModel,
     ) {
+    val uri = model.trackUri.collectAsStateWithLifecycle()
     VerticalPager(state = pagerState) { page ->
         val image = tracks[page].images[0].url
+        //val uri = tracks[page].uri
         if (image.isNotEmpty()) {
             MainImageHeader(
                 image,
@@ -95,11 +102,11 @@ fun MediaDetails(
                     },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        Icons.Default.PlayArrow, // TODO: will have to change with state
-                        contentDescription = "play or pause",
-                        modifier = Modifier.size(30.dp)
-                    )
+                    if (uri.value == tracks[page].uri) {
+                        playPauseIcon(painterResource(R.drawable.pause))
+                    } else {
+                        playPauseIcon(Icons.Default.PlayArrow)
+                    }
                 }
             }
             Text(

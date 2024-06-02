@@ -151,28 +151,25 @@ class MainActivity : ComponentActivity() {
         disconnect()
     }
 
-    override fun onResume() {
-        super.onResume()
-        spotifyAppRemote
-    }
-
     private fun connect() {
         spotifyAppRemote?.let {
-            it.playerApi.subscribeToPlayerState().setEventCallback { playState ->
-                val artistName = playState.track.artist.name ?: null
+            it.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
+                val artistName = playerState.track.artist.name ?: null
 
                 model.setMusicHeader(MusicHeader().apply {
                     this.imageUrl = StringBuilder().apply {
                         append(IMAGE_URL)
-                        append(playState.track.imageUri.toString().drop(22).dropLast(2))
+                        append(playerState.track.imageUri.toString().drop(22).dropLast(2))
                     }.toString()
                     this.artistName = artistName ?: "" // TODO: set strings null
-                    this.albumName = playState.track.album.name ?: ""
-                    this.songName = playState.track.name ?: ""
+                    this.albumName = playerState.track.album.name ?: ""
+                    this.songName = playerState.track.name ?: ""
                 })
                 //TODO: model.setArtistName(artistName)
-                model.setCurrentlyPlayingState(playState.isPaused)
-                model.setTrackUri(playState.track.uri)
+                model.setCurrentlyPlayingState(playerState.isPaused)
+                model.setTrackUri(playerState.track.uri)
+
+                model.isPaused(playerState.isPaused)
             }
         }
     }
@@ -244,18 +241,15 @@ class MainActivity : ComponentActivity() {
         private var accessCode = ""
     }
 
-    interface Player {
-        fun pauseTrack(uri: String)
-    }
-
     fun playerAction(action: PlayerAction) {
         when(action) {
             PlayerAction.Back -> println("MainViewModel ***** BACK")
-            PlayerAction.Pause -> {
-                spotifyAppRemote?.playerApi?.pause()
-            }
             PlayerAction.Play -> {
-                spotifyAppRemote?.playerApi?.pause()
+                if (model.isPaused.value) {
+                    spotifyAppRemote?.playerApi?.resume()
+                } else {
+                    spotifyAppRemote?.playerApi?.pause()
+                }
             }
             is PlayerAction.Seek -> println("MainViewModel ***** SEEK")
             PlayerAction.Skip -> println("MainViewModel ***** SKIP")
