@@ -3,6 +3,7 @@ package com.mccarty.ritmo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
+import com.mccarty.ritmo.domain.SpotifyService
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
 import com.mccarty.ritmo.model.MusicHeader
@@ -12,10 +13,9 @@ import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.utils.createTrackDetailsFromItems
 import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
-import com.mccarty.ritmo.viewmodel.PlayerAction
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
+import com.spotify.android.appremote.api.SpotifyAppRemote
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -23,7 +23,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
+class MainViewModel @Inject constructor(
+    private val repository: Repository,
+    private val spotifyService: SpotifyService,
+    ) : ViewModel() {
 
     sealed class RecentlyPlayedMusicState {
         data class Success(val trackDetails: List<TrackDetails> = emptyList()): RecentlyPlayedMusicState()
@@ -191,5 +194,9 @@ class MainViewModel @Inject constructor(private val repository: Repository) : Vi
 
     fun playbackPosition(position: Float) {
         _playbackPosition.value = position
+    }
+
+    fun handlePlayerActions(remote: SpotifyAppRemote?, action: TrackSelectAction.TrackSelect) {
+        spotifyService.remote(remote, action)
     }
 }

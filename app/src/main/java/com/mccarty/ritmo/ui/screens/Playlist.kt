@@ -5,9 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.mccarty.ritmo.MainViewModel
-import com.mccarty.ritmo.model.TrackDetails
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
@@ -29,9 +27,6 @@ fun PlaylistScreen(
                 item {
                     MediaList(
                         tracks,
-                        onTrackClick = { index, tracks ->
-                            // TODO: play track
-                        },
                         onViewMoreClick = { showBottom, index, tracks ->
                             model.setPlayList(tracks)
                             onViewMoreClick(showBottom, index)

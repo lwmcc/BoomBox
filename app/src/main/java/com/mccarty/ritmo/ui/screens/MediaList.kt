@@ -28,6 +28,7 @@ import com.mccarty.ritmo.R
 import com.mccarty.ritmo.model.TrackDetails
 import com.mccarty.ritmo.model.payload.Item
 import com.mccarty.ritmo.model.payload.PlaylistItem
+import com.mccarty.ritmo.viewmodel.PlayerAction
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 
@@ -35,7 +36,6 @@ import com.mccarty.ritmo.viewmodel.TrackSelectAction
 @Composable
 fun MediaList(
     tracks: List<TrackDetails>,
-    onTrackClick: (Int, List<TrackDetails>) -> Unit,
     onViewMoreClick:(Boolean, Int, List<TrackDetails>) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
 ) {
@@ -59,10 +59,11 @@ fun MediaList(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(onClick = {
-                            onTrackClick(index, tracks)
-                            onAction(TrackSelectAction.TrackSelect(index, tracks))
-                        })
+                        .clickable(
+                            onClick = {
+                                onAction(TrackSelectAction.TrackSelect(index, tracks[index].uri, tracks))
+                            }
+                        )
                         .padding(5.dp),
                     shape = MaterialTheme.shapes.extraSmall,
                     colors = CardDefaults.cardColors(

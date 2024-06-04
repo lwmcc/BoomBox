@@ -74,9 +74,6 @@ fun MainScreen(
                 item {
                     MediaList(
                         tracks,
-                        onTrackClick = { index, tracks ->
-                            // TODO: play track
-                        },
                         onViewMoreClick = { showBottom, index, tracks ->
                             model.setPlayList(tracks)
                             onViewMoreClick(showBottom, index, tracks)

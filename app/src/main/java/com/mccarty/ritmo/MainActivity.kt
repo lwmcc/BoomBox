@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
@@ -273,6 +274,15 @@ class MainActivity : ComponentActivity() {
             PlayerAction.Skip -> {
                 spotifyAppRemote?.playerApi?.skipNext()
             }
+
+            is PlayerAction.PlayWithUri -> {
+                if (model.isPaused.value) {
+                    spotifyAppRemote?.playerApi?.play(action.uri)
+                } else {
+                    spotifyAppRemote?.playerApi?.pause()
+                }
+
+            }
         }
     }
 
@@ -282,7 +292,7 @@ class MainActivity : ComponentActivity() {
             is TrackSelectAction.PlaylistTrackSelect -> {}
             is TrackSelectAction.RecentlyPlayedTrackSelect -> {}
             is TrackSelectAction.TrackSelect -> {
-                println("MainActivity ***** TRACK SELECT")
+                model.handlePlayerActions(spotifyAppRemote, action)
             }
             is TrackSelectAction.ViewMoreSelect -> {
                 println("MainActivity ***** VIEW MORE SELECT")
