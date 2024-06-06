@@ -213,9 +213,9 @@ class MainActivity : ComponentActivity() {
         super.onActivityResult(requestCode, resultCode, intent)
         val response = AuthorizationClient.getResponse(resultCode, data)
         if (response?.accessToken != null) {
+            writeToPreferences(response.accessToken, SPOTIFY_TOKEN)
             if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
                 try {
-                    writeToPreferences(response.accessToken, SPOTIFY_TOKEN)
                     //model.fetchCurrentlyPlaying() might not need this
                     model.fetchRecentlyPlayedMusic() // TODO: called above
                     //model.fetchLastPlayedSong() will use
@@ -283,7 +283,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun trackSelectionAction(action: TrackSelectAction) {
+    private fun trackSelectionAction(action: TrackSelectAction) {
         when(action) {
             is TrackSelectAction.DetailsSelect -> {}
             is TrackSelectAction.PlaylistTrackSelect -> {}

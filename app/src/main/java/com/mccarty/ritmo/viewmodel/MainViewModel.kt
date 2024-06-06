@@ -80,12 +80,9 @@ class MainViewModel @Inject constructor(
 
     private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Success(emptyList()))
     val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
-    //private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(RecentlyPlayedMusicState.Pending)
-    //val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
 
     private var _playLists = MutableStateFlow<PlaylistState>(PlaylistState.Pending(true))
     val playLists: StateFlow<PlaylistState> = _playLists
-
 
     private var _allPlaylists = MutableStateFlow<AllPlaylistsState>(AllPlaylistsState.Pending(true))
     val allPlaylists: StateFlow<AllPlaylistsState> = _allPlaylists
@@ -128,7 +125,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun fetchPlaylist(playlistId: String) {
-        PlaylistState.Pending(true)
+        _playLists.value = PlaylistState.Pending(true)
         viewModelScope.launch {
             repository.fetchPlayList(playlistId).collect {
                 when(it) {
@@ -142,7 +139,7 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
-        PlaylistState.Pending(false)
+        _playLists.value = PlaylistState.Pending(false)
     }
 
     fun fetchRecentlyPlayedMusic() {
