@@ -1,11 +1,12 @@
 package com.mccarty.ritmo.domain
 
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
+import com.mccarty.ritmo.viewmodel.TrackSelectAction.TrackSelect as TrackSelect
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import javax.inject.Inject
 
-class SpotifyRemoteService @Inject constructor() : SpotifyService {
-    override fun remote(remote: SpotifyAppRemote?, action: TrackSelectAction.TrackSelect) {
+open class RemoteServiceControls @Inject constructor(): RemoteService {
+    override fun onTrackSelected(remote: SpotifyAppRemote?, action: TrackSelect) {
         if (remote == null) {
             return
         }
@@ -15,14 +16,14 @@ class SpotifyRemoteService @Inject constructor() : SpotifyService {
                 .playerState
                 .setResultCallback { playerState ->
                     if (playerState.isPaused) {
-                        if (playerState.track.uri.equals(action)) {
+                        if (playerState.track.uri.equals(action.uri)) {
                             it.playerApi.resume()
                         } else {
                             it.playerApi.play(action.uri)
                         }
                     } else {
                         if (playerState.track.uri.equals(action.uri)) {
-                            it.playerApi.pause()
+                            it.playerApi.skipPrevious()
                         } else {
                             it.playerApi.play(action.uri)
                         }
@@ -35,7 +36,6 @@ class SpotifyRemoteService @Inject constructor() : SpotifyService {
     }
 }
 
-// TODO: move this
-interface SpotifyService {
-    fun remote(remote: SpotifyAppRemote?, action: TrackSelectAction.TrackSelect)
+interface RemoteService {
+    fun onTrackSelected(remote: SpotifyAppRemote?, action: TrackSelectAction.TrackSelect)
 }

@@ -3,7 +3,7 @@ package com.mccarty.ritmo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
-import com.mccarty.ritmo.domain.SpotifyService
+import com.mccarty.ritmo.domain.RemoteService
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
 import com.mccarty.ritmo.model.MusicHeader
@@ -25,7 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val repository: Repository,
-    private val spotifyService: SpotifyService,
+    private val remoteService: RemoteService,
     ) : ViewModel() {
 
     sealed class RecentlyPlayedMusicState {
@@ -197,6 +197,6 @@ class MainViewModel @Inject constructor(
     }
 
     fun handlePlayerActions(remote: SpotifyAppRemote?, action: TrackSelectAction.TrackSelect) {
-        spotifyService.remote(remote, action)
+        remoteService.onTrackSelected(remote, action)
     }
 }

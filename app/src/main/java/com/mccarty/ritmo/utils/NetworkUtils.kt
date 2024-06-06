@@ -3,19 +3,33 @@ package com.mccarty.ritmo.utils
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Build
+import androidx.annotation.RequiresApi
+import javax.inject.Inject
 
 fun hasNetworkConnection(context: Context): Boolean {
     val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    connectivityManager.let {
+    connectivityManager.let { manager ->
         val capabilities =
-            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            manager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
         return capabilities?.let {
-            capabilities.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
-                    capabilities.hasCapability(NetworkCapabilities.TRANSPORT_ETHERNET)
+            it.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                    it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
+                    it.hasCapability(NetworkCapabilities.TRANSPORT_ETHERNET)
         } ?: false
     }
-    return false
+}
+
+class NetworkUtils @Inject constructor() {
+
+    @Inject
+    lateinit var networkCapabilities: NetworkCapabilities
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    fun hasNetworkConnection(): Boolean {
+        //networkCapabilities = NetworkCapabilities
+        return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
 }

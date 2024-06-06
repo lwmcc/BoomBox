@@ -1,5 +1,6 @@
 package com.mccarty.ritmo
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -22,12 +23,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
-import com.mccarty.ritmo.api.ApiClient
 import com.mccarty.ritmo.model.MusicHeader
 import com.mccarty.ritmo.ui.BottomSheet
 import com.mccarty.ritmo.ui.PlayerControls
@@ -216,10 +215,7 @@ class MainActivity : ComponentActivity() {
         if (response?.accessToken != null) {
             if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
                 try {
-                    ApiClient.apply {
-                        this.context = this@MainActivity
-                        this.token = response.accessToken
-                    }
+                    writeToPreferences(response.accessToken, SPOTIFY_TOKEN)
                     //model.fetchCurrentlyPlaying() might not need this
                     model.fetchRecentlyPlayedMusic() // TODO: called above
                     //model.fetchLastPlayedSong() will use
@@ -246,6 +242,7 @@ class MainActivity : ComponentActivity() {
         val PLAYLIST_SCREEN_KEY = "playlist_screen/"
         val SONG_DETAILS_KEY = "song_details/"
         val TAG = MainActivity::class.qualifiedName
+        const val SPOTIFY_TOKEN = "SPOTIFY_TOKEN"
         private val AUTH_TOKEN_REQUEST_CODE = 0x10
         private val AUTH_CODE_REQUEST_CODE = 0x11
         private  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
@@ -305,6 +302,14 @@ class MainActivity : ComponentActivity() {
                     spotifyAppRemote?.playerApi?.pause()
                 }
             }
+        }
+    }
+
+    private fun writeToPreferences(token: String, prefKey: String) {
+        val pref = this@MainActivity.getSharedPreferences(prefKey, Context.MODE_PRIVATE)
+        with (pref.edit()) {
+            putString(prefKey, token)
+            apply()
         }
     }
 }

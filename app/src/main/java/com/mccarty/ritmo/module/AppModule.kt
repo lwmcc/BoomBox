@@ -1,8 +1,13 @@
 package com.mccarty.ritmo.module
 
+import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.mccarty.networkrequest.network.NetworkRequestAdapterFactory
-import com.mccarty.ritmo.api.ApiClient
+import com.mccarty.ritmo.MainActivity
+import com.mccarty.ritmo.api.MusicInterceptor
 import com.mccarty.ritmo.api.ApiService
 import com.mccarty.ritmo.module.Constants.BASE_SPOTIFY_URL
 import com.mccarty.ritmo.repository.db.AppDatabase
@@ -32,19 +37,25 @@ object AppModule {
         return LocalRepository(context, db)
     }
 
-    private fun getOkHttp(): OkHttpClient {
+    private fun getOkHttp(
+        networkCapabilities: NetworkCapabilities,
+        sharedPreferences: SharedPreferences,
+        ): OkHttpClient {
         return OkHttpClient()
             .newBuilder()
-            .addInterceptor(ApiClient.RequestInterceptor)
+            .addInterceptor(MusicInterceptor(networkCapabilities, sharedPreferences))
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideRetrofit(): ApiService {
+    fun provideRetrofit(
+        networkCapabilities: NetworkCapabilities,
+        sharedPreferences: SharedPreferences,
+        ): ApiService {
         return Retrofit.Builder()
             .baseUrl(BASE_SPOTIFY_URL)
-            .client(getOkHttp())
+            .client(getOkHttp(networkCapabilities, sharedPreferences))
             .addConverterFactory(GsonConverterFactory.create())
             .addCallAdapterFactory(NetworkRequestAdapterFactory.create())
             .build().create(ApiService::class.java)
@@ -52,18 +63,32 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providetDispatcher() = Dispatchers
+    fun provideDispatcher() = Dispatchers
 
-//    object RequestInterceptor : Interceptor {
-//        var token = ""
-//        override fun intercept(chain: Interceptor.Chain): Response {
-//            val request = chain.request()
-//                .newBuilder()
-//                .addHeader(CONTENT_TYPE_SPOTIFY, APPLICATION_JSON_SPOTIFY)
-//                .addHeader(AUTHORIZATION_SPOTIFY, token)
-//                .build()
-//            return chain.proceed(request)
-//        }
-//    }
+    @Provides
+    @Singleton
+    fun provideConnectionManager(context: Context): ConnectivityManager {
+        return context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    }
 
+    @Provides
+    @Singleton
+    fun provideCapabilities(connectivityManager: ConnectivityManager): NetworkCapabilities {
+        return connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)!!
+    }
+
+    @Provides
+    @Singleton
+    fun provideApiClient(
+        networkCapabilities: NetworkCapabilities,
+        sharedPreferences: SharedPreferences,
+        ): MusicInterceptor {
+            return MusicInterceptor(networkCapabilities, sharedPreferences)
+    }
+
+    @Provides
+    @Singleton
+    fun providePreferences(application: Application): SharedPreferences {
+       return application.getSharedPreferences(MainActivity.SPOTIFY_TOKEN, Context.MODE_PRIVATE)
+    }
 }

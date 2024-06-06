@@ -1,7 +1,7 @@
 package com.mccarty.ritmo.module
 
-import com.mccarty.ritmo.domain.SpotifyRemoteService
-import com.mccarty.ritmo.domain.SpotifyService
+import com.mccarty.ritmo.domain.RemoteService
+import com.mccarty.ritmo.domain.RemoteServiceControls
 import com.mccarty.ritmo.repository.remote.MusicRepository
 import com.mccarty.ritmo.repository.remote.Repository
 import dagger.Binds
@@ -16,5 +16,5 @@ abstract class InterfaceModule {
     abstract fun bindRepository(musicRepository: MusicRepository): Repository
 
     @Binds
-    abstract fun bindSpotifyRemoteService(spotifyRemoteService: SpotifyRemoteService): SpotifyService
+    abstract fun bindSpotifyRemoteService(spotifyRemoteService: RemoteServiceControls): RemoteService
 }
