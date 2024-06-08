@@ -11,6 +11,7 @@ import retrofit2.Response
 import java.lang.NullPointerException
 import java.lang.NumberFormatException
 import com.mccarty.ritmo.model.payload.Item
+import com.mccarty.ritmo.model.payload.MainItem
 import com.mccarty.ritmo.model.payload.PlaylistItem as PItem
 
 fun processPlaylist(response: Response<JsonObject>): List<PlaylistItem> {
@@ -138,7 +139,7 @@ fun List<Image>.getImageUrlFromList(index: Int): String {
     return imageUrl
 }
 
-fun List<Item>.createTrackDetailsFromItems(): List<TrackDetails> {
+fun List<Item>.createTrackDetailsFromItems(): List<MainItem> {
     if (this.isEmpty()) {
         return emptyList()
     }

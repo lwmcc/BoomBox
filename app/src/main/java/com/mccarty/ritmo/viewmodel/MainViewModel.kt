@@ -1,5 +1,6 @@
 package com.mccarty.ritmo
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
@@ -9,7 +10,12 @@ import com.mccarty.ritmo.model.CurrentlyPlayingTrack
 import com.mccarty.ritmo.model.MusicHeader
 import com.mccarty.ritmo.model.TrackDetails
 import com.mccarty.ritmo.model.TrackV2Item
+import com.mccarty.ritmo.model.payload.ArtistX
+import com.mccarty.ritmo.model.payload.Image
+import com.mccarty.ritmo.model.payload.ListItem
+import com.mccarty.ritmo.model.payload.MainItem
 import com.mccarty.ritmo.model.payload.PlaylistData
+import com.mccarty.ritmo.model.payload.TrackItem
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.utils.createTrackDetailsFromItems
 import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
@@ -29,13 +35,13 @@ class MainViewModel @Inject constructor(
     ) : ViewModel() {
 
     sealed class RecentlyPlayedMusicState {
-        data class Success(val trackDetails: List<TrackDetails> = emptyList()): RecentlyPlayedMusicState()
+        data class Success(val trackDetails: List<MainItem> = emptyList()): RecentlyPlayedMusicState()
     }
 
     sealed class MainMusicState {
         data object Pending: MainMusicState()
         data class Success(
-            val trackDetails: List<TrackDetails> = emptyList(),
+            val trackDetails: List<MainItem> = emptyList(),
             val playLists: List<PlaylistData.Item> = emptyList(),
             ): MainMusicState()
         data object  Error: MainMusicState()
@@ -90,8 +96,11 @@ class MainViewModel @Inject constructor(
     private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending(true))
     val playlist: StateFlow<PlaylistState> = _playlist
 
-    private var _playlistTracks = MutableStateFlow<List<TrackDetails>>(emptyList())
-    val playlistTracks: StateFlow<List<TrackDetails>> = _playlistTracks
+    private var _playlistTracks = MutableStateFlow<List<MainItem>>(emptyList())
+    val playlistTracks: StateFlow<List<MainItem>> = _playlistTracks
+
+    private var _mediaDetails = MutableStateFlow<List<MediaDetails>>(emptyList())
+    val mediaDetails: StateFlow<List<MediaDetails>> = _mediaDetails
 
     private var _lastPlayedSong = MutableStateFlow<LastPlayedSongState>(LastPlayedSongState.Pending(true))
     val lastPlayedSong: StateFlow<LastPlayedSongState> = _lastPlayedSong
@@ -111,6 +120,9 @@ class MainViewModel @Inject constructor(
     private var _playbackPosition = MutableStateFlow(0f)
     val playbackPosition: StateFlow<Float> = _playbackPosition
 
+    private var _mainItems = MutableStateFlow<Map<String, List<MainItem>>>(emptyMap())
+    val mainItems: StateFlow<Map<String, List<MainItem>>> = _mainItems
+
     private suspend fun fetchAllPlaylists() {
         AllPlaylistsState.Pending(true)
         repository.fetchPlayLists().collect {
@@ -125,21 +137,21 @@ class MainViewModel @Inject constructor(
     }
 
     fun fetchPlaylist(playlistId: String) {
-        _playLists.value = PlaylistState.Pending(true)
         viewModelScope.launch {
+            _playLists.value = PlaylistState.Pending(true)
             repository.fetchPlayList(playlistId).collect {
                 when(it) {
                     is NetworkRequest.Error -> {
-                        println("***** ${it.toString()}")
+                        println("MainViewModel ***** NET ERROR ${it.toString()}")
                         // TODO: handle error
                     }
                     is NetworkRequest.Success -> {
+                        println("MainViewModel ***** NET SUCCESS ${it.toString()}")
                         _playLists.value = PlaylistState.Success(it.data.items.createTrackDetailsFromPlayListItems())
                     }
                 }
             }
         }
-        _playLists.value = PlaylistState.Pending(false)
     }
 
     fun fetchRecentlyPlayedMusic() {
@@ -157,7 +169,58 @@ class MainViewModel @Inject constructor(
                 }
             }
             fetchAllPlaylists()
-        }   
+        }
+    }
+
+    fun fetchMainMusic() {
+
+        val mainItems = mutableStateListOf<MainItem>()
+
+        viewModelScope.launch {
+            repository.fetchRecentlyPlayedItem().catch {
+                _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(emptyList())
+            }.collect {
+                when (it) {
+                    is NetworkRequest.Error -> { }
+                    is NetworkRequest.Success -> {
+                        val trackItems = it.data.items.map { it ->
+                            TrackItem(
+                                context = it.context,
+                                played_at = it.played_at,
+                                track = it.track,
+                            )
+                        }
+                        mainItems.addAll(trackItems)
+                    }
+                }
+            }
+            repository.fetchPlayLists().collect {
+                when (it) {
+                    is NetworkRequest.Error -> { }
+                    is NetworkRequest.Success -> {
+                        val listItems = it.data.items.map { it ->
+                            ListItem(
+                                collaborative = it.collaborative,
+                                description = it.description,
+                                external_urls = it.external_urls,
+                                href = it.href,
+                                id = it.id,
+                                images = it.images,
+                                name = it.name,
+                                owner = it.owner,
+                                public = it.public,
+                                snapshot_id = it.snapshot_id,
+                                tracks = it.tracks,
+                                type = it.type,
+                                uri = it.uri,
+                            )
+                        }
+                        mainItems.addAll(listItems)
+                    }
+                }
+            }
+            _mainItems.value = mainItems.groupBy { it.type }
+        }
     }
 
     suspend fun fetchPlaybackState() {
@@ -177,8 +240,45 @@ class MainViewModel @Inject constructor(
         _trackUri.value = trackUri
     }
 
-    fun setPlayList(tracks: List<TrackDetails>) {
-        _playlistTracks.value = tracks
+    fun setPlayList(tracks: List<Any>) {
+
+        when (tracks.firstOrNull()) {
+            is TrackDetails -> {
+                _mediaDetails.value = tracks.map {
+                    it as TrackDetails
+                    MediaDetails(
+                        albumName = it.albumName,
+                        trackName = it.trackName,
+                        explicit = it.explicit,
+                        artists = it.artists,
+                        images = it.images,
+                        trackId = it.id,
+                        uri = it.uri,
+                        type = it.type,
+                    )
+                }
+            }
+
+            is MainItem -> {
+                _mediaDetails.value = tracks.map {
+                    it as MainItem
+                    MediaDetails(
+                        albumName = it.track?.album?.name,
+                        trackName = it.track?.name,
+                        explicit = it.track?.explicit ?: false,
+                        artists = it.track?.artists,
+                        images = it.track?.album?.images,
+                        trackId = it.track?.id,
+                        uri = it.track?.uri,
+                        type = it.track?.type,
+                    )
+                }
+            }
+
+            else -> {
+                _mediaDetails.value = emptyList()
+            }
+        }
     }
 
     fun isPaused(isPaused: Boolean) {
@@ -197,3 +297,14 @@ class MainViewModel @Inject constructor(
         remoteService.onTrackSelected(remote, action)
     }
 }
+
+data class MediaDetails(
+    val albumName: String?,
+    val trackName: String?,
+    val explicit: Boolean = false,
+    val artists: List<ArtistX>? = emptyList(),
+    val images: List<Image>? = emptyList(),
+    val trackId: String?,
+    val uri: String?,
+    val type: String?,
+)

@@ -26,9 +26,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.model.TrackDetails
-import com.mccarty.ritmo.model.payload.Item
-import com.mccarty.ritmo.model.payload.PlaylistItem
-import com.mccarty.ritmo.viewmodel.PlayerAction
+import com.mccarty.ritmo.model.payload.MainItem
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 
@@ -61,7 +59,8 @@ fun MediaList(
                         .fillMaxWidth()
                         .clickable(
                             onClick = {
-                                onAction(TrackSelectAction.TrackSelect(index, tracks[index].uri, tracks))
+                                // TODO: fix !!
+                                //onAction(TrackSelectAction.TrackSelect(index,  tracks[index].uri!!, tracks))
                             }
                         )
                         .padding(5.dp),
@@ -85,22 +84,25 @@ fun MediaList(
 
                             ) {
                             Text(
-                                text = track.trackName,
+
+                                text = track.trackName, // TODO: fix !!
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier
                                     .paddingFromBaseline(top = 25.dp)
                                     .fillMaxWidth(),
                             )
                             Text(
-                                text = track.albumName,
+                                text = track.albumName,  // TODO: fix !!
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
                                     .paddingFromBaseline(top = 25.dp)
                                     .fillMaxWidth()
                             )
-                            if (track.artists.isNotEmpty()) {
+
+                            if (track.artists.isNotEmpty()) { // TODO; fix !!
                                 Text(
-                                    text = track.artists[0].name,
+
+                                    text = track.artists[0].name, // TODO: fix !!
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier
                                         .paddingFromBaseline(top = 25.dp)
@@ -115,12 +117,107 @@ fun MediaList(
                             ),
                             modifier = Modifier.clickable {
                                 onViewMoreClick(true, index, tracks)
-                                onAction(TrackSelectAction.ViewMoreSelect(index, tracks))
+                                onAction(TrackSelectAction.ViewMoreTrackDetailsSelect(index, tracks))
                             }
                         )
                     }
                 }
         }
     }
+}
 
+@OptIn(ExperimentalGlideComposeApi::class)
+@Composable
+fun MediaListMain(
+    tracks: List<MainItem>,
+    onViewMoreClick:(Boolean, Int, List<MainItem>) -> Unit,
+    onAction: (TrackSelectAction) -> Unit,
+) {
+
+    if (tracks.isNotEmpty()) {
+        Text(
+            text = stringResource(R.string.recently_played),
+            color = MaterialTheme.colorScheme.primary,
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
+            modifier = Modifier
+                .paddingFromBaseline(top = 40.dp)
+                .fillMaxWidth(),
+        )
+    }
+
+    Column {
+        //item {
+        tracks.forEachIndexed { index, track ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        onClick = {
+                            // TODO: fix !!
+                            //onAction(TrackSelectAction.TrackSelect(index,  tracks[index].uri!!, tracks))
+                        }
+                    )
+                    .padding(5.dp),
+                shape = MaterialTheme.shapes.extraSmall,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val imageUrl = track.images.firstOrNull()?.url
+                    GlideImage(
+                        model = imageUrl,
+                        contentDescription = "", // TODO: add description
+                        modifier = Modifier.size(100.dp)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .weight(1f),
+
+                        ) {
+                        Text(
+
+                            text = track.trackName.toString(), // TODO: fix !!
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier
+                                .paddingFromBaseline(top = 25.dp)
+                                .fillMaxWidth(),
+                        )
+                        Text(
+                            text = track.name.toString(),  // TODO: fix !!
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .paddingFromBaseline(top = 25.dp)
+                                .fillMaxWidth()
+                        )
+
+                        if (track.track?.artists?.isNotEmpty() == true) { // TODO; fix !!
+                            Text(
+
+                                text = track.track?.artists!![0].name, // TODO: fix !!
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier
+                                    .paddingFromBaseline(top = 25.dp)
+                                    .fillMaxWidth()
+                            )
+                        }
+                    }
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = stringResource(
+                            id = R.string.icon_view_more,
+                        ),
+                        modifier = Modifier.clickable {
+                            onViewMoreClick(true, index, tracks)
+                            //onAction(TrackSelectAction.ViewMoreTrackDetailsSelect(index, tracks))
+                        }
+                    )
+                }
+            }
+        }
+    }
 }

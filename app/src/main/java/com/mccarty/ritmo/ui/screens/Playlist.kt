@@ -22,6 +22,8 @@ fun PlaylistScreen(
 ) {
     val playLists by model.playLists.collectAsStateWithLifecycle()
 
+    println("PlaylistScreen ***** ${playLists.toString()}")
+
     when (playLists) {
         is MainViewModel.PlaylistState.Pending -> {
             Column(
@@ -42,11 +44,10 @@ fun PlaylistScreen(
                         onViewMoreClick = { showBottom, index, tracks ->
                             model.setPlayList(tracks)
                             onViewMoreClick(showBottom, index)
-                        },
-                        onAction = {
-                            onAction(it)
                         }
-                    )
+                    ) {
+                        onAction(it)
+                    }
                 }
             }
 

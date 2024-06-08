@@ -36,8 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.MainViewModel
+import com.mccarty.ritmo.MediaDetails
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.model.TrackDetails
+import com.mccarty.ritmo.model.payload.MainItem
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.ui.MainImageHeader
 import com.mccarty.ritmo.ui.playPauseIcon
@@ -50,7 +52,8 @@ fun SongDetailsScreen(
     index: Int,
     onPlayPauseClicked: (TrackSelectAction) -> Unit,
 ) {
-    val tracks by model.playlistTracks.collectAsStateWithLifecycle()
+    val tracks by model.mediaDetails.collectAsStateWithLifecycle()
+    //val tracks by model.playlistTracks.collectAsStateWithLifecycle()
     Column(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -72,14 +75,15 @@ fun SongDetailsScreen(
 @Composable
 fun MediaDetails(
     pagerState: PagerState,
-    tracks: List<TrackDetails>,
+    tracks: List<MediaDetails>,
     index: Int,
     model: MainViewModel,
     onPlayPauseClicked: (TrackSelectAction) -> Unit,
     ) {
+
     val uri = model.trackUri.collectAsStateWithLifecycle()
     VerticalPager(state = pagerState) { page ->
-        val image = tracks[page].images[0].url
+        val image = tracks[page].images!![0].url // TODO: fix !!
         if (image.isNotEmpty()) {
             MainImageHeader(
                 image,
@@ -94,7 +98,7 @@ fun MediaDetails(
         Column(modifier = Modifier.fillMaxWidth()) {
             Row {
                 Text(
-                    text = "${tracks[page].trackName}",
+                    text = tracks[page].trackName.toString(),
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.weight(1f)
                 )
@@ -104,7 +108,7 @@ fun MediaDetails(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.tertiary)
                     .clickable {
-                        onPlayPauseClicked(TrackSelectAction.PlayTrackWithUri(tracks[page].uri))
+                        onPlayPauseClicked(TrackSelectAction.PlayTrackWithUri(tracks[page]?.uri ?: ""))
                     },
                     contentAlignment = Alignment.Center,
                 ) {
@@ -116,12 +120,12 @@ fun MediaDetails(
                 }
             }
             Text(
-                text = "${tracks[page].albumName}",
+                text = "${tracks[page].trackName}",
                 style = MaterialTheme.typography.titleLarge
             )
-            tracks[page].artists.forEach { artist ->
+            tracks[page].artists?.forEach { artist ->
                 Text(
-                    text = "${artist.name}",
+                    text = "${tracks[page].trackName}",
                     style = MaterialTheme.typography.titleSmall,
                 )
             }

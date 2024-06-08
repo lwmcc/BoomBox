@@ -22,7 +22,7 @@ data class Item(
     val images: List<Image>,
     val name: String,
     val owner: Owner,
-    val `public`: Boolean,
+    val public: Boolean,
     val snapshot_id: String,
     val tracks: Tracks,
     val type: String,
@@ -33,11 +33,11 @@ data class ExternalUrls(
     val spotify: String
 )
 
-data class Image(
+/*data class Image(
     val height: Int,
     val url: String,
     val width: Int
-)
+)*/
 
 data class Owner(
     val display_name: String,

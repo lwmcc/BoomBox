@@ -1,5 +1,7 @@
 package com.mccarty.ritmo.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,20 +29,18 @@ import androidx.navigation.compose.rememberNavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.MainActivity
 import com.bumptech.glide.integration.compose.GlideImage as GlideImage
-import com.mccarty.ritmo.MainViewModel.RecentlyPlayedMusicState.Success as Success
-import com.mccarty.ritmo.MainViewModel.AllPlaylistsState.Success as PlaylistSuccess
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.MainViewModel
-import com.mccarty.ritmo.model.TrackDetails
-import com.mccarty.ritmo.ui.CircleSpinner
-import com.mccarty.ritmo.ui.PlayList
+import com.mccarty.ritmo.model.payload.MainItem
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
-@OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class
+)
 @Composable
 fun MainScreen(
     model: MainViewModel,
-    onViewMoreClick: (Boolean, Int, List<TrackDetails>) -> Unit,
+    onViewMoreClick: (Boolean, Int, List<MainItem>) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
     navController: NavHostController = rememberNavController(),
 ) {
@@ -48,7 +48,189 @@ fun MainScreen(
     val allPlayLists by model.allPlaylists.collectAsStateWithLifecycle()
     val musicHeader by model.musicHeader.collectAsStateWithLifecycle()
 
+    // TODO: grouped data
+    val mainMusic by model.mainItems.collectAsStateWithLifecycle()
+    val tracks = mainMusic.map {
+        Group(
+            type = it.key,
+            items = it.value,
+        )
+    }
+
     LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        tracks.forEachIndexed { index, group ->
+            stickyHeader {
+                Column(
+                    modifier = Modifier
+                        .background(color = MaterialTheme.colorScheme.background),
+                ) {
+                    Text(
+                        text = group.type,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontStyle = FontStyle.Normal,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .paddingFromBaseline(top = 40.dp)
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                    )
+                }
+            }
+
+            if (index == 0) {
+                item {
+                    MainHeader(
+                        imageUrl = musicHeader.imageUrl.toString(),
+                        artistName = musicHeader.artistName,
+                        albumName = musicHeader.albumName,
+                        songName = musicHeader.songName,
+                        modifier = Modifier,
+                    )
+                }
+            }
+
+            itemsIndexed(group.items) { index, item ->
+
+                when(item.type) {
+                    "track" -> {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    onClick = {
+                                        onAction(
+                                            TrackSelectAction.TrackSelect(
+                                                index,
+                                                group.items[index].uri ?: "", // TODO: handle null
+                                                //item.track?.uri ?: "", // TODO: null???? /*tracks[index].uri,*/
+                                                group.items ?: emptyList(),
+                                            )
+                                        )
+                                    }
+                                )
+                                .padding(5.dp),
+                            shape = MaterialTheme.shapes.extraSmall,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            ),
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                val imageUrl = item.track?.album?.images?.firstOrNull()?.url
+                                GlideImage(
+                                    model = imageUrl,
+                                    contentDescription = "", // TODO: add description
+                                    modifier = Modifier.size(100.dp)
+                                )
+
+                                Column(
+                                    modifier = Modifier
+                                        .padding(start = 20.dp)
+                                        .weight(1f),
+
+                                    ) {
+                                    Text(
+                                        text = item.track?.name.toString(),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier
+                                            .paddingFromBaseline(top = 25.dp)
+                                            .fillMaxWidth(),
+                                    )
+                                    Text(
+                                        text = item.track?.album?.name ?: "",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier
+                                            .paddingFromBaseline(top = 25.dp)
+                                            .fillMaxWidth()
+                                    )
+                                    if (item.track?.artists?.isNotEmpty() == true) {
+                                        Text(
+                                            text = item.track?.artists!![0].name, // TODO: fix
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier
+                                                .paddingFromBaseline(top = 25.dp)
+                                                .fillMaxWidth()
+                                        )
+                                    }
+                                }
+                                Icon(
+                                    Icons.Default.MoreVert,
+                                    contentDescription = stringResource(
+                                        id = R.string.icon_view_more,
+                                    ),
+                                    modifier = Modifier.clickable {
+                                        model.setPlayList(group.items)
+                                        onViewMoreClick(true, index, group.items)
+                                        onAction(TrackSelectAction.ViewMoreSelect(index, group.items))
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    "playlist" -> {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(5.dp)
+                                .clickable(onClick = {
+                                    model.fetchPlaylist(item.id ?: ""/*playlist[index].id*/)
+                                    navController.navigate("${MainActivity.PLAYLIST_SCREEN_KEY}${item.id/*playlist[index].id*/}")
+                                }),
+                            shape = MaterialTheme.shapes.extraSmall,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            ),
+                        ) {
+                            val imageUrl = item.images.firstOrNull()?.url
+                            Row {
+                                GlideImage(
+                                    model = imageUrl,
+                                    contentDescription = "",
+                                    modifier = Modifier
+                                        .size(100.dp),
+                                )
+
+                                Column(modifier = Modifier.padding(start = 20.dp)) {
+                                    Text(
+                                        text = item.name.toString(),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier
+                                            .paddingFromBaseline(top = 25.dp)
+                                            .fillMaxWidth(),
+                                    )
+                                    if (item.description?.isNotEmpty() == true) {
+                                        Text(
+                                            text = item.description ?: "", // TODO: use some text
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier
+                                                .paddingFromBaseline(top = 25.dp)
+                                                .fillMaxWidth(),
+                                        )
+                                    }
+                                    Text(
+                                        text = "${stringResource(R.string.total_tracks)} ${item.tracks?.total}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier
+                                            .paddingFromBaseline(top = 25.dp)
+                                            .fillMaxWidth(),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+    }
+
+
+/*    LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -245,5 +427,10 @@ fun MainScreen(
                 println("MainScreen ***** PLAYLIST ERROR")
             }
         }
-    }
+    }*/
 }
+
+data class Group(
+    val type: String,
+    val items: List<MainItem>
+)

@@ -71,11 +71,13 @@ class MainActivity : ComponentActivity() {
                 }) { padding ->
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     Column(
                         modifier = Modifier
-                            .padding(top = padding.calculateTopPadding())
+                            .padding(
+                                top = padding.calculateTopPadding(),
+                                bottom = padding.calculateBottomPadding(),)
                     ) {
                         StartScreen(
                             navController,
@@ -174,6 +176,10 @@ class MainActivity : ComponentActivity() {
                 model.setTrackUri(playerState.track.uri)
                 model.isPaused(playerState.isPaused)
                 model.playbackDuration(playerState.track.duration)
+
+
+                // TODO: combine and group
+                model.fetchMainMusic()
 
                 lifecycleScope.launch(Dispatchers.IO) {
                     while (!playerState.isPaused) {
@@ -278,7 +284,6 @@ class MainActivity : ComponentActivity() {
                 } else {
                     spotifyAppRemote?.playerApi?.pause()
                 }
-
             }
         }
     }
@@ -292,7 +297,11 @@ class MainActivity : ComponentActivity() {
                 model.handlePlayerActions(spotifyAppRemote, action)
             }
             is TrackSelectAction.ViewMoreSelect -> {
-                println("MainActivity ***** VIEW MORE SELECT")
+                println("MainActivity ***** VIEW MORE SELECT") // GO TO NEXT
+            }
+
+            is TrackSelectAction.ViewMoreTrackDetailsSelect -> {
+                println("MainActivity ***** VIEW MORE DETAILS SELECT")
             }
 
             is TrackSelectAction.PlayTrackWithUri -> {

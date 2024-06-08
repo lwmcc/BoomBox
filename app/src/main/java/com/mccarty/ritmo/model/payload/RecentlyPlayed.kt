@@ -1,7 +1,6 @@
 package com.mccarty.ritmo.model.payload
 
 import com.mccarty.ritmo.model.Artist
-import com.mccarty.ritmo.model.ExternalUrlsX
 
 data class RecentlyPlayedItem(
     val cursors: Cursors,
@@ -17,10 +16,57 @@ data class Cursors(
     val before: String
 )
 
+interface MainItem2 {
+    val type: String
+}
+open class MainItem(
+    open val id: String? = null,
+    open val uri: String? = null,
+    open val type: String,
+    open val track: Track? = null,
+    open val name: String? = null,
+    open val trackName: String? = null,
+    open val description: String? = null,
+    open val tracks: PlaylistData.Tracks? = null,
+    open val images: List<Image> = emptyList(),
+)
+open class TrackItem(
+    val context: Context?,
+    val played_at: String,
+    override val track: Track?,
+) : MainItem(
+    type = "track",
+    track = track,
+)
+
+open class ListItem(
+    val collaborative: Boolean,
+    override val description: String,
+    val external_urls: PlaylistData.ExternalUrls,
+    val href: String,
+    override val id: String,
+    override val images: List<Image>,
+    override val name: String,
+    val owner: PlaylistData.Owner,
+    val `public`: Boolean,
+    val snapshot_id: String,
+    override val tracks: PlaylistData.Tracks,
+    override val type: String,
+    override val uri: String,
+) : MainItem(
+    id = id,
+    uri = uri,
+    type = type,
+    name = name,
+    description = description,
+    images = images,
+    tracks = tracks,
+)
+
 data class Item(
     val context: Context,
     val played_at: String,
-    val track: Track?
+    val track: Track?,
 )
 
 data class Context(
