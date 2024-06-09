@@ -193,7 +193,7 @@ class MainViewModel @Inject constructor(
                 when (it) {
                     is NetworkRequest.Error -> { _mainItems.value = MainItemsState.Error(true) }
                     is NetworkRequest.Success -> {
-                        val trackItems = it.data.items.map { track ->
+                        val trackItems = it.data.items.distinctBy { track -> track.track?.id }.map { track ->
                             TrackItem(
                                 context = track.context,
                                 played_at = track.played_at,
