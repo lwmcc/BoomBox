@@ -198,8 +198,10 @@ fun MainScreen(
                                         .fillMaxWidth()
                                         .padding(5.dp)
                                         .clickable(onClick = {
-                                            model.fetchPlaylist(item.id ?: ""/*playlist[index].id*/)
-                                            navController.navigate("${MainActivity.PLAYLIST_SCREEN_KEY}${item.id/*playlist[index].id*/}")
+                                            model.fetchPlaylist(item.id ?: "")
+                                            navController.navigate(
+                                                "${MainActivity.PLAYLIST_SCREEN_KEY}${item.name}"
+                                            )
                                         }),
                                     shape = MaterialTheme.shapes.extraSmall,
                                     colors = CardDefaults.cardColors(

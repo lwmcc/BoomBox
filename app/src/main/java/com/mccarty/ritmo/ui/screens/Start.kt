@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import com.mccarty.ritmo.MainActivity.Companion.INDEX_KEY
 import com.mccarty.ritmo.MainActivity.Companion.MAIN_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_ID_KEY
+import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_NAME_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.SONG_DETAILS_KEY
 import com.mccarty.ritmo.viewmodel.MainViewModel
@@ -47,9 +48,10 @@ fun StartScreen(
             )
         }
         composable(
-            "$PLAYLIST_SCREEN_KEY{$PLAYLIST_ID_KEY}",
-        ) {
+            "$PLAYLIST_SCREEN_KEY{$PLAYLIST_NAME_KEY}",
+        ) { backStackEntry ->
             PlaylistScreen(
+                title = backStackEntry.arguments?.getString(PLAYLIST_NAME_KEY),
                 model = mainViewModel,
                 onViewMoreClick = { showBottomSheet, index ->
                     onViewMoreClick(showBottomSheet, index)

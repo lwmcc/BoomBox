@@ -111,12 +111,12 @@ fun MediaDetails(
                 }
             }
             Text(
-                text = "${tracks[page].trackName}",
+                text = "${tracks[page].albumName}",
                 style = MaterialTheme.typography.titleLarge
             )
             tracks[page].artists?.forEach { artist ->
                 Text(
-                    text = "${tracks[page].trackName}",
+                    text = artist.name,
                     style = MaterialTheme.typography.titleSmall,
                 )
             }

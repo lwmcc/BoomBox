@@ -33,95 +33,96 @@ import com.mccarty.ritmo.viewmodel.TrackSelectAction
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun MediaList(
+    title: String?,
     tracks: List<TrackDetails>,
-    onViewMoreClick:(Boolean, Int, List<TrackDetails>) -> Unit,
+    onViewMoreClick: (Boolean, Int, List<TrackDetails>) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
-) {
+    ) {
 
     if (tracks.isNotEmpty()) {
         Text(
-            text = stringResource(R.string.playlist),
+            text = title ?: "${stringResource(R.string.playlist)}",
             color = MaterialTheme.colorScheme.primary,
             fontStyle = FontStyle.Normal,
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
             modifier = Modifier
                 .paddingFromBaseline(top = 40.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(16.dp),
         )
     }
 
     Column {
-        //item {
-            tracks.forEachIndexed { index, track ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            onClick = {
-                                // TODO: fix !!
-                                //onAction(TrackSelectAction.TrackSelect(index,  tracks[index].uri!!, tracks))
-                            }
-                        )
-                        .padding(5.dp),
-                    shape = MaterialTheme.shapes.extraSmall,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    ),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        val imageUrl = track.images.firstOrNull()?.url
-                        GlideImage(
-                            model = imageUrl,
-                            contentDescription = "", // TODO: add description
-                            modifier = Modifier.size(100.dp)
-                        )
+        tracks.forEachIndexed { index, track ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        onClick = {
+                            // TODO: fix !!
+                            onAction(TrackSelectAction.TrackSelect(index,  tracks[index].uri!!, tracks))
+                        }
+                    )
+                    .padding(5.dp),
+                shape = MaterialTheme.shapes.extraSmall,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val imageUrl = track.images.firstOrNull()?.url
+                    GlideImage(
+                        model = imageUrl,
+                        contentDescription = "", // TODO: add description
+                        modifier = Modifier.size(100.dp)
+                    )
 
-                        Column(
+                    Column(
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .weight(1f),
+
+                        ) {
+                        Text(
+
+                            text = track.trackName, // TODO: fix !!
+                            style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier
-                                .padding(start = 20.dp)
-                                .weight(1f),
+                                .paddingFromBaseline(top = 25.dp)
+                                .fillMaxWidth(),
+                        )
+                        Text(
+                            text = track.albumName,  // TODO: fix !!
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .paddingFromBaseline(top = 25.dp)
+                                .fillMaxWidth()
+                        )
 
-                            ) {
+                        if (track.artists.isNotEmpty()) { // TODO; fix !!
                             Text(
 
-                                text = track.trackName, // TODO: fix !!
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .paddingFromBaseline(top = 25.dp)
-                                    .fillMaxWidth(),
-                            )
-                            Text(
-                                text = track.albumName,  // TODO: fix !!
+                                text = track.artists[0].name, // TODO: fix !!
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
                                     .paddingFromBaseline(top = 25.dp)
                                     .fillMaxWidth()
                             )
-
-                            if (track.artists.isNotEmpty()) { // TODO; fix !!
-                                Text(
-
-                                    text = track.artists[0].name, // TODO: fix !!
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier
-                                        .paddingFromBaseline(top = 25.dp)
-                                        .fillMaxWidth()
-                                )
-                            }
                         }
-                        Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = stringResource(
-                                id = R.string.icon_view_more,
-                            ),
-                            modifier = Modifier.clickable {
-                                onViewMoreClick(true, index, tracks)
-                                onAction(TrackSelectAction.ViewMoreTrackDetailsSelect(index, tracks))
-                            }
-                        )
                     }
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = stringResource(
+                            id = R.string.icon_view_more,
+                        ),
+                        modifier = Modifier.clickable {
+                            onViewMoreClick(true, index, tracks)
+                            onAction(TrackSelectAction.ViewMoreTrackDetailsSelect(index, tracks))
+                        }
+                    )
                 }
+            }
         }
     }
 }
@@ -130,7 +131,7 @@ fun MediaList(
 @Composable
 fun MediaListMain(
     tracks: List<MainItem>,
-    onViewMoreClick:(Boolean, Int, List<MainItem>) -> Unit,
+    onViewMoreClick: (Boolean, Int, List<MainItem>) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
 ) {
 

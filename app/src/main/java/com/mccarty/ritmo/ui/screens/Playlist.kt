@@ -16,6 +16,7 @@ import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 @Composable
 fun PlaylistScreen(
+    title: String?,
     model: MainViewModel,
     onViewMoreClick: (Boolean, Int) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
@@ -38,11 +39,12 @@ fun PlaylistScreen(
             LazyColumn {
                 item {
                     MediaList(
-                        tracks,
+                        title = title,
+                        tracks = tracks,
                         onViewMoreClick = { showBottom, index, tracks ->
                             model.setPlayList(tracks)
                             onViewMoreClick(showBottom, index)
-                        }
+                        },
                     ) {
                         onAction(it)
                     }

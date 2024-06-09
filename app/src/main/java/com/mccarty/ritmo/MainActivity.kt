@@ -240,7 +240,8 @@ class MainActivity : ComponentActivity() {
     companion object {
         val TRACK_ID_KEY = "trackId"
         val INDEX_KEY = "index"
-        val PLAYLIST_ID_KEY = "playlist_id"
+        val PLAYLIST_ID_KEY = "playlist_id/"
+        val PLAYLIST_NAME_KEY = "playlist_name/"
         val MAIN_SCREEN_KEY = "main_screen"
         val PLAYLIST_SCREEN_KEY = "playlist_screen/"
         val SONG_DETAILS_KEY = "song_details/"
