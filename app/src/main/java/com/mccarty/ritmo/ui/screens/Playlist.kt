@@ -48,7 +48,6 @@ fun PlaylistScreen(
                     }
                 }
             }
-
         }
 
         else -> {

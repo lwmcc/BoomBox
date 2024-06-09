@@ -40,7 +40,7 @@ fun MediaList(
 
     if (tracks.isNotEmpty()) {
         Text(
-            text = stringResource(R.string.recently_played),
+            text = stringResource(R.string.playlist),
             color = MaterialTheme.colorScheme.primary,
             fontStyle = FontStyle.Normal,
             fontWeight = FontWeight.Bold,
