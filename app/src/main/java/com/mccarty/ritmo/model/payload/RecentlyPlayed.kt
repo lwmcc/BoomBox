@@ -1,6 +1,7 @@
 package com.mccarty.ritmo.model.payload
 
 import com.mccarty.ritmo.model.Artist
+import com.mccarty.ritmo.ui.screens.CollectionType
 
 data class RecentlyPlayedItem(
     val cursors: Cursors,
@@ -35,7 +36,7 @@ open class TrackItem(
     val played_at: String,
     override val track: Track?,
 ) : MainItem(
-    type = "track",
+    type = CollectionType.TRACK.collectionType,
     track = track,
 )
 

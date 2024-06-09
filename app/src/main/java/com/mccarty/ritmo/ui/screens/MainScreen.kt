@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -30,12 +30,14 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.MainActivity
 import com.bumptech.glide.integration.compose.GlideImage as GlideImage
 import com.mccarty.ritmo.R
-import com.mccarty.ritmo.MainViewModel
+import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.model.payload.MainItem
+import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
-@OptIn(ExperimentalGlideComposeApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class
+@OptIn(
+    ExperimentalGlideComposeApi::class,
+    ExperimentalFoundationApi::class,
 )
 @Composable
 fun MainScreen(
@@ -44,393 +46,231 @@ fun MainScreen(
     onAction: (TrackSelectAction) -> Unit,
     navController: NavHostController = rememberNavController(),
 ) {
-    val recentlyPlayedMusic by model.recentlyPlayedMusic.collectAsStateWithLifecycle()
-    val allPlayLists by model.allPlaylists.collectAsStateWithLifecycle()
     val musicHeader by model.musicHeader.collectAsStateWithLifecycle()
-
-    // TODO: grouped data
     val mainMusic by model.mainItems.collectAsStateWithLifecycle()
-    val tracks = mainMusic.map {
-        Group(
-            type = it.key,
-            items = it.value,
-        )
-    }
+    val context = LocalContext.current
+    val tracksHeader = context.getString(R.string.recently_played)
+    val playlistsHeader = context.getString(R.string.playlists)
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        tracks.forEachIndexed { index, group ->
-            stickyHeader {
-                Column(
-                    modifier = Modifier
-                        .background(color = MaterialTheme.colorScheme.background),
-                ) {
-                    Text(
-                        text = group.type,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontStyle = FontStyle.Normal,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        modifier = Modifier
-                            .paddingFromBaseline(top = 40.dp)
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                    )
-                }
+    when (mainMusic) {
+        is MainViewModel.MainItemsState.Pending -> {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                CircleSpinner(32.dp)
             }
-
-            if (index == 0) {
-                item {
-                    MainHeader(
-                        imageUrl = musicHeader.imageUrl.toString(),
-                        artistName = musicHeader.artistName,
-                        albumName = musicHeader.albumName,
-                        songName = musicHeader.songName,
-                        modifier = Modifier,
-                    )
-                }
-            }
-
-            itemsIndexed(group.items) { index, item ->
-
-                when(item.type) {
-                    "track" -> {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    onClick = {
-                                        onAction(
-                                            TrackSelectAction.TrackSelect(
-                                                index,
-                                                group.items[index].uri ?: "", // TODO: handle null
-                                                //item.track?.uri ?: "", // TODO: null???? /*tracks[index].uri,*/
-                                                group.items ?: emptyList(),
-                                            )
-                                        )
-                                    }
-                                )
-                                .padding(5.dp),
-                            shape = MaterialTheme.shapes.extraSmall,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            ),
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                val imageUrl = item.track?.album?.images?.firstOrNull()?.url
-                                GlideImage(
-                                    model = imageUrl,
-                                    contentDescription = "", // TODO: add description
-                                    modifier = Modifier.size(100.dp)
-                                )
-
-                                Column(
-                                    modifier = Modifier
-                                        .padding(start = 20.dp)
-                                        .weight(1f),
-
-                                    ) {
-                                    Text(
-                                        text = item.track?.name.toString(),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier
-                                            .paddingFromBaseline(top = 25.dp)
-                                            .fillMaxWidth(),
-                                    )
-                                    Text(
-                                        text = item.track?.album?.name ?: "",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier
-                                            .paddingFromBaseline(top = 25.dp)
-                                            .fillMaxWidth()
-                                    )
-                                    if (item.track?.artists?.isNotEmpty() == true) {
-                                        Text(
-                                            text = item.track?.artists!![0].name, // TODO: fix
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            modifier = Modifier
-                                                .paddingFromBaseline(top = 25.dp)
-                                                .fillMaxWidth()
-                                        )
-                                    }
-                                }
-                                Icon(
-                                    Icons.Default.MoreVert,
-                                    contentDescription = stringResource(
-                                        id = R.string.icon_view_more,
-                                    ),
-                                    modifier = Modifier.clickable {
-                                        model.setPlayList(group.items)
-                                        onViewMoreClick(true, index, group.items)
-                                        onAction(TrackSelectAction.ViewMoreSelect(index, group.items))
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    "playlist" -> {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(5.dp)
-                                .clickable(onClick = {
-                                    model.fetchPlaylist(item.id ?: ""/*playlist[index].id*/)
-                                    navController.navigate("${MainActivity.PLAYLIST_SCREEN_KEY}${item.id/*playlist[index].id*/}")
-                                }),
-                            shape = MaterialTheme.shapes.extraSmall,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            ),
-                        ) {
-                            val imageUrl = item.images.firstOrNull()?.url
-                            Row {
-                                GlideImage(
-                                    model = imageUrl,
-                                    contentDescription = "",
-                                    modifier = Modifier
-                                        .size(100.dp),
-                                )
-
-                                Column(modifier = Modifier.padding(start = 20.dp)) {
-                                    Text(
-                                        text = item.name.toString(),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier
-                                            .paddingFromBaseline(top = 25.dp)
-                                            .fillMaxWidth(),
-                                    )
-                                    if (item.description?.isNotEmpty() == true) {
-                                        Text(
-                                            text = item.description ?: "", // TODO: use some text
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            modifier = Modifier
-                                                .paddingFromBaseline(top = 25.dp)
-                                                .fillMaxWidth(),
-                                        )
-                                    }
-                                    Text(
-                                        text = "${stringResource(R.string.total_tracks)} ${item.tracks?.total}",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier
-                                            .paddingFromBaseline(top = 25.dp)
-                                            .fillMaxWidth(),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
         }
 
-    }
-
-
-/*    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-
-        when (allPlayLists) {
-            is MainViewModel.AllPlaylistsState.Pending -> {
-                item {
-                    CircleSpinner(32.dp)
-                }
+        is MainViewModel.MainItemsState.Success -> {
+            val mainItems = (mainMusic as MainViewModel.MainItemsState.Success).mainItems
+            val tracks = mainItems.map {
+                Group(
+                    type = it.key,
+                    items = it.value,
+                )
             }
 
-            is PlaylistSuccess -> {
-                item {
-                    MainHeader(
-                        imageUrl = musicHeader.imageUrl.toString(),
-                        artistName = musicHeader.artistName,
-                        albumName = musicHeader.albumName,
-                        songName = musicHeader.songName,
-                        modifier = Modifier,
-                    )
-                }
-                val tracks = (recentlyPlayedMusic as Success).trackDetails
-                if (tracks.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.recently_played),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontStyle = FontStyle.Normal,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                tracks.forEachIndexed { index, group ->
+                    stickyHeader {
+                        Column(
                             modifier = Modifier
-                                .paddingFromBaseline(top = 40.dp)
-                                .fillMaxWidth(),
-                        )
-                    }
-                }
-                itemsIndexed(tracks) { index, track ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(
-                                onClick = {
-                                    onAction(
-                                        TrackSelectAction.TrackSelect(
-                                            index,
-                                            tracks[index].uri,
-                                            tracks
-                                        )
-                                    )
-                                }
-                            )
-                            .padding(5.dp),
-                        shape = MaterialTheme.shapes.extraSmall,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        ),
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            val imageUrl = track.images.firstOrNull()?.url
-                            GlideImage(
-                                model = imageUrl,
-                                contentDescription = "", // TODO: add description
-                                modifier = Modifier.size(100.dp)
-                            )
-
-                            Column(
+                                .background(color = MaterialTheme.colorScheme.background),
+                        ) {
+                            Text(
+                                text = stickyHeaderText(group.type, tracksHeader, playlistsHeader),
+                                color = MaterialTheme.colorScheme.primary,
+                                fontStyle = FontStyle.Normal,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
                                 modifier = Modifier
-                                    .padding(start = 20.dp)
-                                    .weight(1f),
+                                    .paddingFromBaseline(top = 40.dp)
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                            )
+                        }
+                    }
 
-                                ) {
-                                Text(
-                                    text = track.trackName,
-                                    style = MaterialTheme.typography.titleMedium,
+                    if (index == 0) {
+                        item {
+                            MainHeader(
+                                imageUrl = musicHeader.imageUrl.toString(),
+                                artistName = musicHeader.artistName,
+                                albumName = musicHeader.albumName,
+                                songName = musicHeader.songName,
+                                modifier = Modifier,
+                            )
+                        }
+                    }
+
+                    itemsIndexed(group.items) { index, item ->
+                        when (item.type) {
+                            CollectionType.TRACK.collectionType -> {
+                                Card(
                                     modifier = Modifier
-                                        .paddingFromBaseline(top = 25.dp)
-                                        .fillMaxWidth(),
-                                )
-                                Text(
-                                    text = track.albumName,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier
-                                        .paddingFromBaseline(top = 25.dp)
                                         .fillMaxWidth()
-                                )
-                                if (track.artists.isNotEmpty()) {
-                                    Text(
-                                        text = track.artists[0].name,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier
-                                            .paddingFromBaseline(top = 25.dp)
-                                            .fillMaxWidth()
-                                    )
+                                        .clickable(
+                                            onClick = {
+                                                onAction(
+                                                    TrackSelectAction.TrackSelect(
+                                                        index,
+                                                        group.items[index].uri
+                                                            ?: "", // TODO: handle null
+                                                        //item.track?.uri ?: "", // TODO: null???? /*tracks[index].uri,*/
+                                                        group.items ?: emptyList(),
+                                                    )
+                                                )
+                                            }
+                                        )
+                                        .padding(5.dp),
+                                    shape = MaterialTheme.shapes.extraSmall,
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    ),
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        val imageUrl = item.track?.album?.images?.firstOrNull()?.url
+                                        GlideImage(
+                                            model = imageUrl,
+                                            contentDescription = "", // TODO: add description
+                                            modifier = Modifier.size(100.dp)
+                                        )
+
+                                        Column(
+                                            modifier = Modifier
+                                                .padding(start = 20.dp)
+                                                .weight(1f),
+
+                                            ) {
+                                            Text(
+                                                text = item.track?.name.toString(),
+                                                style = MaterialTheme.typography.titleMedium,
+                                                modifier = Modifier
+                                                    .paddingFromBaseline(top = 25.dp)
+                                                    .fillMaxWidth(),
+                                            )
+                                            Text(
+                                                text = item.track?.album?.name ?: "",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                modifier = Modifier
+                                                    .paddingFromBaseline(top = 25.dp)
+                                                    .fillMaxWidth()
+                                            )
+                                            if (item.track?.artists?.isNotEmpty() == true) {
+                                                Text(
+                                                    text = item.track?.artists!![0].name, // TODO: fix
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    modifier = Modifier
+                                                        .paddingFromBaseline(top = 25.dp)
+                                                        .fillMaxWidth()
+                                                )
+                                            }
+                                        }
+                                        Icon(
+                                            Icons.Default.MoreVert,
+                                            contentDescription = stringResource(
+                                                id = R.string.icon_view_more,
+                                            ),
+                                            modifier = Modifier.clickable {
+                                                model.setPlayList(group.items)
+                                                onViewMoreClick(true, index, group.items)
+                                                onAction(
+                                                    TrackSelectAction.ViewMoreSelect(
+                                                        index,
+                                                        group.items
+                                                    )
+                                                )
+                                            }
+                                        )
+                                    }
                                 }
                             }
-                            Icon(
-                                Icons.Default.MoreVert,
-                                contentDescription = stringResource(
-                                    id = R.string.icon_view_more,
-                                ),
-                                modifier = Modifier.clickable {
-                                    onViewMoreClick(true, index, tracks)
-                                    onAction(TrackSelectAction.ViewMoreSelect(index, tracks))
-                                }
-                            )
-                        }
-                    }
-                }
 
-                item {
-                    MediaList(
-                        tracks,
-                        onViewMoreClick = { showBottom, index, tracks ->
-                            model.setPlayList(tracks)
-                            onViewMoreClick(showBottom, index, tracks)
-                        },
-                        onAction = {
-                           onAction(it)
-                        }
-                    )
-                }
-
-                val playlist = (allPlayLists as MainViewModel.AllPlaylistsState.Success).playLists
-                if (playlist.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(id = R.string.playlists),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontStyle = FontStyle.Normal,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            modifier = Modifier
-                                .paddingFromBaseline(top = 40.dp)
-                                .fillMaxWidth(),
-                        )
-                    }
-                }
-
-                itemsIndexed(playlist) {index, item ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(5.dp)
-                            .clickable(onClick = {
-                                model.fetchPlaylist(playlist[index].id)
-                                navController.navigate("${MainActivity.PLAYLIST_SCREEN_KEY}${playlist[index].id}")
-                            }),
-                        shape = MaterialTheme.shapes.extraSmall,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        ),
-                    ) {
-                        val imageUrl = item.images.firstOrNull()?.url
-                        Row {
-                            GlideImage(
-                                model = imageUrl,
-                                contentDescription = "",
-                                modifier = Modifier
-                                    .size(100.dp),
-                            )
-
-                            Column(modifier = Modifier.padding(start = 20.dp)) {
-                                Text(
-                                    text = item.name,
-                                    style = MaterialTheme.typography.titleMedium,
+                           CollectionType.PLAYLIST.collectionType -> {
+                                Card(
                                     modifier = Modifier
-                                        .paddingFromBaseline(top = 25.dp)
-                                        .fillMaxWidth(),
-                                )
-                                if (item.description.isNotEmpty()) {
-                                    Text(
-                                        text = item.description,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier
-                                            .paddingFromBaseline(top = 25.dp)
-                                            .fillMaxWidth(),
-                                    )
+                                        .fillMaxWidth()
+                                        .padding(5.dp)
+                                        .clickable(onClick = {
+                                            model.fetchPlaylist(item.id ?: ""/*playlist[index].id*/)
+                                            navController.navigate("${MainActivity.PLAYLIST_SCREEN_KEY}${item.id/*playlist[index].id*/}")
+                                        }),
+                                    shape = MaterialTheme.shapes.extraSmall,
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    ),
+                                ) {
+                                    val imageUrl = item.images.firstOrNull()?.url
+                                    Row {
+                                        GlideImage(
+                                            model = imageUrl,
+                                            contentDescription = "",
+                                            modifier = Modifier
+                                                .size(100.dp),
+                                        )
+
+                                        Column(modifier = Modifier.padding(start = 20.dp)) {
+                                            Text(
+                                                text = item.name.toString(),
+                                                style = MaterialTheme.typography.titleMedium,
+                                                modifier = Modifier
+                                                    .paddingFromBaseline(top = 25.dp)
+                                                    .fillMaxWidth(),
+                                            )
+                                            if (item.description?.isNotEmpty() == true) {
+                                                Text(
+                                                    text = item.description
+                                                        ?: "", // TODO: use some text
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    modifier = Modifier
+                                                        .paddingFromBaseline(top = 25.dp)
+                                                        .fillMaxWidth(),
+                                                )
+                                            }
+                                            Text(
+                                                text = "${stringResource(R.string.total_tracks)} ${item.tracks?.total}",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                modifier = Modifier
+                                                    .paddingFromBaseline(top = 25.dp)
+                                                    .fillMaxWidth(),
+                                            )
+                                        }
+                                    }
                                 }
-                                Text(
-                                    text = "${stringResource(R.string.total_tracks)} ${item.tracks.total}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier
-                                        .paddingFromBaseline(top = 25.dp)
-                                        .fillMaxWidth(),
-                                )
                             }
                         }
                     }
                 }
-            }
-
-            else -> {
-                println("MainScreen ***** PLAYLIST ERROR")
             }
         }
-    }*/
+
+        is MainViewModel.MainItemsState.Error -> {
+            // TODO: show on UI
+        }
+    }
+}
+
+fun stickyHeaderText(type: String, tracks: String, playlists: String): String {
+    return when (type) {
+        CollectionType.TRACK.collectionType -> tracks
+        CollectionType.PLAYLIST.collectionType -> playlists
+        else -> {
+            tracks
+        }
+    }
 }
 
 data class Group(
     val type: String,
     val items: List<MainItem>
 )
+
+enum class CollectionType(val collectionType: String) {
+    TRACK("track"), PLAYLIST("playlist")
+}

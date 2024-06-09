@@ -27,7 +27,14 @@ fun MainHeader(
     songName: String,
     modifier: Modifier = Modifier,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = modifier
+            .padding(
+                start = 16.dp,
+                bottom = 16.dp,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
         MainImageHeader(
             imageUrl,
             400.dp,
@@ -50,14 +57,14 @@ fun MainHeader(
                 .paddingFromBaseline(top = 25.dp)
                 .fillMaxWidth(),
         )
+        Text(
+            text = songName,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = modifier
+                .paddingFromBaseline(top = 25.dp)
+                .fillMaxWidth(),
+        )
     }
-    Text(
-        text = songName,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = modifier
-            .paddingFromBaseline(top = 25.dp)
-            .fillMaxWidth(),
-    )
 }
 
 

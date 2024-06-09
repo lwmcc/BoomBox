@@ -10,7 +10,7 @@ import com.mccarty.ritmo.MainActivity.Companion.MAIN_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_ID_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.SONG_DETAILS_KEY
-import com.mccarty.ritmo.MainViewModel
+import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 @Composable

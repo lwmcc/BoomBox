@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.mccarty.ritmo.MainViewModel
+import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
@@ -21,8 +21,6 @@ fun PlaylistScreen(
     onAction: (TrackSelectAction) -> Unit,
 ) {
     val playLists by model.playLists.collectAsStateWithLifecycle()
-
-    println("PlaylistScreen ***** ${playLists.toString()}")
 
     when (playLists) {
         is MainViewModel.PlaylistState.Pending -> {

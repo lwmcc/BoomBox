@@ -2,7 +2,6 @@ package com.mccarty.ritmo.viewmodel
 
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.networkrequest.network.NetworkRequest.Success as NetworkRequestSuccess
-import com.mccarty.ritmo.MainViewModel
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
 import com.mccarty.ritmo.model.ExternalIds
@@ -10,8 +9,8 @@ import com.mccarty.ritmo.model.ExternalUrlsX
 import com.mccarty.ritmo.model.Tracks
 import com.mccarty.ritmo.model.payload.Album
 import com.mccarty.ritmo.model.payload.Context
-import com.mccarty.ritmo.MainViewModel.RecentlyPlayedMusicState.Success as RecentlyPlayedMusicStateSuccess
-import com.mccarty.ritmo.MainViewModel.AllPlaylistsState.Success as PlaylistStateSuccess
+import com.mccarty.ritmo.viewmodel.MainViewModel.RecentlyPlayedMusicState.Success as RecentlyPlayedMusicStateSuccess
+import com.mccarty.ritmo.viewmodel.MainViewModel.AllPlaylistsState.Success as PlaylistStateSuccess
 import com.mccarty.ritmo.model.payload.Cursors
 import com.mccarty.ritmo.model.payload.ExternalIds as PayloadExternalIds
 import com.mccarty.ritmo.model.payload.ExternalUrls

@@ -31,6 +31,7 @@ import com.mccarty.ritmo.model.MusicHeader
 import com.mccarty.ritmo.ui.BottomSheet
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.ui.screens.StartScreen
+import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.viewmodel.PlayerAction
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 import com.spotify.android.appremote.api.ConnectionParams
@@ -172,13 +173,9 @@ class MainActivity : ComponentActivity() {
                     this.albumName = playerState.track.album.name ?: ""
                     this.songName = playerState.track.name ?: ""
                 })
-                //TODO: model.setArtistName(artistName)
                 model.setTrackUri(playerState.track.uri)
                 model.isPaused(playerState.isPaused)
                 model.playbackDuration(playerState.track.duration)
-
-
-                // TODO: combine and group
                 model.fetchMainMusic()
 
                 lifecycleScope.launch(Dispatchers.IO) {
