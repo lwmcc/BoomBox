@@ -1,5 +1,7 @@
 package com.mccarty.ritmo.module
 
+import com.mccarty.ritmo.domain.MediaDetails
+import com.mccarty.ritmo.domain.MediaDetailsCollections
 import com.mccarty.ritmo.domain.RemoteService
 import com.mccarty.ritmo.domain.RemoteServiceControls
 import com.mccarty.ritmo.repository.remote.MusicRepository
@@ -17,4 +19,7 @@ abstract class InterfaceModule {
 
     @Binds
     abstract fun bindSpotifyRemoteService(spotifyRemoteService: RemoteServiceControls): RemoteService
+
+    @Binds
+    abstract fun bindMediaDetailsCollections(mediaDetailsCollections: MediaDetailsCollections): MediaDetails
 }

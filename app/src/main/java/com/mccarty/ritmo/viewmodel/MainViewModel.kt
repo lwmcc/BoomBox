@@ -4,6 +4,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
+import com.mccarty.ritmo.domain.Details
+import com.mccarty.ritmo.domain.MediaDetails
+import com.mccarty.ritmo.domain.MediaDetailsCollections
 import com.mccarty.ritmo.domain.RemoteService
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
@@ -26,12 +29,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import java.util.Collections
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val repository: Repository,
     private val remoteService: RemoteService,
+    private val details: MediaDetails,
     ) : ViewModel() {
 
     sealed class RecentlyPlayedMusicState {
@@ -99,8 +104,8 @@ class MainViewModel @Inject constructor(
     private var _playlistTracks = MutableStateFlow<List<MainItem>>(emptyList())
     val playlistTracks: StateFlow<List<MainItem>> = _playlistTracks
 
-    private var _mediaDetails = MutableStateFlow<List<MediaDetails>>(emptyList())
-    val mediaDetails: StateFlow<List<MediaDetails>> = _mediaDetails
+    private var _mediaDetails = MutableStateFlow<List<Details>>(emptyList())
+    val mediaDetails: StateFlow<List<Details>> = _mediaDetails
 
     private var _lastPlayedSong = MutableStateFlow<LastPlayedSongState>(LastPlayedSongState.Pending(true))
     val lastPlayedSong: StateFlow<LastPlayedSongState> = _lastPlayedSong
@@ -241,44 +246,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun setPlayList(tracks: List<Any>) {
-
-        when (tracks.firstOrNull()) {
-            is TrackDetails -> {
-                _mediaDetails.value = tracks.map {
-                    it as TrackDetails
-                    MediaDetails(
-                        albumName = it.albumName,
-                        trackName = it.trackName,
-                        explicit = it.explicit,
-                        artists = it.artists,
-                        images = it.images,
-                        trackId = it.id,
-                        uri = it.uri,
-                        type = it.type,
-                    )
-                }
-            }
-
-            is MainItem -> {
-                _mediaDetails.value = tracks.map {
-                    it as MainItem
-                    MediaDetails(
-                        albumName = it.track?.album?.name,
-                        trackName = it.track?.name,
-                        explicit = it.track?.explicit ?: false,
-                        artists = it.track?.artists,
-                        images = it.track?.album?.images,
-                        trackId = it.track?.id,
-                        uri = it.track?.uri,
-                        type = it.track?.type,
-                    )
-                }
-            }
-
-            else -> {
-                _mediaDetails.value = emptyList()
-            }
-        }
+        _mediaDetails.value = details.mediaDetails(tracks)
     }
 
     fun isPaused(isPaused: Boolean) {
@@ -297,14 +265,3 @@ class MainViewModel @Inject constructor(
         remoteService.onTrackSelected(remote, action)
     }
 }
-
-data class MediaDetails(
-    val albumName: String?,
-    val trackName: String?,
-    val explicit: Boolean = false,
-    val artists: List<ArtistX>? = emptyList(),
-    val images: List<Image>? = emptyList(),
-    val trackId: String?,
-    val uri: String?,
-    val type: String?,
-)

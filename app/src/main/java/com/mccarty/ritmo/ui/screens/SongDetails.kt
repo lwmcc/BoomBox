@@ -36,8 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.MainViewModel
-import com.mccarty.ritmo.MediaDetails
 import com.mccarty.ritmo.R
+import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.model.TrackDetails
 import com.mccarty.ritmo.model.payload.MainItem
 import com.mccarty.ritmo.ui.CircleSpinner
@@ -53,7 +53,6 @@ fun SongDetailsScreen(
     onPlayPauseClicked: (TrackSelectAction) -> Unit,
 ) {
     val tracks by model.mediaDetails.collectAsStateWithLifecycle()
-    //val tracks by model.playlistTracks.collectAsStateWithLifecycle()
     Column(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -75,7 +74,7 @@ fun SongDetailsScreen(
 @Composable
 fun MediaDetails(
     pagerState: PagerState,
-    tracks: List<MediaDetails>,
+    tracks: List<Details>,
     index: Int,
     model: MainViewModel,
     onPlayPauseClicked: (TrackSelectAction) -> Unit,
