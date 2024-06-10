@@ -120,10 +120,8 @@ fun MainScreen(
                                                 onAction(
                                                     TrackSelectAction.TrackSelect(
                                                         index,
-                                                        group.items[index].uri
-                                                            ?: "", // TODO: handle null
-                                                        //item.track?.uri ?: "", // TODO: null???? /*tracks[index].uri,*/
-                                                        group.items ?: emptyList(),
+                                                        group.items[index].track?.uri ?: "",
+                                                        group.items,
                                                     )
                                                 )
                                             }
