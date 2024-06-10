@@ -23,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
@@ -41,7 +42,6 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -61,6 +61,10 @@ class MainActivity : ComponentActivity() {
             var showBottomSheet by remember { mutableStateOf(false) }
             var trackIndex by remember { mutableIntStateOf(0) }
             val navController = rememberNavController()
+
+            val mainItems = model.mainItems.collectAsStateWithLifecycle()
+            val music by remember { mutableStateOf(mainItems) }
+
             Scaffold(
                 bottomBar = {
                     BottomAppBar(
@@ -78,10 +82,12 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .padding(
                                 top = padding.calculateTopPadding(),
-                                bottom = padding.calculateBottomPadding(),)
+                                bottom = padding.calculateBottomPadding(),
+                            )
                     ) {
                         StartScreen(
                             navController,
+                            music = music,
                             onViewMoreClick = { bottomSheet, index ->
                                 showBottomSheet = bottomSheet
                                 trackIndex = index
@@ -134,6 +140,17 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.isPaused.collect {
+                    while(it) {
+                        model.fetchPlaybackState()
+                        delay(1_000)
+                    }
+                }
+            }
+        }
     }
 
     override fun onStart() {
@@ -177,13 +194,6 @@ class MainActivity : ComponentActivity() {
                 model.isPaused(playerState.isPaused)
                 model.playbackDuration(playerState.track.duration)
                 model.fetchMainMusic()
-
-                lifecycleScope.launch(Dispatchers.IO) {
-                    while (!playerState.isPaused) {
-                        model.fetchPlaybackState()
-                        delay(timeMillis = 1_000)
-                    }
-                }
             }
         }
     }

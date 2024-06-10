@@ -1,6 +1,5 @@
 package com.mccarty.ritmo.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
@@ -234,10 +233,21 @@ class MainViewModel @Inject constructor(
     }
 
     suspend fun fetchPlaybackState() {
-        repository.fetchPlaybackState().collect {
-            when (it) {
-                is NetworkRequest.Error -> println("ERROR ***** ${it}")
-                is NetworkRequest.Success -> { _playbackPosition.value = it.data.progress_ms.toFloat() }
+        viewModelScope.launch {
+            while (!isPaused.value) {
+                repository.fetchPlaybackState()
+                    .catch { _isPaused.value = true }
+                    .collect {
+                    when (it) {
+                        is NetworkRequest.Error -> {
+                            _isPaused.value = true
+                        }
+
+                        is NetworkRequest.Success -> {
+                            _playbackPosition.value = it.data.progress_ms.toFloat()
+                        }
+                    }
+                }
             }
         }
     }

@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,7 @@ fun MainScreen(
     onViewMoreClick: (Boolean, Int, List<MainItem>) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
     navController: NavHostController = rememberNavController(),
+    music: State<MainViewModel.MainItemsState>,
 ) {
     val musicHeader by model.musicHeader.collectAsStateWithLifecycle()
     val mainMusic by model.mainItems.collectAsStateWithLifecycle()
@@ -52,7 +54,7 @@ fun MainScreen(
     val tracksHeader = context.getString(R.string.recently_played)
     val playlistsHeader = context.getString(R.string.playlists)
 
-    when (mainMusic) {
+    when (music.value) {
         is MainViewModel.MainItemsState.Pending -> {
             Column(
                 modifier = Modifier.fillMaxSize(),

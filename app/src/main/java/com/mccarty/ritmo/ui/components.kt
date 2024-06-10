@@ -26,8 +26,10 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -76,23 +78,23 @@ fun PlayerControls(
     onSlide: (PlayerAction) -> Unit,
     ) {
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle()
-    val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle()
+    var position = mainViewModel.playbackPosition.collectAsStateWithLifecycle().value
     val duration = mainViewModel.playbackDuration.collectAsStateWithLifecycle().value.toFloat()
 
-    val pos = remember { mutableFloatStateOf(position.value) }
+    var sliderPosition by remember { mutableFloatStateOf(position) }
 
     Column {
-
         Slider(
-            value = pos.value,
+            value = position,
             onValueChange = {
-                pos.value = it
+                mainViewModel.isPaused(true)
+                position = it
             },
             valueRange = 0f..duration,
-            steps = 10,
+            steps = 200,
             onValueChangeFinished = {
-                mainViewModel.playbackPosition(pos.value)
-                onSlide(PlayerAction.Seek(pos.value))
+                mainViewModel.playbackPosition(position)
+                onSlide(PlayerAction.Seek(position))
             }
         )
         Row(
