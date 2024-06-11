@@ -22,7 +22,9 @@ import com.spotify.android.appremote.api.SpotifyAppRemote
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -92,7 +94,7 @@ class MainViewModel @Inject constructor(
     private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(
         RecentlyPlayedMusicState.Success(emptyList())
     )
-    val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
+    val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic.asStateFlow()
 
     private var _playLists = MutableStateFlow<PlaylistState>(PlaylistState.Pending(true))
     val playLists: StateFlow<PlaylistState> = _playLists
@@ -171,11 +173,18 @@ class MainViewModel @Inject constructor(
                 _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(emptyList())
             }.collect {
                 when (it) {
-                    is NetworkRequest.Error -> _recentlyPlayedMusic.value =
-                        RecentlyPlayedMusicState.Success(emptyList())
+                    is NetworkRequest.Error -> {
+                        _recentlyPlayedMusic.update {
+                            RecentlyPlayedMusicState.Success(emptyList())
+                        }
+                    }
+
                     is NetworkRequest.Success -> {
-                        _recentlyPlayedMusic.value =
-                            RecentlyPlayedMusicState.Success(it.data.items.createTrackDetailsFromItems())
+                        _recentlyPlayedMusic.update { _ ->
+                            RecentlyPlayedMusicState.Success(
+                                it.data.items.createTrackDetailsFromItems()
+                            )
+                        }
                     }
                 }
             }

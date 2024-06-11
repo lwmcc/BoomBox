@@ -8,11 +8,14 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.getValue
@@ -42,6 +45,7 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -107,18 +111,19 @@ class MainActivity : ComponentActivity() {
                     sheetState = sheetState,
                     text = getString(R.string.sheets_view_more),
                     onDismiss = {
-                        // TODO: duplicate code
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                showBottomSheet = false
-                            }
+                        showSheet(
+                            scope = scope,
+                            sheetState = sheetState,
+                        ) {
+                            showBottomSheet = it
                         }
                     },
                     onClick = {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                showBottomSheet = false
-                            }
+                        showSheet(
+                            scope = scope,
+                            sheetState = sheetState,
+                        ) {
+                            showBottomSheet = it
                         }
                         navController.navigate("${MainActivity.SONG_DETAILS_KEY}${trackIndex}")
                     },
@@ -178,23 +183,23 @@ class MainActivity : ComponentActivity() {
 
     private fun connect() {
         spotifyAppRemote?.let {
-            it.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
-                val artistName = playerState.track.artist.name ?: null
-
-                model.setMusicHeader(MusicHeader().apply {
-                    this.imageUrl = StringBuilder().apply {
-                        append(IMAGE_URL)
-                        append(playerState.track.imageUri.toString().drop(22).dropLast(2))
-                    }.toString()
-                    this.artistName = artistName ?: "" // TODO: set strings null
-                    this.albumName = playerState.track.album.name ?: ""
-                    this.songName = playerState.track.name ?: ""
-                })
-                model.setTrackUri(playerState.track.uri)
-                model.isPaused(playerState.isPaused)
-                model.playbackDuration(playerState.track.duration)
-                model.fetchMainMusic()
-            }
+            it.playerApi.playerState
+                .setResultCallback { playerState ->
+                    model.setMusicHeader(MusicHeader().apply {
+                        imageUrl = StringBuilder().apply {
+                            append(IMAGE_URL)
+                            append(playerState.track.imageUri.toString().drop(22).dropLast(2))
+                        }.toString()
+                        artistName = playerState.track.artist.name ?: getString(R.string.artist_name)
+                        albumName = playerState.track.album.name ?: getString(R.string.album_name)
+                        songName = playerState.track.name ?: getString(R.string.track_name)
+                    })
+                    model.setTrackUri(playerState.track.uri)
+                    model.isPaused(playerState.isPaused)
+                    model.playbackDuration(playerState.track.duration)
+                    model.fetchMainMusic()
+                }
+                .setErrorCallback { throwable -> println("MainActivity ***** ERROR ${throwable.message}") } // TODO: handle this
         }
     }
 
@@ -264,7 +269,7 @@ class MainActivity : ComponentActivity() {
         private var accessCode = ""
     }
 
-    fun playerAction(action: PlayerAction) {
+    private fun playerAction(action: PlayerAction) {
         when (action) {
             PlayerAction.Back -> {
                 spotifyAppRemote?.playerApi?.skipPrevious()
@@ -327,6 +332,19 @@ class MainActivity : ComponentActivity() {
         with (pref.edit()) {
             putString(prefKey, token)
             apply()
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    fun showSheet(
+        scope: CoroutineScope,
+        sheetState: SheetState,
+        onShowSheet: (Boolean) -> Unit,
+    ) {
+        scope.launch { sheetState.hide() }.invokeOnCompletion {
+            if (!sheetState.isVisible) {
+                onShowSheet(false)
+            }
         }
     }
 }
