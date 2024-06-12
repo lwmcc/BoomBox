@@ -21,9 +21,12 @@ import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -276,7 +279,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun isPaused(isPaused: Boolean) {
-        _isPaused.value = isPaused
+        _isPaused.update { isPaused }
     }
 
     fun<T: Number> playbackDuration(duration: T) {
@@ -297,9 +300,5 @@ class MainViewModel @Inject constructor(
             increment++
             _playbackPosition.update { increment }
         }
-    }
-
-    fun setIsScreenVisible(isScreenVisible: Boolean) {
-        _isScreenVisible.update { isScreenVisible }
     }
 }

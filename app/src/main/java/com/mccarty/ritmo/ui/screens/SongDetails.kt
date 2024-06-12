@@ -21,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,19 +39,21 @@ import com.mccarty.ritmo.viewmodel.TrackSelectAction
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongDetailsScreen(
+    isPaused: Boolean,
     model: MainViewModel,
+    details: List<Details>,
     index: Int,
     onPlayPauseClicked: (TrackSelectAction) -> Unit,
 ) {
-    val tracks by model.mediaDetails.collectAsStateWithLifecycle()
     Column(
         modifier = Modifier.padding(horizontal = 25.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val pagerState = rememberPagerState(pageCount = { tracks.size })
+        val pagerState = rememberPagerState(pageCount = { details.size })
         MediaDetails(
+            isPaused = isPaused,
             pagerState,
-            tracks,
+            details,
             index,
             model,
             onPlayPauseClicked = {
@@ -65,6 +66,7 @@ fun SongDetailsScreen(
 @OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
 @Composable
 fun MediaDetails(
+    isPaused: Boolean,
     pagerState: PagerState,
     tracks: List<Details>,
     index: Int,
@@ -95,16 +97,20 @@ fun MediaDetails(
                 )
 
                 Box(modifier = Modifier
-                    .size(40.dp)
+                    .size(60.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.tertiary)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
                     .clickable {
                         onPlayPauseClicked(TrackSelectAction.PlayTrackWithUri(tracks[page]?.uri ?: ""))
                     },
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (uri.value == tracks[page].uri) {
-                        playPauseIcon(painterResource(R.drawable.pause))
+                    if (!isPaused) {
+                        if (uri.value == tracks[page].uri) {
+                            playPauseIcon(painterResource(R.drawable.pause))
+                        } else {
+                            playPauseIcon(Icons.Default.PlayArrow)
+                        }
                     } else {
                         playPauseIcon(Icons.Default.PlayArrow)
                     }

@@ -149,9 +149,8 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.playbackDuration.collect {
-                    val duration = model.playbackDuration.value.toFloat()
-                    while(!model.isPaused.value && model.playbackPosition.value < duration) {
+                model.isPaused.collect {
+                    while(!model.isPaused.value && model.playbackPosition.value <  model.playbackDuration.value.toFloat()) {
                         model.getSliderPosition(model.playbackPosition.value)
                         delay( 1_000)
                     }
@@ -176,14 +175,11 @@ class MainActivity : ComponentActivity() {
                 println("SpotifyBroadcastReceiver ***** ${throwable.message}")
             }
         })
-
-        model.setIsScreenVisible(true)
     }
 
     override fun onStop() {
         super.onStop()
         disconnect()
-        model.setIsScreenVisible(false)
     }
 
 
@@ -310,6 +306,7 @@ class MainActivity : ComponentActivity() {
 
             PlayerAction.Skip -> {
                 model.playbackPosition(0)
+                model.isPaused(false)
                 spotifyAppRemote?.playerApi?.skipNext()
             }
 
@@ -330,31 +327,26 @@ class MainActivity : ComponentActivity() {
 
     private fun trackSelectionAction(action: TrackSelectAction) {
         when(action) {
-            is TrackSelectAction.DetailsSelect -> { println("MainActivity ***** 1")}
-            is TrackSelectAction.PlaylistTrackSelect -> { println("MainActivity ***** 2")}
-            is TrackSelectAction.RecentlyPlayedTrackSelect -> { println("MainActivity ***** 3")}
             is TrackSelectAction.TrackSelect -> {
                 model.playbackPosition(0)
+                model.isPaused(false)
                 model.handlePlayerActions(spotifyAppRemote, action)
             }
-            is TrackSelectAction.ViewMoreSelect -> {
-                println("MainActivity ***** VIEW MORE SELECT") // GO TO NEXTÏ
-            }
-
-            is TrackSelectAction.ViewMoreTrackDetailsSelect -> {
-                println("MainActivity ***** VIEW MORE DETAILS SELECT")
-            }
-
             is TrackSelectAction.PlayTrackWithUri -> {
                 if (model.isPaused.value) {
-                    println("MainActivity ***** PLAY URI PAUSED") // GO TO NEXT
                     spotifyAppRemote?.playerApi?.play(action.playTrackWithUri)
+                    model.isPaused(false)
                 } else {
-                    println("MainActivity ***** PLAY URI NOT PAUSED") // GO TO NEXT
-                    println("MainActivity ***** VIEW MORE SELECT") // GO TO NEXT
                     spotifyAppRemote?.playerApi?.pause()
+                    model.isPaused(true)
                 }
             }
+
+            is TrackSelectAction.ViewMoreSelect -> { }
+            is TrackSelectAction.ViewMoreTrackDetailsSelect -> { }
+            is TrackSelectAction.DetailsSelect -> { }
+            is TrackSelectAction.PlaylistTrackSelect -> { }
+            is TrackSelectAction.RecentlyPlayedTrackSelect -> { }
         }
     }
 

@@ -2,6 +2,8 @@ package com.mccarty.ritmo.ui.screens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -23,6 +25,8 @@ fun StartScreen(
     music: State<MainViewModel.MainItemsState>,
 ) {
     val mainViewModel: MainViewModel = viewModel()
+    val details by mainViewModel.mediaDetails.collectAsStateWithLifecycle()
+    val isPaused by mainViewModel.isPaused.collectAsStateWithLifecycle()
 
     NavHost(navController = navController, startDestination = MAIN_SCREEN_KEY) {
         composable(MAIN_SCREEN_KEY) {
@@ -42,6 +46,8 @@ fun StartScreen(
             "$SONG_DETAILS_KEY{$INDEX_KEY}",
         ) { backStackEntry ->
             SongDetailsScreen(
+                isPaused = isPaused,
+                details = details,
                 model = mainViewModel,
                 index = backStackEntry.arguments?.getString(INDEX_KEY)?.toInt() ?: 0,
                 onPlayPauseClicked = {

@@ -1,9 +1,9 @@
 package com.mccarty.ritmo.viewmodel
 
-import com.mccarty.ritmo.model.payload.Item
 import com.mccarty.ritmo.model.payload.MainItem
-import com.mccarty.ritmo.model.payload.PlaylistItem
 import com.mccarty.ritmo.model.TrackDetails
+import com.mccarty.ritmo.model.payload.Item
+import com.mccarty.ritmo.model.payload.PlaylistItem
 
 sealed class TrackSelectAction { // TODO: change name
     data class RecentlyPlayedTrackSelect(val items: List<Item>): TrackSelectAction()
