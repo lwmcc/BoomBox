@@ -1,7 +1,11 @@
 package com.mccarty.ritmo.ui
 
+import android.annotation.SuppressLint
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,8 +30,10 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -71,31 +77,45 @@ fun MainImageHeader(
     )
 }
 
+@SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerControls(
     mainViewModel: MainViewModel = viewModel(),
     onSlide: (PlayerAction) -> Unit,
     ) {
-    val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle()
+    val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle().value
     var position = mainViewModel.playbackPosition.collectAsStateWithLifecycle().value
     val duration = mainViewModel.playbackDuration.collectAsStateWithLifecycle().value.toFloat()
 
     var sliderPosition by remember { mutableFloatStateOf(position) }
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isDragged by interactionSource.collectIsDraggedAsState()
+    val isInteracting = isPressed || isDragged
+
+    val value by derivedStateOf {
+        if (isInteracting) {
+            sliderPosition
+        } else {
+            position
+        }
+    }
+
     Column {
         Slider(
-            value = position,
+            value = value,
             onValueChange = {
-                mainViewModel.isPaused(true)
-                position = it
+                sliderPosition = it
             },
             valueRange = 0f..duration,
-            steps = 200,
+            steps = 1_000,
+
             onValueChangeFinished = {
-                mainViewModel.playbackPosition(position)
-                onSlide(PlayerAction.Seek(position))
-            }
+                onSlide(PlayerAction.Seek(value))
+            },
+            interactionSource = interactionSource,
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -113,7 +133,6 @@ fun PlayerControls(
                 )
             ) {
                 Icon(
-                    // TODO: will have to change with state
                     painter = painterResource(R.drawable.back),
                     contentDescription = "Back",
                     modifier = Modifier.size(40.dp)
@@ -130,7 +149,7 @@ fun PlayerControls(
                     contentColor = Color.Black
                 )
             ) {
-                if (isPaused.value) {
+                if (isPaused) {
                     playPauseIcon(playPause = R.drawable.play)
                 } else {
                     playPauseIcon(playPause = R.drawable.pause)

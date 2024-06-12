@@ -125,16 +125,19 @@ class MainViewModel @Inject constructor(
     val trackUri: StateFlow<String?> = _trackUri
 
     private var _isPaused = MutableStateFlow(true)
-    val isPaused: StateFlow<Boolean> = _isPaused
+    val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
 
-    private var _playbackDuration = MutableStateFlow(0L)
-    val playbackDuration: StateFlow<Long> = _playbackDuration
+    private var _playbackDuration = MutableStateFlow<Number>(0)
+    val playbackDuration: StateFlow<Number> = _playbackDuration
 
     private var _playbackPosition = MutableStateFlow(0f)
     val playbackPosition: StateFlow<Float> = _playbackPosition
 
     private var _mainItems = MutableStateFlow<MainItemsState>(MainItemsState.Pending(true))
     val mainItems: StateFlow<MainItemsState> = _mainItems
+
+    private var _isScreenVisible = MutableStateFlow<Boolean>(false)
+    val isScreenVisible = _isScreenVisible.asStateFlow()
 
     private suspend fun fetchAllPlaylists() {
         AllPlaylistsState.Pending(true)
@@ -241,25 +244,24 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    suspend fun fetchPlaybackState() {
+/*    suspend fun fetchPlaybackState() {
         viewModelScope.launch {
             while (!isPaused.value) {
                 repository.fetchPlaybackState()
-                    .catch { _isPaused.value = true }
-                    .collect {
-                    when (it) {
+                    .collect { request ->
+                        when (request) {
                         is NetworkRequest.Error -> {
-                            _isPaused.value = true
+                            _isPaused.update { it }
                         }
 
                         is NetworkRequest.Success -> {
-                            _playbackPosition.value = it.data.progress_ms.toFloat()
+                            _playbackPosition.update { request.data.progress_ms.toFloat() }
                         }
                     }
                 }
             }
         }
-    }
+    }*/
 
     fun setMusicHeader(header: MusicHeader) {
         _musicHeader.value = header
@@ -277,15 +279,27 @@ class MainViewModel @Inject constructor(
         _isPaused.value = isPaused
     }
 
-    fun playbackDuration(duration: Long) {
-        _playbackDuration.value = duration
+    fun<T: Number> playbackDuration(duration: T) {
+        _playbackDuration.update { duration }
     }
 
-    fun playbackPosition(position: Float) {
-        _playbackPosition.value = position
+    fun<T: Number> playbackPosition(position: T) {
+        _playbackPosition.value = position.toFloat()
     }
 
     fun handlePlayerActions(remote: SpotifyAppRemote?, action: TrackSelectAction.TrackSelect) {
         remoteService.onTrackSelected(remote, action)
+    }
+
+    fun <T : Number> getSliderPosition(position: T) {
+        viewModelScope.launch {
+            var increment = position.toFloat()
+            increment++
+            _playbackPosition.update { increment }
+        }
+    }
+
+    fun setIsScreenVisible(isScreenVisible: Boolean) {
+        _isScreenVisible.update { isScreenVisible }
     }
 }

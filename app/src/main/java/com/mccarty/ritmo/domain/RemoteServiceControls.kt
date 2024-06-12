@@ -37,5 +37,5 @@ open class RemoteServiceControls @Inject constructor(): RemoteService {
 }
 
 interface RemoteService {
-    fun onTrackSelected(remote: SpotifyAppRemote?, action: TrackSelectAction.TrackSelect)
+    fun onTrackSelected(remote: SpotifyAppRemote?, action: TrackSelect)
 }

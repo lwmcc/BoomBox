@@ -113,9 +113,11 @@ fun processCurrentlyPlaying(response: Response<JsonObject>): Pair<Boolean, ItemV
                     Pair(false, ItemV2())
                 }
             }
+
             204 -> { // Code 204 means it is not currently playing anything
                 Pair(false, ItemV2())
             }
+
             else -> {
                 Pair(false, ItemV2())
             }
@@ -149,7 +151,7 @@ fun List<Item>.createTrackDetailsFromItems(): List<MainItem> {
             uri = it.track?.uri ?: "",
             images = it.track?.album?.images ?: emptyList(),
             trackName = it.track?.name ?: "",
-            albumName = it.track?.album?.name?: "",
+            albumName = it.track?.album?.name ?: "",
             artists = it.track?.artists ?: emptyList(),
             explicit = it.track?.explicit ?: true,
         )
@@ -166,9 +168,13 @@ fun List<PItem>.createTrackDetailsFromPlayListItems(): List<TrackDetails> {
             uri = it.track?.uri ?: "",
             images = it.track?.album?.images ?: emptyList(),
             trackName = it.track?.name ?: "",
-            albumName = it.track?.album?.name?: "",
+            albumName = it.track?.album?.name ?: "",
             artists = it.track?.artists ?: emptyList(),
             explicit = it.track?.explicit ?: true,
         )
     }.distinctBy { it.id }
+}
+
+fun Float.positionProduct(factor: Long): Long {
+    return this.toLong() * factor
 }
