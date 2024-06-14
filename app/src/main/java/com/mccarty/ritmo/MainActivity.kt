@@ -18,6 +18,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,7 @@ import com.mccarty.ritmo.ui.BottomSheet
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.ui.screens.StartScreen
 import com.mccarty.ritmo.utils.positionProduct
+import com.mccarty.ritmo.utils.quotientOf
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.viewmodel.PlayerAction
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
@@ -47,7 +49,6 @@ import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -69,6 +70,7 @@ class MainActivity : ComponentActivity() {
 
             val mainItems = model.mainItems.collectAsStateWithLifecycle()
             val music by remember { mutableStateOf(mainItems) }
+            val isPaused = model.isPaused.collectAsStateWithLifecycle()
 
             Scaffold(
                 bottomBar = {
@@ -98,10 +100,11 @@ class MainActivity : ComponentActivity() {
                                 trackIndex = index
                             },
                             onAction = {
-                                trackSelectionAction(it)
+                                println("MainActivity ***** CLICKED")
+                                trackSelectionAction(action = it, isPaused = isPaused)
                             },
                             onPlayPauseClicked = {
-                                trackSelectionAction(it)
+                                trackSelectionAction(action = it, isPaused = isPaused)
                             }
                         )
                     }
@@ -149,12 +152,28 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.isPaused.collect {
-                    while(!model.isPaused.value && model.playbackPosition.value <  model.playbackDuration.value.toFloat()) {
+
+               // model.setSliderPositio()
+/*
+                model.playbackDuration.collect {
+                    println("MainActivity ***** DUR $it")
+                    while(!model.isPaused.value && model.playbackPosition.value <  it.toFloat()) {
                         model.getSliderPosition(model.playbackPosition.value)
                         delay( 1_000)
                     }
+                }*/
+
+/*                model.playbackPosition.collect {
+                    println("MainActivity ***** POS $it")
                 }
+
+                model.isPaused.collect {
+                    println("MainActivity ***** PAUSED $it")
+                    while(!it && model.playbackPosition.value <  model.playbackDuration.value.toFloat()) {
+                        model.getSliderPosition(model.playbackPosition.value)
+                        delay( 1_000)
+                    }
+                }*/
             }
         }
     }
@@ -201,15 +220,10 @@ class MainActivity : ComponentActivity() {
                     model.setTrackUri(playerState.track.uri)
                     model.isPaused(playerState.isPaused)
 
-                    val maxDuration = if (playerState.track.duration > 0L) {
-                        playerState.track.duration / 1_000L
-                    } else {
-                        0L
-                    }
-
-                    model.playbackDuration(maxDuration)
-                    model.playbackPosition(playerState.playbackPosition.toFloat() / 1_000)
+                    model.playbackDuration(playerState.track.duration.quotientOf(1_000))
+                    model.playbackPosition(playerState.playbackPosition.quotientOf(1_000))
                     model.fetchMainMusic()
+                    model.setSliderPosition()
                 }
                 .setErrorCallback { throwable -> println("MainActivity ***** ERROR ${throwable.message}") } // TODO: handle this
         }
@@ -289,9 +303,12 @@ class MainActivity : ComponentActivity() {
                 spotifyAppRemote?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
                         if (playerState.isPaused) {
+                            println("MainActivity ***** PAUSED +++ track click")
                             model.isPaused(false)
                             spotifyAppRemote?.playerApi?.resume()
+                            model.setSliderPosition()
                         } else {
+                            println("MainActivity ***** NOT PAUSED +++ track click")
                             model.isPaused(true)
                             spotifyAppRemote?.playerApi?.pause()
                         }
@@ -308,6 +325,7 @@ class MainActivity : ComponentActivity() {
                 model.playbackPosition(0)
                 model.isPaused(false)
                 spotifyAppRemote?.playerApi?.skipNext()
+                model.setSliderPosition()
             }
 
             is PlayerAction.PlayWithUri -> {
@@ -315,8 +333,10 @@ class MainActivity : ComponentActivity() {
                     it.playerApi.playerState.setResultCallback { playerState ->
                         model.isPaused(playerState.isPaused)
                         if (playerState.isPaused) {
+                            println("MainActivity ***** PAUSED track click with URI")
                             spotifyAppRemote?.playerApi?.play(action.uri)
                         } else {
+                            println("MainActivity ***** NOT PAUSED track click with URI")
                             spotifyAppRemote?.playerApi?.pause()
                         }
                     }
@@ -325,18 +345,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun trackSelectionAction(action: TrackSelectAction) {
+    private fun trackSelectionAction(action: TrackSelectAction, isPaused: State<Boolean>) {
         when(action) {
             is TrackSelectAction.TrackSelect -> {
+                println("MainActivity ***** PAUSED track click UNPAUSE")
                 model.playbackPosition(0)
-                model.isPaused(false)
+                model.isPaused(isPaused.value) // TODO: main select
                 model.handlePlayerActions(spotifyAppRemote, action)
             }
             is TrackSelectAction.PlayTrackWithUri -> {
-                if (model.isPaused.value) {
+                if (isPaused.value) {
+                    println("MainActivity ***** PAUSED track click") ///// TODO:
                     spotifyAppRemote?.playerApi?.play(action.playTrackWithUri)
                     model.isPaused(false)
                 } else {
+                    println("MainActivity ***** NOT PAUSED TRACK CLICK")
                     spotifyAppRemote?.playerApi?.pause()
                     model.isPaused(true)
                 }
@@ -346,7 +369,7 @@ class MainActivity : ComponentActivity() {
             is TrackSelectAction.ViewMoreTrackDetailsSelect -> { }
             is TrackSelectAction.DetailsSelect -> { }
             is TrackSelectAction.PlaylistTrackSelect -> { }
-            is TrackSelectAction.RecentlyPlayedTrackSelect -> { }
+            is TrackSelectAction.RecentlyPlayedTrackSelect -> { println("MainActivity ***** ACTION RECENT") }
         }
     }
 

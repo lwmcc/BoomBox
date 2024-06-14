@@ -26,7 +26,7 @@ fun StartScreen(
 ) {
     val mainViewModel: MainViewModel = viewModel()
     val details by mainViewModel.mediaDetails.collectAsStateWithLifecycle()
-    val isPaused by mainViewModel.isPaused.collectAsStateWithLifecycle()
+    val isPaused by mainViewModel.isPaused.collectAsStateWithLifecycle(false)
 
     NavHost(navController = navController, startDestination = MAIN_SCREEN_KEY) {
         composable(MAIN_SCREEN_KEY) {

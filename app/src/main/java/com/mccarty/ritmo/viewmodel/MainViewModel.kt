@@ -1,5 +1,7 @@
 package com.mccarty.ritmo.viewmodel
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
@@ -20,13 +22,12 @@ import com.mccarty.ritmo.utils.createTrackDetailsFromItems
 import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -127,8 +128,11 @@ class MainViewModel @Inject constructor(
     private var _trackUri = MutableStateFlow<String?>(null)
     val trackUri: StateFlow<String?> = _trackUri
 
-    private var _isPaused = MutableStateFlow(true)
-    val isPaused: StateFlow<Boolean> = _isPaused.asStateFlow()
+     private var _isPaused = MutableStateFlow(true)
+     val isPaused: StateFlow<Boolean> = _isPaused
+
+    //private var _isPaused = MutableSharedFlow<Boolean>(0)
+    //val isPaused: SharedFlow<Boolean> = _isPaused
 
     private var _playbackDuration = MutableStateFlow<Number>(0)
     val playbackDuration: StateFlow<Number> = _playbackDuration
@@ -229,7 +233,7 @@ class MainViewModel @Inject constructor(
                                 external_urls = item.external_urls,
                                 href = item.href,
                                 id = item.id,
-                                images = item.images,
+                                images = item.images, // TODO: null image fix
                                 name = item.name,
                                 owner = item.owner,
                                 public = item.public,
@@ -247,24 +251,23 @@ class MainViewModel @Inject constructor(
         }
     }
 
-/*    suspend fun fetchPlaybackState() {
-        viewModelScope.launch {
-            while (!isPaused.value) {
-                repository.fetchPlaybackState()
-                    .collect { request ->
-                        when (request) {
-                        is NetworkRequest.Error -> {
-                            _isPaused.update { it }
-                        }
 
-                        is NetworkRequest.Success -> {
-                            _playbackPosition.update { request.data.progress_ms.toFloat() }
-                        }
-                    }
-                }
+    var job: Job? = null
+    fun setSliderPosition() {
+        //if (job != null) return
+
+        println("MainViewModel ***** ${isPaused.value}")
+        println("MainViewModel ***** ${playbackPosition.value}")
+        println("MainViewModel ***** ${playbackDuration.value.toFloat()}")
+
+        job = viewModelScope.launch {
+            while(!isPaused.value && playbackPosition.value < playbackDuration.value.toFloat()) {
+                getSliderPosition(playbackPosition.value)
+                delay( 1_000)
             }
         }
-    }*/
+    }
+
 
     fun setMusicHeader(header: MusicHeader) {
         _musicHeader.value = header
@@ -279,7 +282,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun isPaused(isPaused: Boolean) {
-        _isPaused.update { isPaused }
+        viewModelScope.launch {
+            _isPaused.emit(isPaused)
+        }
     }
 
     fun<T: Number> playbackDuration(duration: T) {

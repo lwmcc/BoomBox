@@ -178,3 +178,11 @@ fun List<PItem>.createTrackDetailsFromPlayListItems(): List<TrackDetails> {
 fun Float.positionProduct(factor: Long): Long {
     return this.toLong() * factor
 }
+
+fun Long.quotientOf(divisor: Long): Long {
+    return if (this > 0L) {
+        this / divisor
+    } else {
+        0L
+    }
+}

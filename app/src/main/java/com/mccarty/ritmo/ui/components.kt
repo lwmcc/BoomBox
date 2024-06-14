@@ -84,7 +84,7 @@ fun PlayerControls(
     mainViewModel: MainViewModel = viewModel(),
     onSlide: (PlayerAction) -> Unit,
     ) {
-    val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle().value
+    val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle(false).value
     val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle().value
     val duration = mainViewModel.playbackDuration.collectAsStateWithLifecycle().value.toFloat()
 
@@ -95,10 +95,13 @@ fun PlayerControls(
     val isDragged by interactionSource.collectIsDraggedAsState()
     val isInteracting = isPressed || isDragged
 
+    println("PlayerControls DUR ${duration}")
+
     val value by derivedStateOf {
         if (isInteracting) {
             sliderPosition
         } else {
+            println("PlayerControls POS ${position}")
             position
         }
     }
