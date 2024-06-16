@@ -128,9 +128,10 @@ fun MainScreen(
                                             onClick = {
                                                 onAction(
                                                     TrackSelectAction.TrackSelect(
-                                                        itemIndex,
-                                                        group.items[itemIndex].track?.uri ?: "",
-                                                        group.items,
+                                                        index = itemIndex,
+                                                        duration = group.items[itemIndex].track?.duration_ms ?: 0L, // TODO: fix
+                                                        uri = group.items[itemIndex].track?.uri ?: "",
+                                                        tracks = group.items,
                                                     )
                                                 )
                                             }

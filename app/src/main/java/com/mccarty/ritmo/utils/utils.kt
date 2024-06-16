@@ -180,6 +180,7 @@ fun Float.positionProduct(factor: Long): Long {
 }
 
 fun Long.quotientOf(divisor: Long): Long {
+    if (this == null) return 0L
     return if (this > 0L) {
         this / divisor
     } else {

@@ -60,8 +60,8 @@ fun MediaList(
                     .fillMaxWidth()
                     .clickable(
                         onClick = {
-                            // TODO: fix !!
-                            onAction(TrackSelectAction.TrackSelect(index,  tracks[index].uri!!, tracks))
+                            // TODO: fix !! and ?:
+                            onAction(TrackSelectAction.TrackSelect(index,  tracks[index].uri!!, tracks[index].track?.duration_ms ?: 0L, tracks))
                         }
                     )
                     .padding(5.dp),

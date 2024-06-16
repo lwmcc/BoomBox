@@ -82,7 +82,7 @@ data class Track(
     val artists: List<ArtistX>,
     val available_markets: List<String>,
     val disc_number: Int,
-    val duration_ms: Int,
+    val duration_ms: Long = 0L,
     val explicit: Boolean,
     val external_ids: ExternalIds,
     val external_urls: ExternalUrls,

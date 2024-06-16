@@ -33,7 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -54,7 +53,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.model.payload.PlaylistData.Item as Item
-import com.mccarty.ritmo.viewmodel.PlayerAction
+import com.mccarty.ritmo.viewmodel.PlayerControlAction
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -82,7 +81,7 @@ fun MainImageHeader(
 @Composable
 fun PlayerControls(
     mainViewModel: MainViewModel = viewModel(),
-    onSlide: (PlayerAction) -> Unit,
+    onSlide: (PlayerControlAction) -> Unit,
     ) {
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle(false).value
     val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle().value
@@ -116,7 +115,7 @@ fun PlayerControls(
             steps = 1_000,
 
             onValueChangeFinished = {
-                onSlide(PlayerAction.Seek(value))
+                onSlide(PlayerControlAction.Seek(value))
             },
             interactionSource = interactionSource,
         )
@@ -127,7 +126,7 @@ fun PlayerControls(
             ) {
             Button(
                 onClick = {
-                    onSlide(PlayerAction.Back)
+                    onSlide(PlayerControlAction.Back)
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -144,7 +143,7 @@ fun PlayerControls(
 
             Button(
                 onClick = {
-                    onSlide(PlayerAction.Play)
+                    onSlide(PlayerControlAction.Play)
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -161,7 +160,7 @@ fun PlayerControls(
 
             Button(
                 onClick = {
-                    onSlide(PlayerAction.Skip)
+                    onSlide(PlayerControlAction.Skip)
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(

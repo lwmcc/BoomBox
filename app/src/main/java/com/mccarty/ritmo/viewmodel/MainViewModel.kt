@@ -22,12 +22,18 @@ import com.mccarty.ritmo.utils.createTrackDetailsFromItems
 import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -145,6 +151,9 @@ class MainViewModel @Inject constructor(
 
     private var _isScreenVisible = MutableStateFlow<Boolean>(false)
     val isScreenVisible = _isScreenVisible.asStateFlow()
+
+    private var _lastPlayedTrackData = MutableSharedFlow<ControlTrackData?>(replay = 1)
+    val lastPlayedTrackData = _lastPlayedTrackData
 
     private suspend fun fetchAllPlaylists() {
         AllPlaylistsState.Pending(true)
@@ -287,8 +296,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun<T: Number> playbackDuration(duration: T) {
-        _playbackDuration.update { duration }
+    fun playbackDuration(duration: Long?) {
+        _playbackDuration.update { duration!! } // TODO: fix!!
     }
 
     fun<T: Number> playbackPosition(position: T) {
@@ -303,7 +312,20 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             var increment = position.toFloat()
             increment++
+            println("MainViewModel ***** INC ${increment}")
             _playbackPosition.update { increment }
         }
     }
+
+    fun setLastPlayedTrackData(track: com.spotify.protocol.types.Track) {
+        viewModelScope.launch {
+            _lastPlayedTrackData.emit(ControlTrackData(duration = track.duration))
+        }
+    }
 }
+
+data class ControlTrackData(
+    var duration: Long
+)
+
+
