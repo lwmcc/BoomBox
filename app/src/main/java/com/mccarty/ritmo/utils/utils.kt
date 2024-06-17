@@ -154,6 +154,7 @@ fun List<Item>.createTrackDetailsFromItems(): List<MainItem> {
             albumName = it.track?.album?.name ?: "",
             artists = it.track?.artists ?: emptyList(),
             explicit = it.track?.explicit ?: true,
+            track = it.track,
         )
     }.distinctBy { it.id }
 }
@@ -171,6 +172,7 @@ fun List<PItem>.createTrackDetailsFromPlayListItems(): List<TrackDetails> {
             albumName = it.track?.album?.name ?: "",
             artists = it.track?.artists ?: emptyList(),
             explicit = it.track?.explicit ?: true,
+            track = it.track,
         )
     }.distinctBy { it.id }
 }

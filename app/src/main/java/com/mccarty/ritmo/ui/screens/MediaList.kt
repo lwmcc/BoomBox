@@ -61,7 +61,14 @@ fun MediaList(
                     .clickable(
                         onClick = {
                             // TODO: fix !! and ?:
-                            onAction(TrackSelectAction.TrackSelect(index,  tracks[index].uri!!, tracks[index].track?.duration_ms ?: 0L, tracks))
+                            onAction(
+                                TrackSelectAction.TrackSelect(
+                                    index = index,
+                                    duration = tracks[index].track?.duration_ms ?: 0L,
+                                    uri = tracks[index].uri!!,
+                                    tracks = tracks,
+                                )
+                            )
                         }
                     )
                     .padding(5.dp),

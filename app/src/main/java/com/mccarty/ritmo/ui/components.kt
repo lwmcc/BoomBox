@@ -94,13 +94,10 @@ fun PlayerControls(
     val isDragged by interactionSource.collectIsDraggedAsState()
     val isInteracting = isPressed || isDragged
 
-    println("PlayerControls DUR ${duration}")
-
     val value by derivedStateOf {
         if (isInteracting) {
             sliderPosition
         } else {
-            println("PlayerControls POS ${position}")
             position
         }
     }
@@ -143,7 +140,7 @@ fun PlayerControls(
 
             Button(
                 onClick = {
-                    onSlide(PlayerControlAction.Play)
+                    onSlide(PlayerControlAction.Play(pausedPosition = position.toLong()))
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(

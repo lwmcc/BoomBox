@@ -46,53 +46,55 @@ class MainViewModel @Inject constructor(
     ) : ViewModel() {
 
     sealed class RecentlyPlayedMusicState {
-        data class Success(val trackDetails: List<MainItem> = emptyList()): RecentlyPlayedMusicState()
+        data class Success(val trackDetails: List<MainItem> = emptyList()) :
+            RecentlyPlayedMusicState()
     }
 
     sealed class MainMusicState {
-        data object Pending: MainMusicState()
+        data object Pending : MainMusicState()
         data class Success(
             val trackDetails: List<MainItem> = emptyList(),
             val playLists: List<PlaylistData.Item> = emptyList(),
-            ): MainMusicState()
-        data object  Error: MainMusicState()
+        ) : MainMusicState()
+
+        data object Error : MainMusicState()
     }
 
     sealed class Recently {
-        data object Pending: Recently()
-        data class Success(val success: String): Recently()
-        data object  Error: Recently()
+        data object Pending : Recently()
+        data class Success(val success: String) : Recently()
+        data object Error : Recently()
     }
 
     sealed class AllPlaylistsState {
-        data class Pending(val pending: Boolean): AllPlaylistsState()
-        data class Success(val playLists: List<PlaylistData.Item>): AllPlaylistsState()
-        data object  Error: AllPlaylistsState()
+        data class Pending(val pending: Boolean) : AllPlaylistsState()
+        data class Success(val playLists: List<PlaylistData.Item>) : AllPlaylistsState()
+        data object Error : AllPlaylistsState()
     }
 
     sealed class PlaylistState {
-        data class Pending(val pending: Boolean): PlaylistState()
+        data class Pending(val pending: Boolean) : PlaylistState()
 
-        data class Success(val trackDetails: List<TrackDetails>): PlaylistState()
-        data object  Error: PlaylistState()
+        data class Success(val trackDetails: List<TrackDetails>) : PlaylistState()
+        data object Error : PlaylistState()
     }
 
     sealed class LastPlayedSongState {
-        data class Pending(val pending: Boolean): LastPlayedSongState()
-        data class Success<T: AlbumXX>(val data: T): LastPlayedSongState()
-        data object  Error: LastPlayedSongState()
+        data class Pending(val pending: Boolean) : LastPlayedSongState()
+        data class Success<T : AlbumXX>(val data: T) : LastPlayedSongState()
+        data object Error : LastPlayedSongState()
     }
 
     sealed class CurrentlyPayingTrackState {
-        data object Pending: CurrentlyPayingTrackState()
-        data class Success<T: CurrentlyPlayingTrack>(val data: T): CurrentlyPayingTrackState()
-        data object  Error: CurrentlyPayingTrackState()
+        data object Pending : CurrentlyPayingTrackState()
+        data class Success<T : CurrentlyPlayingTrack>(val data: T) : CurrentlyPayingTrackState()
+        data object Error : CurrentlyPayingTrackState()
     }
 
     sealed class MainItemsState {
-        data class Pending(val pending: Boolean): MainItemsState()
-        data class Success(val mainItems: Map<String, List<MainItem>>): MainItemsState()
-        data class  Error(val error: Boolean): MainItemsState()
+        data class Pending(val pending: Boolean) : MainItemsState()
+        data class Success(val mainItems: Map<String, List<MainItem>>) : MainItemsState()
+        data class Error(val error: Boolean) : MainItemsState()
     }
 
     private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
@@ -104,7 +106,8 @@ class MainViewModel @Inject constructor(
     private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(
         RecentlyPlayedMusicState.Success(emptyList())
     )
-    val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic.asStateFlow()
+    val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> =
+        _recentlyPlayedMusic.asStateFlow()
 
     private var _playLists = MutableStateFlow<PlaylistState>(PlaylistState.Pending(true))
     val playLists: StateFlow<PlaylistState> = _playLists
@@ -134,11 +137,8 @@ class MainViewModel @Inject constructor(
     private var _trackUri = MutableStateFlow<String?>(null)
     val trackUri: StateFlow<String?> = _trackUri
 
-     private var _isPaused = MutableStateFlow(true)
-     val isPaused: StateFlow<Boolean> = _isPaused
-
-    //private var _isPaused = MutableSharedFlow<Boolean>(0)
-    //val isPaused: SharedFlow<Boolean> = _isPaused
+    private var _isPaused = MutableStateFlow(true)
+    val isPaused: StateFlow<Boolean> = _isPaused
 
     private var _playbackDuration = MutableStateFlow<Number>(0)
     val playbackDuration: StateFlow<Number> = _playbackDuration
@@ -172,11 +172,12 @@ class MainViewModel @Inject constructor(
         _playLists.value = PlaylistState.Pending(true)
         viewModelScope.launch {
             repository.fetchPlayList(playlistId).collect {
-                when(it) {
+                when (it) {
                     is NetworkRequest.Error -> {
                         println("MainViewModel ***** NET ERROR ${it.toString()}")
                         // TODO: handle error
                     }
+
                     is NetworkRequest.Success -> {
                         _playLists.value =
                             PlaylistState.Success(it.data.items.createTrackDetailsFromPlayListItems())
@@ -218,22 +219,29 @@ class MainViewModel @Inject constructor(
                 _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(emptyList())
             }.collect {
                 when (it) {
-                    is NetworkRequest.Error -> { _mainItems.value = MainItemsState.Error(true) }
+                    is NetworkRequest.Error -> {
+                        _mainItems.value = MainItemsState.Error(true)
+                    }
+
                     is NetworkRequest.Success -> {
-                        val trackItems = it.data.items.distinctBy { track -> track.track?.id }.map { track ->
-                            TrackItem(
-                                context = track.context,
-                                played_at = track.played_at,
-                                track = track.track,
-                            )
-                        }
+                        val trackItems =
+                            it.data.items.distinctBy { track -> track.track?.id }.map { track ->
+                                TrackItem(
+                                    context = track.context,
+                                    played_at = track.played_at,
+                                    track = track.track,
+                                )
+                            }
                         mainItems.addAll(trackItems)
                     }
                 }
             }
             repository.fetchPlayLists().collect {
                 when (it) {
-                    is NetworkRequest.Error -> { MainItemsState.Error(true) }
+                    is NetworkRequest.Error -> {
+                        MainItemsState.Error(true)
+                    }
+
                     is NetworkRequest.Success -> {
                         val listItems = it.data.items.map { item ->
                             ListItem(
@@ -256,24 +264,32 @@ class MainViewModel @Inject constructor(
                     }
                 }
             }
-            _mainItems.value = MainItemsState.Success( mainItems.groupBy { it.type } )
+            _mainItems.value = MainItemsState.Success(mainItems.groupBy { it.type })
         }
     }
 
 
-    var job: Job? = null
+    private var job: Job? = null
     fun setSliderPosition() {
-        //if (job != null) return
-
-        println("MainViewModel ***** ${isPaused.value}")
-        println("MainViewModel ***** ${playbackPosition.value}")
-        println("MainViewModel ***** ${playbackDuration.value.toFloat()}")
 
         job = viewModelScope.launch {
-            while(!isPaused.value && playbackPosition.value < playbackDuration.value.toFloat()) {
-                getSliderPosition(playbackPosition.value)
-                delay( 1_000)
-            }
+            job?.cancelAndJoin()
+            delay(1_000)
+            tickerFlow(playbackPosition.value.toLong(), playbackDuration.value.toLong())
+                .collect { position ->
+                    //println("MainViewModel ***** POSITION  LOOP ${playbackPosition.value}")
+                    _playbackPosition.update { position.toFloat() }
+                }
+        }
+    }
+
+    fun tickerFlow(position: Long, duration: Long) = flow {
+        delay(1_000)
+        var index = position
+        while(index <= duration) {
+            emit(index)
+            delay(1_000)
+            index++
         }
     }
 
@@ -300,7 +316,7 @@ class MainViewModel @Inject constructor(
         _playbackDuration.update { duration!! } // TODO: fix!!
     }
 
-    fun<T: Number> playbackPosition(position: T) {
+    fun <T : Number> playbackPosition(position: T) {
         _playbackPosition.value = position.toFloat()
     }
 
@@ -308,22 +324,20 @@ class MainViewModel @Inject constructor(
         remoteService.onTrackSelected(remote, action)
     }
 
-    fun <T : Number> getSliderPosition(position: T) {
-        viewModelScope.launch {
-            var increment = position.toFloat()
-            increment++
-            println("MainViewModel ***** INC ${increment}")
-            _playbackPosition.update { increment }
-        }
-    }
-
     fun setLastPlayedTrackData(track: com.spotify.protocol.types.Track) {
         viewModelScope.launch {
             _lastPlayedTrackData.emit(ControlTrackData(duration = track.duration))
         }
     }
-}
 
+    fun cancelJobIfRunning() {
+        viewModelScope.launch {
+            job?.let {
+                it.cancelAndJoin()
+            }
+        }
+    }
+}
 data class ControlTrackData(
     var duration: Long
 )
