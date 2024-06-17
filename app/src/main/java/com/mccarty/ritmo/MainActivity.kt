@@ -100,7 +100,6 @@ class MainActivity : ComponentActivity() {
                                 trackIndex = index
                             },
                             onAction = {
-                                println("MainActivity ***** CLICKED")
                                 trackSelectionAction(
                                     action = it,
                                     isPaused = isPaused,
@@ -197,8 +196,8 @@ class MainActivity : ComponentActivity() {
                     model.setTrackUri(playerState.track.uri)
                     model.isPaused(playerState.isPaused)
 
-                    model.playbackDuration(playerState.track.duration.quotientOf(1_000))
-                    model.playbackPosition(playerState.playbackPosition.quotientOf(1_000))
+                    model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
+                    model.playbackPosition(playerState.playbackPosition.quotientOf(TICKER_DELAY))
                     model.fetchMainMusic()
 
                     if (!playerState.isPaused) {
@@ -255,23 +254,6 @@ class MainActivity : ComponentActivity() {
         return Uri.parse(REDIRECT_URI)
     }
 
-    companion object {
-        val TRACK_ID_KEY = "trackId"
-        val INDEX_KEY = "index"
-        val PLAYLIST_ID_KEY = "playlist_id/"
-        val PLAYLIST_NAME_KEY = "playlist_name/"
-        val MAIN_SCREEN_KEY = "main_screen"
-        val PLAYLIST_SCREEN_KEY = "playlist_screen/"
-        val SONG_DETAILS_KEY = "song_details/"
-        val TAG = MainActivity::class.qualifiedName
-        const val SPOTIFY_TOKEN = "SPOTIFY_TOKEN"
-        private val AUTH_TOKEN_REQUEST_CODE = 0x10
-        private val AUTH_CODE_REQUEST_CODE = 0x11
-        private  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
-        private val IMAGE_URL = "https://i.scdn.co/image/"
-        private var accessCode = ""
-    }
-
     private fun playerControlAction(action: PlayerControlAction) {
         when (action) {
             PlayerControlAction.Back -> {
@@ -297,7 +279,7 @@ class MainActivity : ComponentActivity() {
                             model.setSliderPosition()
                         } else {
                             model.isPaused(true)
-                            model.playbackPosition(playerState.playbackPosition.quotientOf(1_000))
+                            model.playbackPosition(playerState.playbackPosition.quotientOf(TICKER_DELAY))
                             model.cancelJobIfRunning()
                             spotifyAppRemote?.playerApi?.pause()
                         }
@@ -307,7 +289,7 @@ class MainActivity : ComponentActivity() {
 
             is PlayerControlAction.Seek -> {
                 model.playbackPosition(action.position)
-                spotifyAppRemote?.playerApi?.seekTo(action.position.positionProduct(1_000))
+                spotifyAppRemote?.playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
             }
 
             PlayerControlAction.Skip -> {
@@ -317,13 +299,13 @@ class MainActivity : ComponentActivity() {
                             model.playbackPosition(0f)
                             spotifyAppRemote?.playerApi?.skipNext()
                             model.isPaused(false)
-                            model.playbackDuration(playerState.track.duration.quotientOf(1_000))
+                            model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
                             model.setSliderPosition()
                         } else {
                             model.playbackPosition(0f)
                             spotifyAppRemote?.playerApi?.skipNext()
                             model.isPaused(false)
-                            model.playbackDuration(playerState.track.duration.quotientOf(1_000))
+                            model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
                             model.cancelJobIfRunning()
                             model.setSliderPosition()
                         }
@@ -357,7 +339,7 @@ class MainActivity : ComponentActivity() {
                 if (isPaused.value) {
                     spotifyAppRemote?.let { remote ->
                         model.isPaused(false) // TODO: main select
-                        model.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(1_000))
+                        model.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY))
                         model.handlePlayerActions(remote, action)
                     }
                     model.playbackPosition(0)
@@ -365,7 +347,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     spotifyAppRemote?.let { remote ->
                         model.isPaused(false) // TODO: main select
-                        model.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(1_000))
+                        model.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY))
                         model.handlePlayerActions(remote, action)
                     }
                     model.playbackPosition(0)
@@ -410,5 +392,23 @@ class MainActivity : ComponentActivity() {
                 onShowSheet(false)
             }
         }
+    }
+
+    companion object {
+        val TRACK_ID_KEY = "trackId"
+        val INDEX_KEY = "index"
+        val PLAYLIST_ID_KEY = "playlist_id/"
+        val PLAYLIST_NAME_KEY = "playlist_name/"
+        val MAIN_SCREEN_KEY = "main_screen"
+        val PLAYLIST_SCREEN_KEY = "playlist_screen/"
+        val SONG_DETAILS_KEY = "song_details/"
+        val TAG = MainActivity::class.qualifiedName
+        const val SPOTIFY_TOKEN = "SPOTIFY_TOKEN"
+        private val AUTH_TOKEN_REQUEST_CODE = 0x10
+        private val AUTH_CODE_REQUEST_CODE = 0x11
+        private  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
+        private val IMAGE_URL = "https://i.scdn.co/image/"
+        private var accessCode = ""
+        const val TICKER_DELAY = 1_000L
     }
 }

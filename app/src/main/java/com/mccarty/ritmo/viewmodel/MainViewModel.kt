@@ -1,10 +1,9 @@
 package com.mccarty.ritmo.viewmodel
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
+import com.mccarty.ritmo.MainActivity.Companion.TICKER_DELAY
 import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.domain.MediaDetails
 import com.mccarty.ritmo.domain.RemoteService
@@ -22,7 +21,6 @@ import com.mccarty.ritmo.utils.createTrackDetailsFromItems
 import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -32,8 +30,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -274,7 +270,7 @@ class MainViewModel @Inject constructor(
 
         job = viewModelScope.launch {
             job?.cancelAndJoin()
-            delay(1_000)
+            delay(TICKER_DELAY)
             tickerFlow(playbackPosition.value.toLong(), playbackDuration.value.toLong())
                 .collect { position ->
                     //println("MainViewModel ***** POSITION  LOOP ${playbackPosition.value}")
@@ -284,11 +280,11 @@ class MainViewModel @Inject constructor(
     }
 
     fun tickerFlow(position: Long, duration: Long) = flow {
-        delay(1_000)
+        delay(TICKER_DELAY)
         var index = position
         while(index <= duration) {
             emit(index)
-            delay(1_000)
+            delay(TICKER_DELAY)
             index++
         }
     }
