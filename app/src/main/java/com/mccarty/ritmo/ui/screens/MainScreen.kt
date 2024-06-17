@@ -188,12 +188,6 @@ fun MainScreen(
                                             modifier = Modifier.clickable {
                                                 model.setPlayList(group.items)
                                                 onViewMoreClick(true, itemIndex, group.items)
-                                                onAction(
-                                                    TrackSelectAction.ViewMoreSelect(
-                                                        itemIndex,
-                                                        group.items
-                                                    )
-                                                )
                                             }
                                         )
                                     }

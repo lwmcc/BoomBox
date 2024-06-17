@@ -318,10 +318,8 @@ class MainActivity : ComponentActivity() {
                     it.playerApi.playerState.setResultCallback { playerState ->
                         model.isPaused(playerState.isPaused)
                         if (playerState.isPaused) {
-                            println("MainActivity ***** PAUSED track click with URI")
                             spotifyAppRemote?.playerApi?.play(action.uri)
                         } else {
-                            println("MainActivity ***** NOT PAUSED track click with URI")
                             spotifyAppRemote?.playerApi?.pause()
                         }
                     }
@@ -354,7 +352,6 @@ class MainActivity : ComponentActivity() {
                     model.cancelJobIfRunning()
                     model.setSliderPosition()
                 }
-
             }
             is TrackSelectAction.PlayTrackWithUri -> {
                 if (isPaused.value) {
@@ -365,12 +362,6 @@ class MainActivity : ComponentActivity() {
                     model.isPaused(true)
                 }
             }
-
-            is TrackSelectAction.ViewMoreSelect -> { }
-            is TrackSelectAction.ViewMoreTrackDetailsSelect -> { }
-            is TrackSelectAction.DetailsSelect -> { }
-            is TrackSelectAction.PlaylistTrackSelect -> { }
-            is TrackSelectAction.RecentlyPlayedTrackSelect -> { println("MainActivity ***** ACTION RECENT") }
         }
     }
     private fun writeToPreferences(token: String, prefKey: String) {

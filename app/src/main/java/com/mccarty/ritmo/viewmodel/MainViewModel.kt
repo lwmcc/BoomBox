@@ -6,6 +6,7 @@ import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.MainActivity.Companion.TICKER_DELAY
 import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.domain.MediaDetails
+import com.mccarty.ritmo.domain.MediaTicker
 import com.mccarty.ritmo.domain.RemoteService
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
@@ -39,7 +40,10 @@ class MainViewModel @Inject constructor(
     private val repository: Repository,
     private val remoteService: RemoteService,
     private val details: MediaDetails,
-    ) : ViewModel() {
+) : ViewModel() {
+
+    @Inject
+    lateinit var mediaTickerFactory: MediaTicker.MediaTickerFactory
 
     sealed class RecentlyPlayedMusicState {
         data class Success(val trackDetails: List<MainItem> = emptyList()) :
@@ -267,28 +271,18 @@ class MainViewModel @Inject constructor(
 
     private var job: Job? = null
     fun setSliderPosition() {
-
         job = viewModelScope.launch {
             job?.cancelAndJoin()
-            delay(TICKER_DELAY)
-            tickerFlow(playbackPosition.value.toLong(), playbackDuration.value.toLong())
-                .collect { position ->
-                    //println("MainViewModel ***** POSITION  LOOP ${playbackPosition.value}")
-                    _playbackPosition.update { position.toFloat() }
-                }
+            val ticker = mediaTickerFactory.create(
+                playbackPosition.value.toLong(),
+                playbackDuration.value.toLong(),
+                TICKER_DELAY,
+            )
+            ticker.mediaTicker().collect { position ->
+                _playbackPosition.update { position.toFloat() }
+            }
         }
     }
-
-    fun tickerFlow(position: Long, duration: Long) = flow {
-        delay(TICKER_DELAY)
-        var index = position
-        while(index <= duration) {
-            emit(index)
-            delay(TICKER_DELAY)
-            index++
-        }
-    }
-
 
     fun setMusicHeader(header: MusicHeader) {
         _musicHeader.value = header
