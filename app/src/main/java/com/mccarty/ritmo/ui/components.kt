@@ -84,7 +84,7 @@ fun PlayerControls(
     onSlide: (PlayerControlAction) -> Unit,
     ) {
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle(false).value
-    val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle().value
+    val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle().value.toFloat()
     val duration = mainViewModel.playbackDuration.collectAsStateWithLifecycle().value.toFloat()
 
     var sliderPosition by remember { mutableFloatStateOf(position) }

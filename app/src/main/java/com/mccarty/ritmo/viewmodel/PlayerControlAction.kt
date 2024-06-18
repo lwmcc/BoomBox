@@ -6,4 +6,5 @@ sealed class PlayerControlAction {
     data class PlayWithUri(val uri: String): PlayerControlAction()
     data object Skip: PlayerControlAction()
     data object Back: PlayerControlAction()
+    data object ResetToStart: PlayerControlAction()
 }

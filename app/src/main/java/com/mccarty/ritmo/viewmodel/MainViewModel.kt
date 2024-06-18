@@ -86,7 +86,7 @@ class MainViewModel @Inject constructor(
     }
 
     sealed class CurrentlyPayingTrackState {
-        data object Pending : CurrentlyPayingTrackState()
+        data class Pending(val pending: Boolean) : CurrentlyPayingTrackState()
         data class Success<T : CurrentlyPlayingTrack>(val data: T) : CurrentlyPayingTrackState()
         data object Error : CurrentlyPayingTrackState()
     }
@@ -118,6 +118,9 @@ class MainViewModel @Inject constructor(
     private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending(true))
     val playlist: StateFlow<PlaylistState> = _playlist
 
+    private var _currentlyPlayingTrack = MutableStateFlow<CurrentlyPayingTrackState>(CurrentlyPayingTrackState.Pending(true))
+    val currentlyPayingTrackState: StateFlow<CurrentlyPayingTrackState> = _currentlyPlayingTrack
+
     private var _playlistTracks = MutableStateFlow<List<MainItem>>(emptyList())
     val playlistTracks: StateFlow<List<MainItem>> = _playlistTracks
 
@@ -140,17 +143,20 @@ class MainViewModel @Inject constructor(
     private var _isPaused = MutableStateFlow(true)
     val isPaused: StateFlow<Boolean> = _isPaused
 
-    private var _playbackDuration = MutableStateFlow<Number>(0)
-    val playbackDuration: StateFlow<Number> = _playbackDuration
+    private var _playbackDuration = MutableStateFlow(0L)
+    val playbackDuration: StateFlow<Long> = _playbackDuration
 
-    private var _playbackPosition = MutableStateFlow(0f)
-    val playbackPosition: StateFlow<Float> = _playbackPosition
+    private var _playbackPosition = MutableStateFlow(0L)
+    val playbackPosition: StateFlow<Long> = _playbackPosition
 
     private var _mainItems = MutableStateFlow<MainItemsState>(MainItemsState.Pending(true))
     val mainItems: StateFlow<MainItemsState> = _mainItems
 
     private var _isScreenVisible = MutableStateFlow<Boolean>(false)
     val isScreenVisible = _isScreenVisible.asStateFlow()
+
+    private var _trackEnd = MutableSharedFlow<Boolean>(1)
+    val trackEnd = _trackEnd
 
     private var _lastPlayedTrackData = MutableSharedFlow<ControlTrackData?>(replay = 1)
     val lastPlayedTrackData = _lastPlayedTrackData
@@ -268,18 +274,37 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun fetchCurrentlyPlayingTrack() {
+        viewModelScope.launch {
+            repository.fetchCurrentlyPlayingTrack().collect { it ->
+                when (it) {
+                    is NetworkRequest.Error -> {
+                        "handle error "
+                    }
+
+                    is NetworkRequest.Success -> {
+                        _currentlyPlayingTrack.value = CurrentlyPayingTrackState.Success(it.data)
+                    }
+                }
+            }
+        }
+    }
 
     private var job: Job? = null
     fun setSliderPosition() {
         job = viewModelScope.launch {
             job?.cancelAndJoin()
             val ticker = mediaTickerFactory.create(
-                playbackPosition.value.toLong(),
-                playbackDuration.value.toLong(),
+                playbackPosition.value,
+                playbackDuration.value,
                 TICKER_DELAY,
             )
             ticker.mediaTicker().collect { position ->
-                _playbackPosition.update { position.toFloat() }
+                _playbackPosition.update { position }
+                if (position == playbackDuration.value) {
+                    _playbackPosition.update { 0L }
+                    _trackEnd.tryEmit(true)
+                }
             }
         }
     }
@@ -307,7 +332,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun <T : Number> playbackPosition(position: T) {
-        _playbackPosition.value = position.toFloat()
+        _playbackPosition.value = position.toLong()
     }
 
     fun handlePlayerActions(remote: SpotifyAppRemote?, action: TrackSelectAction.TrackSelect) {
@@ -322,11 +347,14 @@ class MainViewModel @Inject constructor(
 
     fun cancelJobIfRunning() {
         viewModelScope.launch {
-            job?.let {
-                it.cancelAndJoin()
-            }
+            job?.cancelAndJoin()
         }
     }
+
+    fun trackEnded(ended: Boolean) {
+        _trackEnd.tryEmit(ended)
+    }
+
 }
 data class ControlTrackData(
     var duration: Long

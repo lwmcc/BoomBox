@@ -154,6 +154,53 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.currentlyPayingTrackState.collect {
+                   when(it) {
+                       MainViewModel.CurrentlyPayingTrackState.Error -> { }
+                       is MainViewModel.CurrentlyPayingTrackState.Pending -> { }
+                       is MainViewModel.CurrentlyPayingTrackState.Success<*> -> {
+                           println("MainActivity ***** Song ${it.data}")
+                       }
+                   }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.isPaused.collect {
+                    if (!it) {
+                        model.fetchCurrentlyPlayingTrack()
+                    }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.trackEnd.collect { trackEnded ->
+                    if (trackEnded) {
+                        model.playbackPosition(0)
+                        spotifyAppRemote?.playerApi?.playerState?.setResultCallback { playerState ->
+                            model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
+                            model.setSliderPosition()
+                            model.setMusicHeader(MusicHeader().apply {
+                                imageUrl = StringBuilder().apply {
+                                    append(IMAGE_URL)
+                                    append(playerState.track.imageUri.toString().drop(22).dropLast(2))
+                                }.toString()
+                                artistName = playerState.track.artist.name ?: getString(R.string.artist_name)
+                                albumName = playerState.track.album.name ?: getString(R.string.album_name)
+                                songName = playerState.track.name ?: getString(R.string.track_name)
+                            })
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun onStart() {
@@ -202,6 +249,7 @@ class MainActivity : ComponentActivity() {
 
                     if (!playerState.isPaused) {
                         model.setSliderPosition()
+                        model.fetchCurrentlyPlayingTrack()
                     }
                 }
                 .setErrorCallback { throwable -> println("MainActivity ***** ERROR ${throwable.message}") } // TODO: handle this
@@ -288,27 +336,24 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.Seek -> {
-                model.playbackPosition(action.position)
+                model.cancelJobIfRunning()
+                model.playbackPosition(action.position.toLong())
                 spotifyAppRemote?.playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
+                model.setSliderPosition()
             }
 
             PlayerControlAction.Skip -> {
-                spotifyAppRemote?.let {
-                    it.playerApi.playerState.setResultCallback { playerState ->
-                        if (playerState.isPaused) {
-                            model.playbackPosition(0f)
-                            spotifyAppRemote?.playerApi?.skipNext()
-                            model.isPaused(false)
-                            model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
-                            model.setSliderPosition()
-                        } else {
-                            model.playbackPosition(0f)
-                            spotifyAppRemote?.playerApi?.skipNext()
-                            model.isPaused(false)
-                            model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
+                spotifyAppRemote?.let { remote ->
+                    remote.playerApi.playerState.setResultCallback { playerState ->
+                        remote.playerApi.skipNext()
+                        model.playbackPosition(0f)
+                        model.isPaused(false)
+                        model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
+                        model.setSliderPosition()
+                        if (!playerState.isPaused) {
                             model.cancelJobIfRunning()
-                            model.setSliderPosition()
                         }
+                        model.trackEnded(true)
                     }
                 }
             }
@@ -324,6 +369,12 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+            }
+
+            PlayerControlAction.ResetToStart -> {
+                // TODO: testing
+                model.fetchCurrentlyPlayingTrack()
+
             }
         }
     }
