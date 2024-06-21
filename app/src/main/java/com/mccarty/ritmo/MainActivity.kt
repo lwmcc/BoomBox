@@ -33,6 +33,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.model.MusicHeader
+import com.mccarty.ritmo.model.RecentlyPlayed
+import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.ui.BottomSheet
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.ui.screens.StartScreen
@@ -40,6 +42,8 @@ import com.mccarty.ritmo.utils.positionProduct
 import com.mccarty.ritmo.utils.quotientOf
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
+import com.mccarty.ritmo.viewmodel.Playlist
+import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
@@ -49,6 +53,8 @@ import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -57,6 +63,8 @@ class MainActivity : ComponentActivity() {
     private val model: MainViewModel by viewModels()
 
     private var spotifyAppRemote: SpotifyAppRemote? = null
+
+    private var accessCode = ""
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,67 +148,14 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        println("MainActivity ***** onCreate")
+
         if (savedInstanceState == null) {
             val request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN)
             AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
         }
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.trackUri.collect {
-                    it?.let {
-                        model.fetchRecentlyPlayedMusic()
-                    }
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.currentlyPayingTrackState.collect {
-                   when(it) {
-                       MainViewModel.CurrentlyPayingTrackState.Error -> { }
-                       is MainViewModel.CurrentlyPayingTrackState.Pending -> { }
-                       is MainViewModel.CurrentlyPayingTrackState.Success<*> -> {
-                           println("MainActivity ***** Song ${it.data}")
-                       }
-                   }
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.isPaused.collect {
-                    if (!it) {
-                        model.fetchCurrentlyPlayingTrack()
-                    }
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.trackEnd.collect { trackEnded ->
-                    if (trackEnded) {
-                        model.playbackPosition(0)
-                        spotifyAppRemote?.playerApi?.playerState?.setResultCallback { playerState ->
-                            model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
-                            model.setSliderPosition()
-                            model.setMusicHeader(MusicHeader().apply {
-                                imageUrl = StringBuilder().apply {
-                                    append(IMAGE_URL)
-                                    append(playerState.track.imageUri.toString().drop(22).dropLast(2))
-                                }.toString()
-                                artistName = playerState.track.artist.name ?: getString(R.string.artist_name)
-                                albumName = playerState.track.album.name ?: getString(R.string.album_name)
-                                songName = playerState.track.name ?: getString(R.string.track_name)
-                            })
-                        }
-                    }
-                }
-            }
-        }
+        fetchData()
     }
 
     override fun onStart() {
@@ -215,7 +170,7 @@ class MainActivity : ComponentActivity() {
             }
 
             override fun onFailure(throwable: Throwable) {
-                // TODO: log this
+                // TODO: show an error message
                 println("SpotifyBroadcastReceiver ***** ${throwable.message}")
             }
         })
@@ -298,6 +253,119 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    fun fetchData() {
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.trackUri.collect {
+                    it?.let {
+                        model.fetchRecentlyPlayedMusic()
+                    }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.isPaused.collect {
+                    if (!it) {
+                        model.fetchCurrentlyPlayingTrack()
+                    }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.trackEnd.collect { trackEnded ->
+                    if (trackEnded) {
+                        println("MainActivity ***** POSITION 0")
+                        model.playbackPosition(0)
+                        spotifyAppRemote?.let { remote ->
+                            remote.playerApi.playerState.setResultCallback { playerState ->
+                                if (model.recentPlaylist?.name == PlaylistNames.RECENTLY_PLAYED) {
+                                    if ((model.recentPlaylist?.index ?: 0) == (model?.recentPlaylist?.tracks?.lastIndex)) {
+                                        remote.playerApi.play(null)
+                                        model.setPlaylistData(null)
+                                    } else {
+                                        val newIndex = model.recentPlaylist?.index?.plus(1) ?: 0
+                                        val theUri = model.recentPlaylist?.tracks!![newIndex].track?.uri.toString()
+                                        model.setPlaylistData(
+                                            Playlist(
+                                                uri = theUri,
+                                                index = newIndex,
+                                                name = PlaylistNames.RECENTLY_PLAYED,
+                                                tracks = emptyList(),
+                                            )
+                                        )
+                                        model.recentPlaylist = model.recentPlaylist?.copy(
+                                            uri = theUri,
+                                            index = newIndex,
+                                        )
+                                        remote.playerApi.play(theUri)
+                                    }
+                                } else {
+                                    remote.playerApi.skipNext()
+                                }
+
+                                model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
+                                model.setSliderPosition()
+                                if (!playerState.isPaused) { model.cancelJobIfRunning() }
+                                model.setMusicHeader(MusicHeader().apply {
+                                    imageUrl = StringBuilder().apply {
+                                        append(IMAGE_URL)
+                                        append(playerState.track.imageUri.toString().drop(22).dropLast(2))
+                                    }.toString()
+                                    artistName = playerState.track.artist.name ?: getString(R.string.artist_name)
+                                    albumName = playerState.track.album.name ?: getString(R.string.album_name)
+                                    songName = playerState.track.name ?: getString(R.string.track_name)
+                                }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+/*        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.playlistData.collectLatest {  playlistData ->
+
+                    println("MainActivity ***** ******************")
+                    println("MainActivity ***** PL INDEX ${playlistData?.index}") // ok
+                    println("MainActivity ***** PL NAME ${playlistData?.name}") // playlist name ok
+                    println("MainActivity ***** PL URI ${playlistData?.uri}") // track uri ok
+                    playlistData?.tracks?.forEach { item ->
+                        println("MainActivity ***** #######################")
+                        // println("MainActivity ***** PL NAME 2 ${item.name}") // null
+                        // println("MainActivity ***** PL URI 2 ${item.uri}") // null
+                        println("MainActivity ***** PL TRACK NAME 2 ${item.track?.name}") // ok
+                        println("MainActivity ***** PL TRACK NAME 2 ${item.track?.uri}")
+                        println("MainActivity ***** PL TRACK NAME 2 ${item.track?.album?.name}")
+                        //println("MainActivity ***** PL TRACKS NAME 3 ${item.trackName}") // null
+                        println("MainActivity ***** #######################")
+                    }
+                    println("MainActivity ***** ******************")
+                }
+            }
+        }*/
+
+/*        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                model.currentlyPayingTrackState.collect { state ->
+                    when(state) {
+                        MainViewModel.CurrentlyPayingTrackState.Error ->  { }
+                        is MainViewModel.CurrentlyPayingTrackState.Pending -> { }
+                        is MainViewModel.CurrentlyPayingTrackState.Success<*> -> {
+                            println("MainActivity ***** CURRENT")
+                        }
+                    }
+                }
+            }
+        }*/
+    }
+
     private fun getRedirectUri(): Uri? {
         return Uri.parse(REDIRECT_URI)
     }
@@ -342,20 +410,54 @@ class MainActivity : ComponentActivity() {
                 model.setSliderPosition()
             }
 
-            PlayerControlAction.Skip -> {
+            is PlayerControlAction.Skip -> {
                 spotifyAppRemote?.let { remote ->
                     remote.playerApi.playerState.setResultCallback { playerState ->
-                        remote.playerApi.skipNext()
-                        model.playbackPosition(0f)
-                        model.isPaused(false)
-                        model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
-                        model.setSliderPosition()
-                        if (!playerState.isPaused) {
-                            model.cancelJobIfRunning()
+                        if (model.recentPlaylist?.name == PlaylistNames.RECENTLY_PLAYED) {
+                            if ((model.recentPlaylist?.index ?: 0) == (model?.recentPlaylist?.tracks?.lastIndex)) {
+                                remote.playerApi.play(null)
+                                model.setPlaylistData(null)
+                            } else {
+                                val newIndex = model.recentPlaylist?.index?.plus(0) ?: 0
+                                val theUri = model.recentPlaylist?.tracks!![newIndex].track?.uri.toString()
+
+                                model.setPlaylistData(
+                                    Playlist(
+                                        uri = theUri,
+                                        index = newIndex,
+                                        name = PlaylistNames.RECENTLY_PLAYED,
+                                        tracks = emptyList(),
+                                    )
+                                )
+
+                                model.recentPlaylist = model.recentPlaylist?.copy(
+                                    uri = theUri,
+                                    index = newIndex,
+                                )
+                                remote.playerApi.play(theUri)
+                            }
+                        } else {
+                            remote.playerApi.skipNext()
                         }
-                        model.trackEnded(true)
+
+                        //model.cancelJobIfRunning()
+                        model.playbackPosition(0)
+                        model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
+                        // model.setSliderPosition(0, playerState.track.duration.quotientOf(TICKER_DELAY))
+                        //model.startCancelJob()
+
+                        //model.cancelJobIfRunning()
+                        //model.playbackPosition(0)
+                        model.setSliderPosition()
+                        //model.playbackPosition(0f)
+                        //model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
+                        //if (!playerState.isPaused) {
+                        //    model.cancelJobIfRunning()
+                        //}
+                        //model.setSliderPosition()
                     }
                 }
+                model.trackEnded(true)
             }
 
             is PlayerControlAction.PlayWithUri -> {
@@ -372,9 +474,7 @@ class MainActivity : ComponentActivity() {
             }
 
             PlayerControlAction.ResetToStart -> {
-                // TODO: testing
                 model.fetchCurrentlyPlayingTrack()
-
             }
         }
     }
@@ -392,7 +492,24 @@ class MainActivity : ComponentActivity() {
                         model.handlePlayerActions(remote, action)
                     }
                     model.playbackPosition(0)
-                    model.setSliderPosition()
+                    model.setSliderPosition() // TODO: when not paying yet
+                    // TODO: testing
+                    model.setPlaylistData(
+                        Playlist(
+                            uri = action.uri,
+                            index = action.index,
+                            name = PlaylistNames.RECENTLY_PLAYED,
+                            tracks = action.tracks,
+                        )
+                    )
+
+                    // TODO: remove what's not needed
+                    model.recentPlaylist = Playlist(
+                        uri = action.uri,
+                        index = action.index,
+                        name = PlaylistNames.RECENTLY_PLAYED,
+                        tracks = action.tracks,
+                    )
                 } else {
                     spotifyAppRemote?.let { remote ->
                         model.isPaused(false) // TODO: main select
@@ -400,8 +517,27 @@ class MainActivity : ComponentActivity() {
                         model.handlePlayerActions(remote, action)
                     }
                     model.playbackPosition(0)
-                    model.cancelJobIfRunning()
+                    //model.cancelJobIfRunning()
                     model.setSliderPosition()
+
+
+                    // TODO: testing
+                    model.setPlaylistData(
+                        Playlist(
+                            uri = action.uri,
+                            index = action.index,
+                            name = PlaylistNames.RECENTLY_PLAYED,
+                            tracks = action.tracks,
+                        )
+                    )
+
+                    // TODO: remove what's not need
+                    model.recentPlaylist = Playlist(
+                        uri = action.uri,
+                        index = action.index,
+                        name = PlaylistNames.RECENTLY_PLAYED,
+                        tracks = action.tracks,
+                    )
                 }
             }
             is TrackSelectAction.PlayTrackWithUri -> {
@@ -413,6 +549,9 @@ class MainActivity : ComponentActivity() {
                     model.isPaused(true)
                 }
             }
+
+            is TrackSelectAction.PlayTrackWithUri -> TODO()
+            is TrackSelectAction.TrackSelect -> TODO()
         }
     }
     private fun writeToPreferences(token: String, prefKey: String) {
@@ -437,20 +576,19 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        val TRACK_ID_KEY = "trackId"
-        val INDEX_KEY = "index"
-        val PLAYLIST_ID_KEY = "playlist_id/"
-        val PLAYLIST_NAME_KEY = "playlist_name/"
-        val MAIN_SCREEN_KEY = "main_screen"
-        val PLAYLIST_SCREEN_KEY = "playlist_screen/"
-        val SONG_DETAILS_KEY = "song_details/"
-        val TAG = MainActivity::class.qualifiedName
+        const val INDEX_KEY = "index"
+        const val PLAYLIST_NAME_KEY = "playlist_name/"
+        const val MAIN_SCREEN_KEY = "main_screen"
+        const val PLAYLIST_SCREEN_KEY = "playlist_screen/"
+        const val SONG_DETAILS_KEY = "song_details/"
+
         const val SPOTIFY_TOKEN = "SPOTIFY_TOKEN"
-        private val AUTH_TOKEN_REQUEST_CODE = 0x10
-        private val AUTH_CODE_REQUEST_CODE = 0x11
-        private  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
-        private val IMAGE_URL = "https://i.scdn.co/image/"
-        private var accessCode = ""
+        const val AUTH_TOKEN_REQUEST_CODE = 0x10
+        const val AUTH_CODE_REQUEST_CODE = 0x11
+        const  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
+        const val IMAGE_URL = "https://i.scdn.co/image/"
         const val TICKER_DELAY = 1_000L
+
+        val TAG = MainActivity::class.qualifiedName
     }
 }

@@ -84,7 +84,7 @@ fun PlayerControls(
     onSlide: (PlayerControlAction) -> Unit,
     ) {
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle(false).value
-    val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle().value.toFloat()
+    val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle(0).value.toFloat()
     val duration = mainViewModel.playbackDuration.collectAsStateWithLifecycle().value.toFloat()
 
     var sliderPosition by remember { mutableFloatStateOf(position) }
@@ -92,6 +92,7 @@ fun PlayerControls(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isDragged by interactionSource.collectIsDraggedAsState()
+    val index by mainViewModel.playlistData.collectAsStateWithLifecycle()
     val isInteracting = isPressed || isDragged
 
     val value by derivedStateOf {
@@ -157,7 +158,8 @@ fun PlayerControls(
 
             Button(
                 onClick = {
-                    onSlide(PlayerControlAction.Skip)
+                    //onSlide(PlayerControlAction.Skip(0))
+                          onSlide(PlayerControlAction.Skip(index?.index ?: 0))
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(

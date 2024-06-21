@@ -25,6 +25,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -41,6 +42,7 @@ import com.mccarty.ritmo.R
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.model.payload.MainItem
 import com.mccarty.ritmo.ui.CircleSpinner
+import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 @OptIn(
@@ -60,6 +62,7 @@ fun MainScreen(
     val context = LocalContext.current
     val tracksHeader = context.getString(R.string.recently_played)
     val playlistsHeader = context.getString(R.string.playlists)
+    val playListItem by model.playlistData.collectAsStateWithLifecycle()
 
     when (music.value) {
         is MainViewModel.MainItemsState.Pending -> {
@@ -82,7 +85,7 @@ fun MainScreen(
             }
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -90,7 +93,7 @@ fun MainScreen(
                     stickyHeader {
                         Column(
                             modifier = Modifier
-                                .background(color = MaterialTheme.colorScheme.background),
+                                .background(color = MaterialTheme.colorScheme.primaryContainer),
                         ) {
                             Text(
                                 text = stickyHeaderText(group.type, tracksHeader, playlistsHeader),
@@ -129,9 +132,12 @@ fun MainScreen(
                                                 onAction(
                                                     TrackSelectAction.TrackSelect(
                                                         index = itemIndex,
-                                                        duration = group.items[itemIndex].track?.duration_ms ?: 0L, // TODO: fix
-                                                        uri = group.items[itemIndex].track?.uri ?: "",
+                                                        duration = group.items[itemIndex].track?.duration_ms
+                                                            ?: 0L, // TODO: fix
+                                                        uri = group.items[itemIndex].track?.uri
+                                                            ?: "",
                                                         tracks = group.items,
+                                                        playlistName = PlaylistNames.RECENTLY_PLAYED,
                                                     )
                                                 )
                                             }
@@ -139,7 +145,7 @@ fun MainScreen(
                                         .padding(5.dp),
                                     shape = MaterialTheme.shapes.extraSmall,
                                     colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        containerColor = MaterialTheme.colorScheme.background,
                                     ),
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -156,12 +162,20 @@ fun MainScreen(
                                                 .weight(1f),
 
                                             ) {
+
+                                            val color = if (playListItem?.uri == item.track?.uri) {
+                                                MaterialTheme.colorScheme.inversePrimary
+                                            } else {
+                                                Color.Black
+                                            }
+
                                             Text(
                                                 text = item.track?.name.toString(),
                                                 style = MaterialTheme.typography.titleMedium,
                                                 modifier = Modifier
                                                     .paddingFromBaseline(top = 25.dp)
                                                     .fillMaxWidth(),
+                                                color = color,
                                             )
                                             Text(
                                                 text = item.track?.album?.name ?: "",
@@ -207,7 +221,7 @@ fun MainScreen(
                                         }),
                                     shape = MaterialTheme.shapes.extraSmall,
                                     colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        containerColor = MaterialTheme.colorScheme.surface,
                                     ),
                                 ) {
                                     val imageUrl = item.images.firstOrNull()?.url

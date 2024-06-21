@@ -26,7 +26,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.model.TrackDetails
-import com.mccarty.ritmo.model.payload.MainItem
+import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
 
@@ -64,9 +64,10 @@ fun MediaList(
                             onAction(
                                 TrackSelectAction.TrackSelect(
                                     index = index,
-                                    duration = tracks[index].track?.duration_ms ?: 0L,
                                     uri = tracks[index].uri!!,
+                                    duration = tracks[index].track?.duration_ms ?: 0L,
                                     tracks = tracks,
+                                    playlistName = PlaylistNames.RECENTLY_PLAYED,
                                 )
                             )
                         }

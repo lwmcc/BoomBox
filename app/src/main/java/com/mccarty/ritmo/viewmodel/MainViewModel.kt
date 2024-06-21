@@ -23,14 +23,16 @@ import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -160,6 +162,11 @@ class MainViewModel @Inject constructor(
 
     private var _lastPlayedTrackData = MutableSharedFlow<ControlTrackData?>(replay = 1)
     val lastPlayedTrackData = _lastPlayedTrackData
+
+    private val _playlistData = MutableStateFlow<Playlist?>(null)
+    val playlistData = _playlistData
+
+    var recentPlaylist: Playlist? = null
 
     private suspend fun fetchAllPlaylists() {
         AllPlaylistsState.Pending(true)
@@ -355,9 +362,25 @@ class MainViewModel @Inject constructor(
         _trackEnd.tryEmit(ended)
     }
 
+    fun setPlaylistData(playlist: Playlist?) {
+        _playlistData.update { playlist }
+    }
+
 }
 data class ControlTrackData(
     var duration: Long
 )
+
+data class Playlist(
+    val uri: String,
+    var index: Int,
+    val name: PlaylistNames,
+    val tracks: List<MainItem>?,
+)
+
+enum class PlaylistNames {
+    RECENTLY_PLAYED,
+    PLAYLIST,
+}
 
 

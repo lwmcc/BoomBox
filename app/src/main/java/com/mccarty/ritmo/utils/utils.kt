@@ -156,7 +156,7 @@ fun List<Item>.createTrackDetailsFromItems(): List<MainItem> {
             explicit = it.track?.explicit ?: true,
             track = it.track,
         )
-    }.distinctBy { it.id }
+    }.distinctBy { trackId -> trackId.track?.id }
 }
 
 fun List<PItem>.createTrackDetailsFromPlayListItems(): List<TrackDetails> {
