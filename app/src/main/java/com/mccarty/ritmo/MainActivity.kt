@@ -33,8 +33,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.model.MusicHeader
-import com.mccarty.ritmo.model.RecentlyPlayed
-import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.ui.BottomSheet
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.ui.screens.StartScreen
@@ -53,8 +51,6 @@ import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -142,16 +138,14 @@ class MainActivity : ComponentActivity() {
                         ) {
                             showBottomSheet = it
                         }
-                        navController.navigate("${MainActivity.SONG_DETAILS_KEY}${trackIndex}")
+                        navController.navigate("${SONG_DETAILS_KEY}${trackIndex}")
                     },
                 )
             }
         }
 
-        println("MainActivity ***** onCreate")
-
         if (savedInstanceState == null) {
-            val request = getAuthenticationRequest(AuthorizationResponse.Type.TOKEN)
+            val request = getAuthenticationRequest()
             AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
         }
 
@@ -197,7 +191,6 @@ class MainActivity : ComponentActivity() {
                     })
                     model.setTrackUri(playerState.track.uri)
                     model.isPaused(playerState.isPaused)
-
                     model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
                     model.playbackPosition(playerState.playbackPosition.quotientOf(TICKER_DELAY))
                     model.fetchMainMusic()
@@ -217,10 +210,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun getAuthenticationRequest(type: AuthorizationResponse.Type): AuthorizationRequest? {
+    private fun getAuthenticationRequest(): AuthorizationRequest? {
         return AuthorizationRequest.Builder(
             CLIENT_ID,
-            type,
+            AuthorizationResponse.Type.TOKEN,
             getRedirectUri().toString()
         )
             .setShowDialog(false)
@@ -239,7 +232,7 @@ class MainActivity : ComponentActivity() {
         super.onActivityResult(requestCode, resultCode, intent)
         val response = AuthorizationClient.getResponse(resultCode, data)
         if (response?.accessToken != null) {
-            writeToPreferences(response.accessToken, SPOTIFY_TOKEN)
+            writeToPreferences(response.accessToken)
             if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
                 try {
                     model.fetchRecentlyPlayedMusic() // TODO: called above
@@ -367,7 +360,6 @@ class MainActivity : ComponentActivity() {
                     }
                     model.playbackPosition(0)
                     model.setSliderPosition() // TODO: when not paying yet
-                    // TODO: testing
                     model.setPlaylistData(
                         Playlist(
                             uri = action.uri,
@@ -375,14 +367,6 @@ class MainActivity : ComponentActivity() {
                             name = PlaylistNames.RECENTLY_PLAYED,
                             tracks = action.tracks,
                         )
-                    )
-
-                    // TODO: remove what's not needed
-                    model.recentPlaylist = Playlist(
-                        uri = action.uri,
-                        index = action.index,
-                        name = PlaylistNames.RECENTLY_PLAYED,
-                        tracks = action.tracks,
                     )
                 } else {
                     spotifyAppRemote?.let { remote ->
@@ -391,11 +375,7 @@ class MainActivity : ComponentActivity() {
                         model.handlePlayerActions(remote, action)
                     }
                     model.playbackPosition(0)
-                    //model.cancelJobIfRunning()
                     model.setSliderPosition()
-
-
-                    // TODO: testing
                     model.setPlaylistData(
                         Playlist(
                             uri = action.uri,
@@ -403,14 +383,6 @@ class MainActivity : ComponentActivity() {
                             name = PlaylistNames.RECENTLY_PLAYED,
                             tracks = action.tracks,
                         )
-                    )
-
-                    // TODO: remove what's not need
-                    model.recentPlaylist = Playlist(
-                        uri = action.uri,
-                        index = action.index,
-                        name = PlaylistNames.RECENTLY_PLAYED,
-                        tracks = action.tracks,
                     )
                 }
             }
@@ -425,43 +397,30 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private fun writeToPreferences(token: String, prefKey: String) {
-        val pref = this@MainActivity.getSharedPreferences(prefKey, Context.MODE_PRIVATE)
+    private fun writeToPreferences(token: String) {
+        val pref = this@MainActivity.getSharedPreferences(SPOTIFY_TOKEN, Context.MODE_PRIVATE)
         with (pref.edit()) {
-            putString(prefKey, token)
+            putString(SPOTIFY_TOKEN, token)
             apply()
         }
     }
 
     private fun setupSliderPosition() {
         spotifyAppRemote?.let { remote ->
-            remote.playerApi.playerState.setResultCallback { playerState ->
-                if (model.recentPlaylist?.name == PlaylistNames.RECENTLY_PLAYED) {
-                    if ((model.recentPlaylist?.index ?: 0) == (model?.recentPlaylist?.tracks?.lastIndex)) {
+            remote.playerApi.playerState.setResultCallback { _ ->
+                if ( model.playlistData.value?.name == PlaylistNames.RECENTLY_PLAYED) {
+                    if ((model.playlistData.value?.index ?: 0) == (model.playlistData.value?.tracks?.lastIndex)) {
                         remote.playerApi.play(null)
                         model.setPlaylistData(null)
-                        println("MainActivity ***** DATA NULL")
                     } else {
-                        println("MainActivity ***** SET POSITION")
-                        val newIndex = model.recentPlaylist?.index?.plus(1) ?: 0
-                        val theUri = model.recentPlaylist?.tracks!![newIndex].track?.uri.toString()
-
-                        model.setPlaylistData(
-                            Playlist(
-                                uri = theUri,
-                                index = newIndex,
-                                name = PlaylistNames.RECENTLY_PLAYED,
-                                tracks = emptyList(),
-                            )
-                        )
-                        model.recentPlaylist = model.recentPlaylist?.copy(
-                            uri = theUri,
-                            index = newIndex,
-                        )
-
+                        val newIndex = model.playlistData.value?.index?.plus(1) ?: 0
+                        val theUri = model.playlistData.value?.tracks?.get(newIndex)?.track?.uri.toString()
+                        model.setPlaylistData(model.playlistData.value?.copy(uri = theUri, index = newIndex))
                         model.playbackPosition(0)
-
-                        model.playbackDuration(model.recentPlaylist?.tracks!![newIndex].track?.duration_ms?.quotientOf(TICKER_DELAY))
+                        model.playbackDurationWithIndex(newIndex)
+                        model.playbackDuration(
+                            model.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(TICKER_DELAY)
+                        )
                         remote.playerApi.play(theUri)
                         model.setSliderPosition()
                     }

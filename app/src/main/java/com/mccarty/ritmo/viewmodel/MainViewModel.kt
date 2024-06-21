@@ -163,8 +163,6 @@ class MainViewModel @Inject constructor(
     private val _playlistData = MutableStateFlow<Playlist?>(null)
     val playlistData = _playlistData
 
-    var recentPlaylist: Playlist? = null
-
     private suspend fun fetchAllPlaylists() {
         AllPlaylistsState.Pending(true)
         repository.fetchPlayLists().collect {
@@ -297,12 +295,14 @@ class MainViewModel @Inject constructor(
     private var job: Job? = null
     fun setSliderPosition() {
         job = viewModelScope.launch {
+            println("MainViewModel ***** DURATION ${playbackDuration.value}")
             job?.cancelAndJoin()
             mediaTickerFactory.create(
                 playbackPosition.value,
                 playbackDuration.value,
                 TICKER_DELAY,
             ).mediaTicker().collect { position ->
+                println("MainViewModel ***** $position")
                 _playbackPosition.update { position }
                 if (position == playbackDuration.value) {
                     _playbackPosition.update { 0L }
@@ -331,7 +331,15 @@ class MainViewModel @Inject constructor(
     }
 
     fun playbackDuration(duration: Long?) {
-        _playbackDuration.update { duration!! } // TODO: fix!!
+        _playbackDuration.update {
+            duration ?: 0
+        }
+    }
+
+    fun playbackDurationWithIndex(newIndex: Int) {
+        _playbackDuration.update {
+            playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(TICKER_DELAY) ?: 0
+        }
     }
 
     fun <T : Number> playbackPosition(position: T) {
@@ -354,14 +362,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun trackEnded(ended: Boolean) {
-        _trackEnd.tryEmit(ended)
-    }
-
     fun setPlaylistData(playlist: Playlist?) {
         _playlistData.update { playlist }
     }
-
 }
 data class ControlTrackData(
     var duration: Long
@@ -376,7 +379,6 @@ data class Playlist(
 
 enum class PlaylistNames {
     RECENTLY_PLAYED,
-    PLAYLIST,
+    USER_PLAYLIST,
+    RECOMMENDED_PLAYLIST,
 }
-
-
