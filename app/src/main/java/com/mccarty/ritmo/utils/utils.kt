@@ -181,6 +181,7 @@ fun Float.positionProduct(factor: Long): Long {
     return this.toLong() * factor
 }
 
+// TODO: this could be an Int
 fun Long.quotientOf(divisor: Long): Long {
     return if (this > 0L) {
         this / divisor

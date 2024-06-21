@@ -6,6 +6,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.yield
 
 class MediaTicker @AssistedInject constructor(
     @Assisted(POSITION) val position: Long,
@@ -16,6 +17,7 @@ class MediaTicker @AssistedInject constructor(
         delay(delay)
         var index = position
         while (index <= duration) {
+            yield()
             emit(index)
             delay(delay)
             index++

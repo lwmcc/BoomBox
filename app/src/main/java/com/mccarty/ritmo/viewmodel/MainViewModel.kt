@@ -20,19 +20,16 @@ import com.mccarty.ritmo.model.payload.TrackItem
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.utils.createTrackDetailsFromItems
 import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
+import com.mccarty.ritmo.utils.quotientOf
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -301,12 +298,11 @@ class MainViewModel @Inject constructor(
     fun setSliderPosition() {
         job = viewModelScope.launch {
             job?.cancelAndJoin()
-            val ticker = mediaTickerFactory.create(
+            mediaTickerFactory.create(
                 playbackPosition.value,
                 playbackDuration.value,
                 TICKER_DELAY,
-            )
-            ticker.mediaTicker().collect { position ->
+            ).mediaTicker().collect { position ->
                 _playbackPosition.update { position }
                 if (position == playbackDuration.value) {
                     _playbackPosition.update { 0L }

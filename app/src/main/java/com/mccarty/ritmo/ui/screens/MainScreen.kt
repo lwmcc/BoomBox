@@ -164,7 +164,7 @@ fun MainScreen(
                                             ) {
 
                                             val color = if (playListItem?.uri == item.track?.uri) {
-                                                MaterialTheme.colorScheme.inversePrimary
+                                                Color.Red
                                             } else {
                                                 Color.Black
                                             }
