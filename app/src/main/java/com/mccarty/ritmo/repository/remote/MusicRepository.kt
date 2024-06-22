@@ -7,6 +7,7 @@ import com.mccarty.ritmo.model.CurrentlyPlayingTrack
 import com.mccarty.ritmo.model.payload.PlaybackState
 import com.mccarty.ritmo.model.payload.Playlist
 import com.mccarty.ritmo.model.payload.PlaylistData
+import com.mccarty.ritmo.model.payload.Seeds
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -37,5 +38,10 @@ open class MusicRepository @Inject constructor(private val apiService: ApiServic
 
     override suspend fun fetchPlaybackState(): Flow<NetworkRequest<PlaybackState>> = flow {
        emit(apiService.fetchPlaybackState())
+    }
+
+    override suspend fun fetchRecommendedPlaylists(trackIds: String, artistIds: String):
+            Flow<NetworkRequest<Seeds>> = flow {
+        emit(apiService.fetchRecommendedPlaylist(trackIds, artistIds))
     }
 }

@@ -48,9 +48,8 @@ class MainActivity : ComponentActivity() {
 
     private var spotifyAppRemote: SpotifyAppRemote? = null
 
-    private var accessCode = ""
+    private var accessCode: String? = null
 
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -177,7 +176,7 @@ class MainActivity : ComponentActivity() {
                     Log.e(TAG, "${ioe.message}")
                 }
             } else if (requestCode == AUTH_CODE_REQUEST_CODE) {
-                accessCode = response.code
+                accessCode = response.code // TODO: where is this used
             }
         }
     }
@@ -188,7 +187,7 @@ class MainActivity : ComponentActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 model.trackUri.collect {
                     it?.let {
-                        model.fetchRecentlyPlayedMusic()
+                        model.fetchRecentlyPlayedMusic() // TODO: called twice
                     }
                 }
             }
@@ -343,39 +342,66 @@ class MainActivity : ComponentActivity() {
 
     private fun setupSliderPosition() {
         spotifyAppRemote?.let { remote ->
-            remote.playerApi.playerState.setResultCallback { _ ->
-                if ( model.playlistData.value?.name == PlaylistNames.RECENTLY_PLAYED) {
-                    if ((model.playlistData.value?.index ?: 0) == (model.playlistData.value?.tracks?.lastIndex)) {
-                        remote.playerApi.play(null)
-                        model.setPlaylistData(null)
-                    } else {
-                        val newIndex = model.playlistData.value?.index?.plus(1) ?: 0
-                        val theUri = model.playlistData.value?.tracks?.get(newIndex)?.track?.uri.toString()
-                        model.setPlaylistData(model.playlistData.value?.copy(uri = theUri, index = newIndex))
-                        model.playbackPosition(0)
-                        model.playbackDurationWithIndex(newIndex)
-                        model.playbackDuration(
-                            model.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(TICKER_DELAY)
-                        )
-                        remote.playerApi.play(theUri)
-                        model.setSliderPosition()
-                    }
-                } else {
-                    remote.playerApi.skipNext()
-                }
-            }
-        }
-    }
+            remote.playerApi.playerState.setResultCallback { playerState ->
+                when (model.playlistData.value?.name) {
+                    PlaylistNames.RECENTLY_PLAYED -> {
+                        if ((model.playlistData.value?.index
+                                ?: 0) == (model.playlistData.value?.tracks?.lastIndex)
+                        ) {
+                            remote.playerApi.play(null)
+                            model.setPlaylistData(null)
+                            println("MainActivity ***** SKIP 1")
+                            // TODO: set recommneded playlist
+                        } else {
+                            val newIndex = model.playlistData.value?.index?.plus(1) ?: 0
+                            val theUri =
+                                model.playlistData.value?.tracks?.get(newIndex)?.track?.uri.toString()
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    fun showSheet(
-        scope: CoroutineScope,
-        sheetState: SheetState,
-        onShowSheet: (Boolean) -> Unit,
-    ) {
-        scope.launch { sheetState.hide() }.invokeOnCompletion {
-            if (!sheetState.isVisible) {
-                onShowSheet(false)
+                            model.setPlaylistData(
+                                model.playlistData.value?.copy(
+                                    uri = theUri,
+                                    index = newIndex
+                                )
+                            )
+                            model.playbackPosition(0)
+                            model.playbackDurationWithIndex(newIndex)
+                            model.playbackDuration(
+                                model.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(
+                                    TICKER_DELAY
+                                )
+                            )
+                            model.setSliderPosition()
+                            model.isPaused(false)
+
+                            remote.playerApi.play(theUri)
+
+                            println("MainActivity ***** SKIP 2")
+                        }
+                    }
+
+                    PlaylistNames.RECOMMENDED_PLAYLIST -> {
+                        println("MainActivity ***** RECOMMENDED PLAYLIST")
+                        model.fetchRecommendedPlaylist()
+                    }
+
+                    PlaylistNames.USER_PLAYLIST -> {
+                        println("MainActivity ***** SKIP USER LIST")
+                    }
+
+                    else -> {
+                        println("MainActivity ***** ELSE")
+                       /* model.playbackPosition(0)
+                        model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
+                        model.setSliderPosition()
+                        remote.playerApi.skipNext()
+                        model.isPaused(false)
+
+                        println("MainActivity ***** SKIP DURATION ${playerState.track.duration.quotientOf(TICKER_DELAY)}")
+                        println("MainActivity ***** SKIP ARTIST ${playerState.track.artist}")*/
+
+                        // model.fetchRecommendedPlaylist()
+                    }
+                }
             }
         }
     }
@@ -393,6 +419,8 @@ class MainActivity : ComponentActivity() {
         const  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
         const val IMAGE_URL = "https://i.scdn.co/image/"
         const val TICKER_DELAY = 1_000L
+        const val API_SEED_TRACKS = 2
+        const val API_SEED_ARTISTS = 3
 
         val TAG = MainActivity::class.qualifiedName
     }

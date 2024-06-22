@@ -7,8 +7,8 @@ import com.mccarty.ritmo.model.payload.PlaybackState
 import com.mccarty.ritmo.model.payload.Playlist
 import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem
+import com.mccarty.ritmo.model.payload.Seeds
 import kotlinx.coroutines.flow.Flow
-import retrofit2.http.GET
 
 interface Repository {
     suspend fun fetchRecentlyPlayedItem(): Flow<NetworkRequest<RecentlyPlayedItem>>
@@ -17,4 +17,5 @@ interface Repository {
     suspend fun fetchPlayLists(): Flow<NetworkRequest<PlaylistData.PlaylistItem>>
     suspend fun fetchPlayList(playlistId: String): Flow<NetworkRequest<Playlist>>
     suspend fun fetchPlaybackState(): Flow<NetworkRequest<PlaybackState>>
+    suspend fun fetchRecommendedPlaylists(trackIds: String, artistIds: String): Flow<NetworkRequest<Seeds>>
 }

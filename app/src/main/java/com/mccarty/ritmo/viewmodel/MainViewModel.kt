@@ -3,6 +3,8 @@ package com.mccarty.ritmo.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
+import com.mccarty.ritmo.MainActivity.Companion.API_SEED_ARTISTS
+import com.mccarty.ritmo.MainActivity.Companion.API_SEED_TRACKS
 import com.mccarty.ritmo.MainActivity.Companion.TICKER_DELAY
 import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.domain.MediaDetails
@@ -16,6 +18,7 @@ import com.mccarty.ritmo.model.TrackV2Item
 import com.mccarty.ritmo.model.payload.ListItem
 import com.mccarty.ritmo.model.payload.MainItem
 import com.mccarty.ritmo.model.payload.PlaylistData
+import com.mccarty.ritmo.model.payload.Track
 import com.mccarty.ritmo.model.payload.TrackItem
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.utils.createTrackDetailsFromItems
@@ -28,7 +31,6 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -105,8 +107,7 @@ class MainViewModel @Inject constructor(
     private var _recentlyPlayedMusic = MutableStateFlow<RecentlyPlayedMusicState>(
         RecentlyPlayedMusicState.Success(emptyList())
     )
-    val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> =
-        _recentlyPlayedMusic.asStateFlow()
+    val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
 
     private var _playLists = MutableStateFlow<PlaylistState>(PlaylistState.Pending(true))
     val playLists: StateFlow<PlaylistState> = _playLists
@@ -122,6 +123,9 @@ class MainViewModel @Inject constructor(
 
     private var _playlistTracks = MutableStateFlow<List<MainItem>>(emptyList())
     val playlistTracks: StateFlow<List<MainItem>> = _playlistTracks
+
+    private var _recommendedTracks = MutableStateFlow<List<Track>>(emptyList())
+    val recommendedTracks: StateFlow<List<Track>> = _recommendedTracks
 
     private var _mediaDetails = MutableStateFlow<List<Details>>(emptyList())
     val mediaDetails: StateFlow<List<Details>> = _mediaDetails
@@ -150,9 +154,6 @@ class MainViewModel @Inject constructor(
 
     private var _mainItems = MutableStateFlow<MainItemsState>(MainItemsState.Pending(true))
     val mainItems: StateFlow<MainItemsState> = _mainItems
-
-    private var _isScreenVisible = MutableStateFlow<Boolean>(false)
-    val isScreenVisible = _isScreenVisible.asStateFlow()
 
     private var _trackEnd = MutableSharedFlow<Boolean>(1)
     val trackEnd = _trackEnd
@@ -198,9 +199,9 @@ class MainViewModel @Inject constructor(
     fun fetchRecentlyPlayedMusic() {
         viewModelScope.launch {
             repository.fetchRecentlyPlayedItem().catch {
-                _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(emptyList())
-            }.collect {
-                when (it) {
+                _recentlyPlayedMusic.update { RecentlyPlayedMusicState.Success(emptyList()) }
+            }.collect { items ->
+                when (items) {
                     is NetworkRequest.Error -> {
                         _recentlyPlayedMusic.update {
                             RecentlyPlayedMusicState.Success(emptyList())
@@ -208,11 +209,11 @@ class MainViewModel @Inject constructor(
                     }
 
                     is NetworkRequest.Success -> {
-                        _recentlyPlayedMusic.update { _ ->
-                            RecentlyPlayedMusicState.Success(
-                                it.data.items.createTrackDetailsFromItems()
-                            )
+                        val mainItems = items.data.items.createTrackDetailsFromItems()
+                        _recentlyPlayedMusic.update {
+                            RecentlyPlayedMusicState.Success(mainItems)
                         }
+                        _playlistTracks.update { mainItems }
                     }
                 }
             }
@@ -364,6 +365,30 @@ class MainViewModel @Inject constructor(
 
     fun setPlaylistData(playlist: Playlist?) {
         _playlistData.update { playlist }
+    }
+
+    fun fetchRecommendedPlaylist() {
+        val ids = mutableListOf<String>()
+        val artists = mutableListOf<List<String>>()
+        playlistTracks.value.map {
+            ids.add(it.track?.id.toString())
+            it.track?.artists?.map { artist -> artist.id }?.let { item -> artists.add(item) }
+        }
+        val trackIds = ids.take(API_SEED_TRACKS).joinToString().filter { !it.isWhitespace() }
+        val artistIds = artists.flatten().take(API_SEED_ARTISTS).joinToString().filter { !it.isWhitespace() }
+
+        viewModelScope.launch {
+            repository.fetchRecommendedPlaylists(trackIds, artistIds).collect { items ->
+                when(items) {
+                    is NetworkRequest.Error -> {  println("MainViewModel ***** DATA ITEMS ERROR ${items.toString()}") }
+                    is NetworkRequest.Success -> {
+                        _recommendedTracks.update { items.data.tracks }
+                        println("MainViewModel ***** DATA ITEMS ${items.data.seeds}")
+                    }
+                }
+            }
+        }
+
     }
 }
 data class ControlTrackData(
