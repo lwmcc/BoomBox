@@ -16,26 +16,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.compose.rememberNavController
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.model.MusicHeader
-import com.mccarty.ritmo.ui.BottomSheet
+import com.mccarty.ritmo.ui.MainComposeScreen
 import com.mccarty.ritmo.ui.PlayerControls
-import com.mccarty.ritmo.ui.screens.StartScreen
 import com.mccarty.ritmo.utils.positionProduct
 import com.mccarty.ritmo.utils.quotientOf
 import com.mccarty.ritmo.viewmodel.MainViewModel
@@ -66,16 +54,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val sheetState = rememberModalBottomSheetState()
-            val scope = rememberCoroutineScope()
-            var showBottomSheet by remember { mutableStateOf(false) }
-            var trackIndex by remember { mutableIntStateOf(0) }
-            val navController = rememberNavController()
-
-            val mainItems = model.mainItems.collectAsStateWithLifecycle()
-            val music by remember { mutableStateOf(mainItems) }
-            val isPaused = model.isPaused.collectAsStateWithLifecycle()
-
             Scaffold(
                 bottomBar = {
                     BottomAppBar(
@@ -85,61 +63,19 @@ class MainActivity : ComponentActivity() {
                         PlayerControls(onSlide = this@MainActivity::playerControlAction)
                     }
                 }) { padding ->
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(
-                                top = padding.calculateTopPadding(),
-                                bottom = padding.calculateBottomPadding(),
-                            )
-                    ) {
-                        StartScreen(
-                            navController,
-                            music = music,
-                            onViewMoreClick = { bottomSheet, index ->
-                                showBottomSheet = bottomSheet
-                                trackIndex = index
-                            },
-                            onAction = {
-                                trackSelectionAction(
-                                    action = it,
-                                    isPaused = isPaused,
-                                )
-                            },
-                            onPlayPauseClicked = {
-                                trackSelectionAction(
-                                    action = it,
-                                    isPaused = isPaused,
-                                )
-                            }
-                        )
-                    }
-                }
 
-                BottomSheet(
-                    showBottomSheet,
-                    sheetState = sheetState,
-                    text = getString(R.string.sheets_view_more),
-                    onDismiss = {
-                        showSheet(
-                            scope = scope,
-                            sheetState = sheetState,
+                MainComposeScreen(
+                    mainViewModel = model,
+                    padding = padding,
+                    viewMore = getString(R.string.sheets_view_more),
+                    mediaEvents = object : MediaEvents {
+                        override fun trackSelectionAction(
+                            trackSelectAction: TrackSelectAction,
+                            isPaused: State<Boolean>,
                         ) {
-                            showBottomSheet = it
+                            trackSelection(trackSelectAction, isPaused)
                         }
-                    },
-                    onClick = {
-                        showSheet(
-                            scope = scope,
-                            sheetState = sheetState,
-                        ) {
-                            showBottomSheet = it
-                        }
-                        navController.navigate("${SONG_DETAILS_KEY}${trackIndex}")
-                    },
+                    }
                 )
             }
         }
@@ -346,7 +282,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun trackSelectionAction(
+    private fun trackSelection(
         action: TrackSelectAction,
         isPaused: State<Boolean>,
     ) {
@@ -459,5 +395,9 @@ class MainActivity : ComponentActivity() {
         const val TICKER_DELAY = 1_000L
 
         val TAG = MainActivity::class.qualifiedName
+    }
+
+    interface MediaEvents {
+        fun trackSelectionAction(trackSelectAction: TrackSelectAction, isPaused: State<Boolean>)
     }
 }
