@@ -23,7 +23,7 @@ interface MainItem2 {
 open class MainItem(
     open val id: String? = null,
     open val uri: String? = null,
-    open val type: String,
+    open val type: String?,
     open val track: Track? = null,
     open val name: String? = null,
     open val trackName: String? = null,

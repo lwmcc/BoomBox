@@ -8,20 +8,16 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetState
 import androidx.compose.runtime.State
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.model.MusicHeader
+import com.mccarty.ritmo.model.payload.MainItem
 import com.mccarty.ritmo.ui.MainComposeScreen
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.utils.positionProduct
@@ -38,16 +34,13 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.IOException
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val model: MainViewModel by viewModels()
-
     private var spotifyAppRemote: SpotifyAppRemote? = null
-
     private var accessCode: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -130,9 +123,54 @@ class MainActivity : ComponentActivity() {
                     model.playbackPosition(playerState.playbackPosition.quotientOf(TICKER_DELAY))
                     model.fetchMainMusic()
 
-                    if (!playerState.isPaused) {
-                        model.setSliderPosition()
-                        model.fetchCurrentlyPlayingTrack()
+                    when (model.playlistData.value?.name) {
+                        PlaylistNames.RECENTLY_PLAYED -> {
+                            println("MainActivity ***** RECENTLY PLATED")
+                            //setupSliderPosition()
+                        }
+                        PlaylistNames.USER_PLAYLIST -> {
+                            println("MainActivity ***** USER PLAYLIST")
+                        }
+                        PlaylistNames.RECOMMENDED_PLAYLIST -> {
+                            model.setPlaylistData(
+                                Playlist(
+                                    uri = null,
+                                    index = 0, // TODO: set index return 0 -1 becuase not data
+                                    name = PlaylistNames.RECOMMENDED_PLAYLIST,
+                                    tracks = emptyList(),
+                                )
+                            )
+                        }
+
+                        else -> {
+                            spotifyAppRemote?.let { remote ->
+                                remote.playerApi.playerState.setResultCallback { playerState ->
+                                    model.cancelJobIfRunning()
+                                    model.playbackPosition(playerState.playbackPosition.quotientOf(TICKER_DELAY))
+                                    model.playbackDuration(playerState.track?.duration?.quotientOf(TICKER_DELAY))
+                                    model.setSliderPosition()
+
+                                    model.setPlaylistData(
+                                        Playlist(
+                                            uri = playerState.track?.uri,
+                                            index = INITIAL_POSITION,
+                                            name = PlaylistNames.RECOMMENDED_PLAYLIST,
+                                            tracks = listOf(
+                                                MainItem(
+                                                    id = null,
+                                                    uri = playerState.track?.uri,
+                                                    type = null,
+                                                    name = playerState.track?.name,
+                                                    description = null,
+                                                    images = emptyList(),
+                                                    tracks = null,
+                                                )
+                                            ),
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
                 .setErrorCallback { throwable -> println("MainActivity ***** ERROR ${throwable.message}") } // TODO: handle this
@@ -182,22 +220,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun fetchData() {
-
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 model.trackUri.collect {
                     it?.let {
-                        model.fetchRecentlyPlayedMusic() // TODO: called twice
-                    }
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.isPaused.collect {
-                    if (!it) {
-                        model.fetchCurrentlyPlayingTrack()
+                        model.fetchRecentlyPlayedMusic() // TODO: can only call if it's empty
                     }
                 }
             }
@@ -207,7 +234,7 @@ class MainActivity : ComponentActivity() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 model.trackEnd.collect { trackEnded ->
                     if (trackEnded) {
-                        setupSliderPosition()
+                        setupSliderPosition(INCREMENT_INDEX)
                     }
                 }
             }
@@ -259,7 +286,26 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.Skip -> {
-                setupSliderPosition()
+                when(model.playlistData.value?.name) {
+                    PlaylistNames.RECOMMENDED_PLAYLIST -> {
+                        model.setPlaylistData(
+                            Playlist(
+                                uri = model.recommendedPlaylist[INITIAL_POSITION].track?.uri,
+                                index = INITIAL_POSITION,
+                                name = PlaylistNames.RECENTLY_PLAYED,
+                                tracks = model.recommendedPlaylist,
+                            )
+                        )
+
+                        setupSliderPosition()
+                    }
+
+                    PlaylistNames.RECENTLY_PLAYED -> {
+                        setupSliderPosition(INCREMENT_INDEX)
+                    }
+                    PlaylistNames.USER_PLAYLIST -> { /* TODO */}
+                    else -> { setupSliderPosition(INCREMENT_INDEX) }
+                }
             }
 
             is PlayerControlAction.PlayWithUri -> {
@@ -289,12 +335,12 @@ class MainActivity : ComponentActivity() {
             is TrackSelectAction.TrackSelect -> {
                 if (isPaused.value) {
                     spotifyAppRemote?.let { remote ->
-                        model.isPaused(false) // TODO: main select
+                        model.isPaused(false)
                         model.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY))
                         model.handlePlayerActions(remote, action)
                     }
-                    model.playbackPosition(0)
-                    model.setSliderPosition() // TODO: when not paying yet
+                    model.playbackPosition(INITIAL_POSITION)
+                    model.setSliderPosition()
                     model.setPlaylistData(
                         Playlist(
                             uri = action.uri,
@@ -305,11 +351,11 @@ class MainActivity : ComponentActivity() {
                     )
                 } else {
                     spotifyAppRemote?.let { remote ->
-                        model.isPaused(false) // TODO: main select
+                        model.isPaused(false)
                         model.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY))
                         model.handlePlayerActions(remote, action)
                     }
-                    model.playbackPosition(0)
+                    model.playbackPosition(INITIAL_POSITION)
                     model.setSliderPosition()
                     model.setPlaylistData(
                         Playlist(
@@ -340,68 +386,34 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun setupSliderPosition() {
+    private fun setupSliderPosition(index: Int = INITIAL_POSITION) {
         spotifyAppRemote?.let { remote ->
-            remote.playerApi.playerState.setResultCallback { playerState ->
-                when (model.playlistData.value?.name) {
-                    PlaylistNames.RECENTLY_PLAYED -> {
-                        if ((model.playlistData.value?.index
-                                ?: 0) == (model.playlistData.value?.tracks?.lastIndex)
-                        ) {
-                            remote.playerApi.play(null)
-                            model.setPlaylistData(null)
-                            println("MainActivity ***** SKIP 1")
-                            // TODO: set recommneded playlist
-                        } else {
-                            val newIndex = model.playlistData.value?.index?.plus(1) ?: 0
-                            val theUri =
-                                model.playlistData.value?.tracks?.get(newIndex)?.track?.uri.toString()
+            if (model.playlistData.value?.name == PlaylistNames.RECENTLY_PLAYED) {
+                if ((model.playlistData.value?.index
+                        ?: 0) == (model.playlistData.value?.tracks?.lastIndex)
+                ) {
+                    remote.playerApi.play(null)
+                    model.setPlaylistData(null)
+                } else {
+                    val newIndex = model.playlistData.value?.index?.plus(index) ?: INITIAL_POSITION
+                    val theUri =
+                        model.playlistData.value?.tracks?.get(newIndex)?.track?.uri.toString()
 
-                            model.setPlaylistData(
-                                model.playlistData.value?.copy(
-                                    uri = theUri,
-                                    index = newIndex
-                                )
-                            )
-                            model.playbackPosition(0)
-                            model.playbackDurationWithIndex(newIndex)
-                            model.playbackDuration(
-                                model.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(
-                                    TICKER_DELAY
-                                )
-                            )
-                            model.setSliderPosition()
-                            model.isPaused(false)
-
-                            remote.playerApi.play(theUri)
-
-                            println("MainActivity ***** SKIP 2")
-                        }
-                    }
-
-                    PlaylistNames.RECOMMENDED_PLAYLIST -> {
-                        println("MainActivity ***** RECOMMENDED PLAYLIST")
-                        model.fetchRecommendedPlaylist()
-                    }
-
-                    PlaylistNames.USER_PLAYLIST -> {
-                        println("MainActivity ***** SKIP USER LIST")
-                    }
-
-                    else -> {
-                        println("MainActivity ***** ELSE")
-                       /* model.playbackPosition(0)
-                        model.playbackDuration(playerState.track.duration.quotientOf(TICKER_DELAY))
-                        model.setSliderPosition()
-                        remote.playerApi.skipNext()
-                        model.isPaused(false)
-
-                        println("MainActivity ***** SKIP DURATION ${playerState.track.duration.quotientOf(TICKER_DELAY)}")
-                        println("MainActivity ***** SKIP ARTIST ${playerState.track.artist}")*/
-
-                        // model.fetchRecommendedPlaylist()
-                    }
+                    model.setPlaylistData(
+                        model.playlistData.value?.copy(
+                            uri = theUri,
+                            index = newIndex
+                        )
+                    )
+                    model.playbackPosition(0)
+                    model.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(
+                        TICKER_DELAY
+                    )
+                    remote.playerApi.play(theUri)
+                    model.setSliderPosition()
                 }
+            } else {
+                remote.playerApi.skipNext()
             }
         }
     }
@@ -419,8 +431,11 @@ class MainActivity : ComponentActivity() {
         const  val  REDIRECT_URI = "com.mccarty.ritmo://auth"
         const val IMAGE_URL = "https://i.scdn.co/image/"
         const val TICKER_DELAY = 1_000L
+        const val INCREMENT_INDEX = 1
         const val API_SEED_TRACKS = 2
         const val API_SEED_ARTISTS = 3
+        const val  INITIAL_POSITION = 0
+        const val NO_TRACKS_POSITION = -1
 
         val TAG = MainActivity::class.qualifiedName
     }

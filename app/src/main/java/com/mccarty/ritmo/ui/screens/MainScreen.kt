@@ -163,10 +163,24 @@ fun MainScreen(
 
                                             ) {
 
-                                            val color = if (playListItem?.uri == item.track?.uri) {
-                                                Color.Red
-                                            } else {
-                                                Color.Black
+                                            // TODO: move this
+                                            val color = when (playListItem?.name) {
+                                                PlaylistNames.RECOMMENDED_PLAYLIST -> {
+                                                    Color.Black
+                                                }
+                                                PlaylistNames.RECENTLY_PLAYED -> {
+                                                    if (playListItem?.uri == item.track?.uri) {
+                                                        Color.Red
+                                                    } else {
+                                                        Color.Black
+                                                    }
+                                                }
+                                                PlaylistNames.USER_PLAYLIST -> {
+                                                    Color.Black
+                                                }
+                                                null -> {
+                                                    Color.Black
+                                                }
                                             }
 
                                             Text(

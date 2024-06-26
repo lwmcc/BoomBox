@@ -1,5 +1,7 @@
 package com.mccarty.ritmo.model
 
+import com.mccarty.ritmo.model.payload.Image
+
 data class Album(
     val album_type: String ="",
     val artists: List<ArtistX> = emptyList(),

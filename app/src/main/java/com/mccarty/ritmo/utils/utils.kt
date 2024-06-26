@@ -12,6 +12,7 @@ import java.lang.NullPointerException
 import java.lang.NumberFormatException
 import com.mccarty.ritmo.model.payload.Item
 import com.mccarty.ritmo.model.payload.MainItem
+import com.mccarty.ritmo.model.payload.Track
 import com.mccarty.ritmo.model.payload.PlaylistItem as PItem
 
 fun processPlaylist(response: Response<JsonObject>): List<PlaylistItem> {
@@ -157,6 +158,24 @@ fun List<Item>.createTrackDetailsFromItems(): List<MainItem> {
             track = it.track,
         )
     }.distinctBy { trackId -> trackId.track?.id }
+}
+
+fun List<Track>.createTrackDetailsFromItemsRecommended(): List<MainItem> {
+    if (this.isEmpty()) {
+        return emptyList()
+    }
+    return this.map {
+        TrackDetails(
+            id = it.id?: "", // TODO: use nulls
+            uri = it.uri ?: "",
+            images = it.album.images ?: emptyList(),
+            trackName = it.track_number.toString() ?: "",
+            albumName = it.album.name ?: "",
+            artists = it.artists ?: emptyList(),
+            explicit = it.explicit ?: true,
+            track = it,
+        )
+    }
 }
 
 fun List<PItem>.createTrackDetailsFromPlayListItems(): List<TrackDetails> {
