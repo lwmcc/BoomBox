@@ -158,8 +158,7 @@ fun PlayerControls(
 
             Button(
                 onClick = {
-                    //onSlide(PlayerControlAction.Skip(0))
-                          onSlide(PlayerControlAction.Skip(index?.index ?: 0))
+                    onSlide(PlayerControlAction.Skip(index?.index ?: 0))
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(

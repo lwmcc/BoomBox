@@ -345,6 +345,20 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun setSliderPosition(
+        position: Long,
+        duration: Long? = 0,
+        delay: Long,
+        setPosition: Boolean = false,
+    ) {
+        playbackPosition(position.quotientOf(delay))
+        playbackDuration(duration?.quotientOf(delay))
+
+        if (setPosition) {
+            setSliderPosition()
+        }
+    }
+
     fun setMusicHeader(header: MusicHeader) {
         _musicHeader.value = header
     }
