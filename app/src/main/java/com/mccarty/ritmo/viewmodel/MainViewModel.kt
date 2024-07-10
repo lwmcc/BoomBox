@@ -11,6 +11,7 @@ import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.domain.MediaDetails
 import com.mccarty.ritmo.domain.MediaTicker
 import com.mccarty.ritmo.domain.RemoteService
+import com.mccarty.ritmo.domain.SliderPosition
 import com.mccarty.ritmo.domain.Ticker
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
@@ -27,6 +28,7 @@ import com.mccarty.ritmo.utils.createTrackDetailsFromItemsRecommended
 import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.mccarty.ritmo.utils.quotientOf
 import com.spotify.android.appremote.api.SpotifyAppRemote
+import com.spotify.protocol.types.PlayerState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -44,7 +46,7 @@ class MainViewModel @Inject constructor(
     private val remoteService: RemoteService,
     private val details: MediaDetails,
     private val sliderTicker: Ticker,
-) : ViewModel() {
+) : ViewModel(), SliderPosition {
 
     @Inject
     lateinit var mediaTickerFactory: MediaTicker.MediaTickerFactory
@@ -428,6 +430,22 @@ class MainViewModel @Inject constructor(
 
     /** If index less than zero, then this is the first time setting up data */
     fun firstTimePlayingRecommended(): Boolean = (playlistData.value?.index ?: INITIAL_POSITION) < INITIAL_POSITION
+    override fun resumePlayback(
+        position: Long,
+        playerState: PlayerState,
+        remote: SpotifyAppRemote
+    ) {
+        if (playerState.isPaused) {
+            remote.playerApi.resume()
+            setSliderPosition()
+        } else {
+            remote.playerApi.pause()
+            cancelJobIfRunning()
+        }
+
+        isPaused(playerState.isPaused)
+        playbackPosition(playerState.playbackPosition.quotientOf(TICKER_DELAY))
+    }
 
 }
 data class ControlTrackData(

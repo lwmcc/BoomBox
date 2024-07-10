@@ -284,29 +284,22 @@ class MainActivity : ComponentActivity() {
             is PlayerControlAction.Play -> {
                 spotifyAppRemote?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
-                        if (playerState.isPaused) {
-
-                            spotifyAppRemote?.playerApi?.resume()
-
-                            model.isPaused(false)
-                            model.playbackPosition(playerState.playbackPosition.quotientOf(TICKER_DELAY))
-                            model.setSliderPosition()
-                        } else {
-                            spotifyAppRemote?.playerApi?.pause()
-
-                            model.isPaused(true)
-                            model.playbackPosition(playerState.playbackPosition.quotientOf(TICKER_DELAY))
-                            model.cancelJobIfRunning()
-                        }
+                        model.resumePlayback(
+                            position = playerState.playbackPosition.quotientOf(TICKER_DELAY),
+                            playerState = playerState,
+                            remote = it,
+                        )
                     }
                 }
             }
 
             is PlayerControlAction.Seek -> {
-                model.cancelJobIfRunning()
+
                 model.playbackPosition(action.position.toLong())
-                spotifyAppRemote?.playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
+                model.cancelJobIfRunning()
                 model.setSliderPosition()
+
+                spotifyAppRemote?.playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
             }
 
             is PlayerControlAction.Skip -> {
