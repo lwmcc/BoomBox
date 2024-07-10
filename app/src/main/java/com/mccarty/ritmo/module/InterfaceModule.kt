@@ -4,6 +4,8 @@ import com.mccarty.ritmo.domain.MediaDetails
 import com.mccarty.ritmo.domain.MediaDetailsCollections
 import com.mccarty.ritmo.domain.RemoteService
 import com.mccarty.ritmo.domain.RemoteServiceControls
+import com.mccarty.ritmo.domain.SliderTicker
+import com.mccarty.ritmo.domain.Ticker
 import com.mccarty.ritmo.repository.remote.MusicRepository
 import com.mccarty.ritmo.repository.remote.Repository
 import dagger.Binds
@@ -22,4 +24,7 @@ abstract class InterfaceModule {
 
     @Binds
     abstract fun bindMediaDetailsCollections(mediaDetailsCollections: MediaDetailsCollections): MediaDetails
+
+    @Binds
+    abstract fun bindSliderTicker(sliderTicker: SliderTicker): Ticker
 }

@@ -11,6 +11,7 @@ import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.domain.MediaDetails
 import com.mccarty.ritmo.domain.MediaTicker
 import com.mccarty.ritmo.domain.RemoteService
+import com.mccarty.ritmo.domain.Ticker
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
 import com.mccarty.ritmo.model.MusicHeader
@@ -42,6 +43,7 @@ class MainViewModel @Inject constructor(
     private val repository: Repository,
     private val remoteService: RemoteService,
     private val details: MediaDetails,
+    private val sliderTicker: Ticker,
 ) : ViewModel() {
 
     @Inject
@@ -327,17 +329,22 @@ class MainViewModel @Inject constructor(
 
     private var job: Job? = null
     fun setSliderPosition() {
+
+        if (job != null) {
+            job?.cancel()
+            job = null
+        }
+
         job = viewModelScope.launch {
-            println("MainViewModel ***** DURATION ${playbackDuration.value}")
-            job?.cancelAndJoin()
-            mediaTickerFactory.create(
-                playbackPosition.value,
-                playbackDuration.value,
-                TICKER_DELAY,
-            ).mediaTicker().collect { position ->
+            sliderTicker.getPlaybackPosition(
+                position = playbackPosition.value,
+                duration = playbackDuration.value,
+                delay = TICKER_DELAY,
+            ).collect { position ->
                 println("MainViewModel ***** $position")
                 _playbackPosition.update { position }
                 if (position == playbackDuration.value) {
+                    println("MainViewModel ***** IF TRACK END")
                     _playbackPosition.update { 0L }
                     _trackEnd.tryEmit(true)
                 }
