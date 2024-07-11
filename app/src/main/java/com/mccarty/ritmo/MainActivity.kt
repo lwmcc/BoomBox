@@ -39,7 +39,7 @@ import java.io.IOException
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val model: MainViewModel by viewModels()
+    private val mainViewModel: MainViewModel by viewModels()
     private var spotifyAppRemote: SpotifyAppRemote? = null
     private var accessCode: String? = null
 
@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                 }) { padding ->
 
                 MainComposeScreen(
-                    mainViewModel = model,
+                    mainViewModel = mainViewModel,
                     padding = padding,
                     viewMore = getString(R.string.sheets_view_more),
                     mediaEvents = object : MediaEvents {
@@ -101,14 +101,14 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         disconnect()
-        model.cancelJob()
+        mainViewModel.cancelJob()
     }
 
     private fun connect() {
         spotifyAppRemote?.let {
             it.playerApi.playerState
                 .setResultCallback { playerState ->
-                    model.setMusicHeader(MusicHeader().apply {
+                    mainViewModel.setMusicHeader(MusicHeader().apply {
                         imageUrl = StringBuilder().apply {
                             append(IMAGE_URL)
                             append(playerState.track.imageUri.toString().drop(22).dropLast(2))
@@ -117,20 +117,20 @@ class MainActivity : ComponentActivity() {
                         albumName = playerState.track.album.name ?: getString(R.string.album_name)
                         songName = playerState.track.name ?: getString(R.string.track_name)
                     })
-                    model.setTrackUri(playerState.track.uri)
-                    model.isPaused(playerState.isPaused)
-                    model.setSliderPosition(
+                    mainViewModel.setTrackUri(playerState.track.uri)
+                    mainViewModel.isPaused(playerState.isPaused)
+                    mainViewModel.setSliderPosition(
                         position = playerState.playbackPosition,
                         duration = playerState.track?.duration ?: 0,
                         delay = TICKER_DELAY,
                     )
 
-                    model.fetchMainMusic()
+                    mainViewModel.fetchMainMusic()
 
-                    when (model.playlistData.value?.name) {
+                    when (mainViewModel.playlistData.value?.name) {
                         PlaylistNames.RECENTLY_PLAYED -> {
                             println("MainActivity ***** connect RECENTLY_PLAYED")
-                            model.setSliderPosition(
+                            mainViewModel.setSliderPosition(
                                 position = playerState.playbackPosition,
                                 duration = playerState.track?.duration ?: 0,
                                 delay = TICKER_DELAY,
@@ -142,14 +142,14 @@ class MainActivity : ComponentActivity() {
                         }
                         PlaylistNames.RECOMMENDED_PLAYLIST -> {
                             println("MainActivity ***** connect RECOMMENDED_PLAYLIST")
-                            model.setSliderPosition(
+                            mainViewModel.setSliderPosition(
                                 position = playerState.playbackPosition,
                                 duration = playerState.track?.duration ?: 0,
                                 delay = TICKER_DELAY,
                                 setPosition = true,
                             )
 
-                            model.setPlaylistData(
+                            mainViewModel.setPlaylistData(
                                 Playlist(
                                     uri = null,
                                     index = 0,
@@ -163,13 +163,13 @@ class MainActivity : ComponentActivity() {
 
                             spotifyAppRemote?.let { remote ->
                                 remote.playerApi.playerState.setResultCallback { playerState ->
-                                    model.setSliderPosition(
+                                    mainViewModel.setSliderPosition(
                                         position = playerState.playbackPosition,
                                         duration = playerState.track?.duration ?: 0,
                                         delay = TICKER_DELAY,
                                         setPosition = true,
                                     )
-                                    model.setPlaylistData(
+                                    mainViewModel.setPlaylistData(
                                         Playlist(
                                             uri = playerState.track?.uri,
                                             index = INITIAL_POSITION,
@@ -227,7 +227,7 @@ class MainActivity : ComponentActivity() {
             writeToPreferences(response.accessToken)
             if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
                 try {
-                    model.fetchRecentlyPlayedMusic()
+                    mainViewModel.fetchRecentlyPlayedMusic()
                 } catch (ioe: IOException) {
                     // TODO: show some error
                     Log.e(TAG, "${ioe.message}")
@@ -241,9 +241,9 @@ class MainActivity : ComponentActivity() {
     private fun fetchData() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.trackUri.collect {
+                mainViewModel.trackUri.collect {
                     it?.let {
-                        model.fetchRecentlyPlayedMusic()
+                        mainViewModel.fetchRecentlyPlayedMusic()
                     }
                 }
             }
@@ -251,7 +251,7 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                model.trackEnd.collect { trackEnded ->
+                mainViewModel.trackEnd.collect { trackEnded ->
                     playerControlAction(
                         action = PlayerControlAction.Skip(0),
                         trackEnded = trackEnded,
@@ -270,11 +270,11 @@ class MainActivity : ComponentActivity() {
             PlayerControlAction.Back -> {
                 spotifyAppRemote?.let { remote ->
                     remote.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
-                        model.setLastPlayedTrackData(playerState.track)
+                        mainViewModel.setLastPlayedTrackData(playerState.track)
                     }
 
-                    model.isPaused(false)
-                    model.setPlaybackPosition(0)
+                    mainViewModel.isPaused(false)
+                    mainViewModel.setPlaybackPosition(0)
                     remote.playerApi.skipPrevious()
                 }
             }
@@ -282,7 +282,7 @@ class MainActivity : ComponentActivity() {
             is PlayerControlAction.Play -> {
                 spotifyAppRemote?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
-                        model.resumePlayback(
+                        mainViewModel.resumePlayback(
                             position = playerState.playbackPosition.quotientOf(TICKER_DELAY),
                             playerState = playerState,
                             remote = it,
@@ -292,26 +292,26 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.Seek -> {
-                model.cancelJob()
-                model.setPlaybackPosition(action.position.toInt())
+                mainViewModel.cancelJob()
+                mainViewModel.setPlaybackPosition(action.position.toInt())
                 spotifyAppRemote?.playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
             }
 
             is PlayerControlAction.Skip -> {
                 println("MainActivity ***** playerControlAction()")
-                when(model.playlistData.value?.name) {
+                when(mainViewModel.playlistData.value?.name) {
                     PlaylistNames.RECOMMENDED_PLAYLIST -> {
                         println("MainActivity ***** playerControlAction() RECOMMENDED_PLAYLIST")
-                        model.setPlaylistData(
+                        mainViewModel.setPlaylistData(
                             Playlist(
-                                uri = model.recommendedPlaylist[INITIAL_POSITION].track?.uri,
+                                uri = mainViewModel.recommendedPlaylist[INITIAL_POSITION].track?.uri,
                                 index = INITIAL_POSITION,
                                 name = PlaylistNames.RECENTLY_PLAYED,
-                                tracks = model.recommendedPlaylist,
+                                tracks = mainViewModel.recommendedPlaylist,
                             )
                         )
                         if (!trackEnded) {
-                            model.cancelJob()
+                            mainViewModel.cancelJob()
                         }
                         setupSliderPosition()
                     }
@@ -319,7 +319,7 @@ class MainActivity : ComponentActivity() {
                     PlaylistNames.RECENTLY_PLAYED -> {
                         println("MainActivity ***** playerControlAction() RECENTLY_PLAYED")
                         if (!trackEnded) {
-                            model.cancelJob()
+                            mainViewModel.cancelJob()
                         }
                         setupSliderPosition(INCREMENT_INDEX)
                     }
@@ -331,7 +331,7 @@ class MainActivity : ComponentActivity() {
             is PlayerControlAction.PlayWithUri -> {
                 spotifyAppRemote?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
-                        model.isPaused(playerState.isPaused)
+                        mainViewModel.isPaused(playerState.isPaused)
                         if (playerState.isPaused) {
                             spotifyAppRemote?.playerApi?.play(action.uri)
                         } else {
@@ -342,7 +342,7 @@ class MainActivity : ComponentActivity() {
             }
 
             PlayerControlAction.ResetToStart -> {
-                model.fetchCurrentlyPlayingTrack()
+                mainViewModel.fetchCurrentlyPlayingTrack()
             }
         }
     }
@@ -355,12 +355,12 @@ class MainActivity : ComponentActivity() {
             is TrackSelectAction.TrackSelect -> {
                 if (isPaused.value) {
                     spotifyAppRemote?.let { remote ->
-                        model.isPaused(false)
-                        model.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY))
-                        model.handlePlayerActions(remote, action)
+                        mainViewModel.isPaused(false)
+                        mainViewModel.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY))
+                        mainViewModel.handlePlayerActions(remote, action)
                     }
-                    model.setPlaybackPosition(INITIAL_POSITION)
-                    model.setPlaylistData(
+                    mainViewModel.setPlaybackPosition(INITIAL_POSITION)
+                    mainViewModel.setPlaylistData(
                         Playlist(
                             uri = action.uri,
                             index = action.index,
@@ -370,13 +370,13 @@ class MainActivity : ComponentActivity() {
                     )
                 } else {
                     spotifyAppRemote?.let { remote ->
-                        model.isPaused(false)
-                        model.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY))
-                        model.handlePlayerActions(remote, action)
+                        mainViewModel.isPaused(false)
+                        mainViewModel.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY))
+                        mainViewModel.handlePlayerActions(remote, action)
                     }
-                    model.cancelJob()
-                    model.setPlaybackPosition(INITIAL_POSITION)
-                    model.setPlaylistData(
+                    mainViewModel.cancelJob()
+                    mainViewModel.setPlaybackPosition(INITIAL_POSITION)
+                    mainViewModel.setPlaylistData(
                         Playlist(
                             uri = action.uri,
                             index = action.index,
@@ -389,10 +389,10 @@ class MainActivity : ComponentActivity() {
             is TrackSelectAction.PlayTrackWithUri -> {
                 if (isPaused.value) {
                     spotifyAppRemote?.playerApi?.play(action.playTrackWithUri)
-                    model.isPaused(false)
+                    mainViewModel.isPaused(false)
                 } else {
                     spotifyAppRemote?.playerApi?.pause()
-                    model.isPaused(true)
+                    mainViewModel.isPaused(true)
                 }
             }
         }
@@ -407,39 +407,39 @@ class MainActivity : ComponentActivity() {
 
     private fun setupSliderPosition(index: Int = INITIAL_POSITION) {
         spotifyAppRemote?.let { remote ->
-            when(model.playlistData.value?.name) {
+            when(mainViewModel.playlistData.value?.name) {
                 PlaylistNames.RECENTLY_PLAYED -> {
-                    if ((model.playlistData.value?.index ?: 0) == (model.playlistData.value?.tracks?.lastIndex)) {
+                    if ((mainViewModel.playlistData.value?.index ?: 0) == (mainViewModel.playlistData.value?.tracks?.lastIndex)) {
                         println("MainActivity ***** WHAT IS IT IF")
                         remote.playerApi.play(null)
-                        model.setPlaylistData(null)
+                        mainViewModel.setPlaylistData(null)
                     } else {
                         println("MainActivity ***** WHAT IS IT ELSE") // TODO: auto play
-                        val newIndex =  model.newIndex(index)
-                        val theUri = model.getUri(newIndex)
+                        val newIndex =  mainViewModel.newIndex(index)
+                        val theUri = mainViewModel.getUri(newIndex)
 
                         // println("MainActivity ***** TRACK NAME ${model.playlistData.value?.tracks!![newIndex].track?.name}")
                         // println("MainActivity ***** TRACK DURATION ${model.playlistData.value?.tracks!![newIndex]?.track?.duration_ms?.quotientOf(TICKER_DELAY)}")
 
-                        model.setPlaylistData(
-                            model.playlistData.value?.copy(
+                        mainViewModel.setPlaylistData(
+                            mainViewModel.playlistData.value?.copy(
                                 uri = theUri,
                                 index =  newIndex,
                             )
                         )
-                        model.setPlaybackPosition(INITIAL_POSITION)
-                        model.playbackDuration(model.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(TICKER_DELAY) ?: 0)
+                        mainViewModel.setPlaybackPosition(INITIAL_POSITION)
+                        mainViewModel.playbackDuration(mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(TICKER_DELAY) ?: 0)
                         remote.playerApi.play(theUri)
                     }
                 }
                 PlaylistNames.USER_PLAYLIST -> { }
                 PlaylistNames.RECOMMENDED_PLAYLIST -> {
-                    model.setPlaylistData(
+                    mainViewModel.setPlaylistData(
                         Playlist(
-                            uri = model.recommendedPlaylist[INITIAL_POSITION].track?.uri,
+                            uri = mainViewModel.recommendedPlaylist[INITIAL_POSITION].track?.uri,
                             index = INITIAL_POSITION,
                             name = PlaylistNames.RECENTLY_PLAYED,
-                            tracks = model.recommendedPlaylist,
+                            tracks = mainViewModel.recommendedPlaylist,
                         )
                     )
                 }
