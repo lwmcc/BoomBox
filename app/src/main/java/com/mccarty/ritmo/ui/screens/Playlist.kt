@@ -22,6 +22,7 @@ fun PlaylistScreen(
     onAction: (TrackSelectAction) -> Unit,
 ) {
     val playLists by model.playLists.collectAsStateWithLifecycle()
+    val playListItem by model.playlistData.collectAsStateWithLifecycle()
 
     when (playLists) {
         is MainViewModel.PlaylistState.Pending -> {
@@ -33,13 +34,14 @@ fun PlaylistScreen(
                 CircleSpinner(32.dp)
             }
         }
-
+        
         is MainViewModel.PlaylistState.Success -> {
             val tracks = (playLists as MainViewModel.PlaylistState.Success).trackDetails
             LazyColumn {
                 item {
                     MediaList(
                         title = title,
+                        playListItem = playListItem,
                         tracks = tracks,
                         onViewMoreClick = { showBottom, index, tracks ->
                             model.setPlayList(tracks)

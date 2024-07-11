@@ -25,7 +25,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -42,6 +41,7 @@ import com.mccarty.ritmo.R
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.model.payload.MainItem
 import com.mccarty.ritmo.ui.CircleSpinner
+import com.mccarty.ritmo.ui.ItemColor
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
@@ -163,33 +163,13 @@ fun MainScreen(
 
                                             ) {
 
-                                            // TODO: move this
-                                            val color = when (playListItem?.name) {
-                                                PlaylistNames.RECOMMENDED_PLAYLIST -> {
-                                                    Color.Black
-                                                }
-                                                PlaylistNames.RECENTLY_PLAYED -> {
-                                                    if (playListItem?.uri == item.track?.uri) {
-                                                        Color.Red
-                                                    } else {
-                                                        Color.Black
-                                                    }
-                                                }
-                                                PlaylistNames.USER_PLAYLIST -> {
-                                                    Color.Black
-                                                }
-                                                null -> {
-                                                    Color.Black
-                                                }
-                                            }
-
                                             Text(
                                                 text = item.track?.name.toString(),
                                                 style = MaterialTheme.typography.titleMedium,
                                                 modifier = Modifier
                                                     .paddingFromBaseline(top = 25.dp)
                                                     .fillMaxWidth(),
-                                                color = color,
+                                                color = ItemColor.currentItemColor().textColor(playListItem, item),
                                             )
                                             Text(
                                                 text = item.track?.album?.name ?: "",

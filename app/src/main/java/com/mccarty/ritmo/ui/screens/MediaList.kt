@@ -26,6 +26,8 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.model.TrackDetails
+import com.mccarty.ritmo.ui.ItemColor
+import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.viewmodel.TrackSelectAction
 
@@ -34,6 +36,7 @@ import com.mccarty.ritmo.viewmodel.TrackSelectAction
 @Composable
 fun MediaList(
     title: String?,
+    playListItem: Playlist?,
     tracks: List<TrackDetails>,
     onViewMoreClick: (Boolean, Int, List<TrackDetails>) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
@@ -60,11 +63,10 @@ fun MediaList(
                     .fillMaxWidth()
                     .clickable(
                         onClick = {
-                            // TODO: fix !! and ?:
                             onAction(
                                 TrackSelectAction.TrackSelect(
                                     index = index,
-                                    uri = tracks[index].uri!!,
+                                    uri = tracks[index].uri,
                                     duration = tracks[index].track?.duration_ms ?: 0L,
                                     tracks = tracks,
                                     playlistName = PlaylistNames.RECENTLY_PLAYED,
@@ -92,26 +94,26 @@ fun MediaList(
                             .weight(1f),
 
                         ) {
-                        Text(
 
-                            text = track.trackName, // TODO: fix !!
+                        Text(
+                            text = track.trackName,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier
                                 .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth(),
+                            color =  ItemColor.currentItemColor().textColor(playListItem, track),
                         )
                         Text(
-                            text = track.albumName,  // TODO: fix !!
+                            text = track.albumName,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier
                                 .paddingFromBaseline(top = 25.dp)
-                                .fillMaxWidth()
+                                .fillMaxWidth(),
                         )
 
-                        if (track.artists.isNotEmpty()) { // TODO; fix !!
+                        if (track.artists.isNotEmpty()) {
                             Text(
-
-                                text = track.artists[0].name, // TODO: fix !!
+                                text = track.artists[0].name,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
                                     .paddingFromBaseline(top = 25.dp)
