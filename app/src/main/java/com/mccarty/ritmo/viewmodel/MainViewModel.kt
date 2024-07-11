@@ -170,7 +170,7 @@ class MainViewModel @Inject constructor(
     private val _playlistData = MutableStateFlow<Playlist?>(null)
     val playlistData = _playlistData
 
-    private var _recommendedPlaylist = mutableListOf<MainItem>() // TODO: change name
+    private var _recommendedPlaylist = mutableListOf<MainItem>()
         val recommendedPlaylist: List<MainItem>
         get() = _recommendedPlaylist
 
@@ -354,20 +354,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun setSliderPosition(
-        position: Long,
-        duration: Long? = 0,
-        delay: Long,
-        setPosition: Boolean = false,
-    ) {
-        playbackPosition(position.quotientOf(delay))
-        playbackDuration(duration?.quotientOf(delay))
-
-        if (setPosition) {
-            setSliderPosition()
-        }
-    }
-
     fun setMusicHeader(header: MusicHeader) {
         _musicHeader.value = header
     }
@@ -398,7 +384,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun <T : Number> playbackPosition(position: T) {
+    private fun <T : Number> playbackPosition(position: T) {
         _playbackPosition.value = position.toLong()
     }
 
@@ -412,21 +398,11 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun cancelJobIfRunning() {
+    private fun cancelJobIfRunning() {
         viewModelScope.launch {
             job?.cancelAndJoin()
         }
     }
-
-    fun setPlaylistData(playlist: Playlist?) {
-        _playlistData.update { playlist }
-    }
-
-    fun updatedIndex() = playlistData.value?.index?.plus(0) ?: INITIAL_POSITION
-
-    fun updatedUri(index: Int) = playlistData.value?.tracks?.get(index)?.track?.uri.toString()
-
-    fun updatedUriRecommended(index: Int) = recommendedPlaylist[index].track?.uri.toString()
 
     /** If index less than zero, then this is the first time setting up data */
     fun firstTimePlayingRecommended(): Boolean = (playlistData.value?.index ?: INITIAL_POSITION) < INITIAL_POSITION
@@ -447,6 +423,32 @@ class MainViewModel @Inject constructor(
         playbackPosition(playerState.playbackPosition.quotientOf(TICKER_DELAY))
     }
 
+    override fun newIndex(index: Int) = playlistData.value?.index?.plus(index) ?: INITIAL_POSITION
+    override fun getUri(index: Int) = playlistData.value?.tracks?.get(index)?.track?.uri.toString()
+    override fun cancelJob() = cancelJobIfRunning()
+
+    override fun setSliderPosition(
+        position: Long,
+        duration: Long,
+        delay: Long,
+        setPosition: Boolean,
+    ) {
+        playbackPosition(position.quotientOf(delay))
+        playbackDuration(duration.quotientOf(delay))
+
+        if (setPosition) {
+            setSliderPosition()
+        }
+    }
+
+    override fun setPlaylistData(playlist: Playlist?) {
+        _playlistData.update { playlist }
+    }
+
+    override fun setPlaybackPosition(position: Int) {
+        playbackPosition(position)
+        setSliderPosition()
+    }
 }
 data class ControlTrackData(
     var duration: Long
