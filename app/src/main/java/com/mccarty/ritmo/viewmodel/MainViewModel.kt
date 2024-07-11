@@ -9,7 +9,6 @@ import com.mccarty.ritmo.MainActivity.Companion.INITIAL_POSITION
 import com.mccarty.ritmo.MainActivity.Companion.TICKER_DELAY
 import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.domain.MediaDetails
-import com.mccarty.ritmo.domain.MediaTicker
 import com.mccarty.ritmo.domain.RemoteService
 import com.mccarty.ritmo.domain.SliderPosition
 import com.mccarty.ritmo.domain.Ticker
@@ -47,9 +46,6 @@ class MainViewModel @Inject constructor(
     private val details: MediaDetails,
     private val sliderTicker: Ticker,
 ) : ViewModel(), SliderPosition {
-
-    @Inject
-    lateinit var mediaTickerFactory: MediaTicker.MediaTickerFactory
 
     sealed class RecentlyPlayedMusicState {
         data class Success(val trackDetails: List<MainItem> = emptyList()) :
