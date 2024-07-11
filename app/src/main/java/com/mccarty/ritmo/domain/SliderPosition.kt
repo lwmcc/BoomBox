@@ -1,6 +1,5 @@
 package com.mccarty.ritmo.domain
 
-import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.viewmodel.Playlist
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.protocol.types.PlayerState
