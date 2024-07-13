@@ -354,6 +354,17 @@ class MainViewModel @Inject constructor(
         _musicHeader.value = header
     }
 
+    fun setMusicHeaderUrl(image: String?, vararg names: String) {
+        _musicHeader.update {
+            MusicHeader().apply {
+                imageUrl = image
+                artistName = names[0]
+                albumName = names[1]
+                songName = names[2]
+            }
+        }
+    }
+
     fun setTrackUri(trackUri: String?) {
         _trackUri.value = trackUri
     }
