@@ -6,6 +6,9 @@
     <string name="playlist">Playlist</string>
     <string name="playlists">Playlists</string>
     <string name="recently_played">Recently Played</string>
+    <string name="playing_from_recents">Playing from recents</string>
+    <string name="playing_from_recommended">Playing from recommended</string>
+    <string name="playing_from_playlist">Playing from playlist</string>
     <string name="total_tracks">Total Tracks: </string>
 
     <string name="icon_view_more">View more</string>

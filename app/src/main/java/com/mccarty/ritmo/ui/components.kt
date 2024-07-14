@@ -1,6 +1,7 @@
 package com.mccarty.ritmo.ui
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -12,15 +13,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,21 +37,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.R
-import com.mccarty.ritmo.model.payload.PlaylistData.Item as Item
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
+import com.mccarty.ritmo.viewmodel.PlaylistNames
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -82,10 +77,11 @@ fun MainImageHeader(
 fun PlayerControls(
     mainViewModel: MainViewModel = viewModel(),
     onSlide: (PlayerControlAction) -> Unit,
-    ) {
+) {
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle(false).value
     val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle(0).value.toFloat()
     val duration = mainViewModel.playbackDuration.collectAsStateWithLifecycle().value.toFloat()
+    val playlist = mainViewModel.playlistData.collectAsStateWithLifecycle().value?.name?.name
 
     var sliderPosition by remember { mutableFloatStateOf(position) }
 
@@ -117,6 +113,9 @@ fun PlayerControls(
             },
             interactionSource = interactionSource,
         )
+
+        Text(getPlaylist(playlist, LocalContext.current))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -253,77 +252,23 @@ fun CircleSpinner(width: Dp = 64.dp) {
     )
 }
 
-@OptIn(ExperimentalGlideComposeApi::class)
-@Composable
-fun PlayList(
-    playlist: List<Item>,
-    onClick: (Int) -> Unit,
-) {
-    if (playlist.isNotEmpty()) {
-        Text(
-            text = stringResource(id = R.string.playlists),
-            color = MaterialTheme.colorScheme.primary,
-            fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            modifier = Modifier
-                .paddingFromBaseline(top = 40.dp)
-                .fillMaxWidth(),
-        )
+fun getPlaylist(playlist: String?, context: Context): String {
+    if (playlist.isNullOrEmpty()) {
+        return context.getString(R.string.playing_from_recommended)
     }
-
-    playlist.forEachIndexed { index, item ->
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(5.dp)
-                .clickable(onClick = {
-                    onClick(index)
-                }),
-            shape = MaterialTheme.shapes.extraSmall,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
-        ) {
-            val imageUrl = item.images.firstOrNull()?.url
-            Row {
-                GlideImage(
-                    model = imageUrl,
-                    contentDescription = "",
-                    modifier = Modifier
-                        .size(100.dp),
-                )
-
-                Column(modifier = Modifier.padding(start = 20.dp)) {
-                    Text(
-                        text = item.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier
-                            .paddingFromBaseline(top = 25.dp)
-                            .fillMaxWidth(),
-                    )
-                    if (item.description.isNotEmpty()) {
-                        Text(
-                            text = item.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier
-                                .paddingFromBaseline(top = 25.dp)
-                                .fillMaxWidth(),
-                        )
-                    }
-                    Text(
-                        text = "${stringResource(R.string.total_tracks)} ${item.tracks.total}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .paddingFromBaseline(top = 25.dp)
-                            .fillMaxWidth(),
-                    )
-                }
-            }
+    
+    return when(playlist) {
+        PlaylistNames.RECENTLY_PLAYED.name -> {
+            context.getString(R.string.playing_from_recents)
+        }
+        PlaylistNames.RECOMMENDED_PLAYLIST.name -> {
+            context.getString(R.string.playing_from_recommended)
+        }
+        PlaylistNames.USER_PLAYLIST.name-> {
+            context.getString(R.string.playing_from_playlist)
+        }
+        else -> {
+            context.getString(R.string.playing_from_recommended)
         }
     }
 }
-
-
-
-
