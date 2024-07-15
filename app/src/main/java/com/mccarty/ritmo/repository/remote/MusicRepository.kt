@@ -1,6 +1,7 @@
 package com.mccarty.ritmo.repository.remote
 
 import com.mccarty.networkrequest.network.NetworkRequest
+import com.mccarty.ritmo.api.ApiHandler
 import com.mccarty.ritmo.api.ApiService
 import com.mccarty.ritmo.model.AlbumXX
 import com.mccarty.ritmo.model.CurrentlyPlayingTrack
@@ -13,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
-open class MusicRepository @Inject constructor(private val apiService: ApiService): Repository {
+open class MusicRepository @Inject constructor(private val apiService: ApiService): Repository, ApiHandler {
 
     override suspend fun fetchRecentlyPlayedItem(): Flow<NetworkRequest<RecentlyPlayedItem>>  = flow {
         emit(apiService.fetchRecentlyPlayedItem())
@@ -31,9 +32,8 @@ open class MusicRepository @Inject constructor(private val apiService: ApiServic
         emit(apiService.fetchPlayLists())
     }
 
-    // PlaylistData
-    override suspend fun fetchPlayList(playlistId: String): Flow<NetworkRequest<Playlist>> = flow {
-        emit(apiService.fetchPlayList(playlistId))
+    override suspend fun fetchUserPlayList(playlistId: String): Flow<NetworkRequest<Playlist>> = flow {
+        emit(handleApi { apiService.fetchUserPlayList(playlistId) })
     }
 
     override suspend fun fetchPlaybackState(): Flow<NetworkRequest<PlaybackState>> = flow {

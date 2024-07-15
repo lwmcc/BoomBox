@@ -6,6 +6,7 @@ import com.mccarty.ritmo.model.payload.PlaybackState
 import com.mccarty.ritmo.model.payload.Playlist
 import com.mccarty.ritmo.model.payload.PlaylistData
 import com.mccarty.ritmo.model.payload.Seeds
+import retrofit2.Response
 import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -17,6 +18,9 @@ interface ApiService {
 
     @GET("/v1/playlists/{playlist_id}/tracks")
     suspend fun fetchPlayList(@Path("playlist_id") playlistIdd: String): NetworkRequest<Playlist>
+
+    @GET("/v1/playlists/{playlist_id}/tracks")
+    suspend fun fetchUserPlayList(@Path("playlist_id") playlistIdd: String): Response<Playlist>
 
     @GET("/v1/me/player/recently-played?limit=50")
     suspend fun fetchRecentlyPlayedItem(): NetworkRequest<RecentlyPlayedItem>
@@ -31,5 +35,8 @@ interface ApiService {
     suspend fun fetchPlaybackState(): NetworkRequest<PlaybackState>
 
     @GET("/v1/recommendations?limit=100")
-    suspend fun fetchRecommendedPlaylist(@Query("seed_tracks") seed_tracks: String, @Query("seed_artists") seed_artists: String): NetworkRequest<Seeds>
+    suspend fun fetchRecommendedPlaylist(
+        @Query("seed_tracks") seed_tracks: String,
+        @Query("seed_artists") seed_artists: String,
+    ): NetworkRequest<Seeds>
 }

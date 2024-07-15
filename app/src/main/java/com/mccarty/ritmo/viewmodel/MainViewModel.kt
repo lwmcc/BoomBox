@@ -186,7 +186,7 @@ class MainViewModel @Inject constructor(
     fun fetchPlaylist(playlistId: String) {
         _playLists.value = PlaylistState.Pending(true)
         viewModelScope.launch {
-            repository.fetchPlayList(playlistId).collect {
+            repository.fetchUserPlayList(playlistId).collect {
                 when (it) {
                     is NetworkRequest.Error -> {
                         println("MainViewModel ***** NET ERROR ${it.toString()}")
@@ -339,7 +339,6 @@ class MainViewModel @Inject constructor(
                 duration = playbackDuration.value,
                 delay = TICKER_DELAY,
             ).collect { position ->
-                println("MainViewModel ***** $position")
                 _playbackPosition.update { position }
                 if (position == playbackDuration.value) {
                     println("MainViewModel ***** IF TRACK END")

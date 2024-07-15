@@ -1,7 +1,5 @@
 package com.mccarty.networkrequest.network
 
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
 import okhttp3.Request
 import okio.Timeout
 import retrofit2.Call
@@ -50,8 +48,8 @@ class NetworkRequestCall <T : Any>(
 
     override fun clone(): Call<NetworkRequest<T>> = NetworkRequestCall(delegate.clone()) // TODO error?
 
-    override fun execute(): Response<NetworkRequest<T>> = throw UnsupportedOperationException("Does not support execute")
-
+    override fun execute(): Response<NetworkRequest<T>> =
+        throw UnsupportedOperationException("Does not support execute")
 
     override fun isExecuted(): Boolean = delegate.isExecuted
 
