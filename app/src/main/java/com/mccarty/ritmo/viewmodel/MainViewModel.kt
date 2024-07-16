@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.spotify.protocol.types.Track as Track
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -52,22 +53,6 @@ class MainViewModel @Inject constructor(
             RecentlyPlayedMusicState()
     }
 
-    sealed class MainMusicState {
-        data object Pending : MainMusicState()
-        data class Success(
-            val trackDetails: List<MainItem> = emptyList(),
-            val playLists: List<PlaylistData.Item> = emptyList(),
-        ) : MainMusicState()
-
-        data object Error : MainMusicState()
-    }
-
-    sealed class Recently {
-        data object Pending : Recently()
-        data class Success(val success: String) : Recently()
-        data object Error : Recently()
-    }
-
     sealed class AllPlaylistsState {
         data class Pending(val pending: Boolean) : AllPlaylistsState()
         data class Success(val playLists: List<PlaylistData.Item>) : AllPlaylistsState()
@@ -77,14 +62,8 @@ class MainViewModel @Inject constructor(
     sealed class PlaylistState {
         data class Pending(val pending: Boolean) : PlaylistState()
 
-        data class Success(val trackDetails: List<TrackDetails>) : PlaylistState()
+        data class Success<T: TrackDetails>(val trackDetails: List<T>) : PlaylistState()
         data object Error : PlaylistState()
-    }
-
-    sealed class LastPlayedSongState {
-        data class Pending(val pending: Boolean) : LastPlayedSongState()
-        data class Success<T : AlbumXX>(val data: T) : LastPlayedSongState()
-        data object Error : LastPlayedSongState()
     }
 
     sealed class CurrentlyPayingTrackState {
@@ -131,13 +110,6 @@ class MainViewModel @Inject constructor(
 
     private var _mediaDetails = MutableStateFlow<List<Details>>(emptyList())
     val mediaDetails: StateFlow<List<Details>> = _mediaDetails
-
-    private var _lastPlayedSong = MutableStateFlow<LastPlayedSongState>(
-        LastPlayedSongState.Pending(
-            true
-        )
-    )
-    val lastPlayedSong: StateFlow<LastPlayedSongState> = _lastPlayedSong
 
     private var _musicHeader = MutableStateFlow(MusicHeader())
     val musicHeader: StateFlow<MusicHeader> = _musicHeader
@@ -326,7 +298,7 @@ class MainViewModel @Inject constructor(
     }
 
     private var job: Job? = null
-    fun setSliderPosition() {
+    private fun setSliderPosition() {
 
         if (job != null) {
             job?.cancel()
@@ -390,7 +362,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun <T : Number> playbackPosition(position: T) {
+    private inline fun <reified T : Number> playbackPosition(position: T) {
         _playbackPosition.value = position.toLong()
     }
 
@@ -398,7 +370,7 @@ class MainViewModel @Inject constructor(
         remoteService.onTrackSelected(remote, action)
     }
 
-    fun setLastPlayedTrackData(track: com.spotify.protocol.types.Track) {
+    fun setLastPlayedTrackData(track: Track) {
         viewModelScope.launch {
             _lastPlayedTrackData.emit(ControlTrackData(duration = track.duration))
         }

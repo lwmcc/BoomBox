@@ -69,7 +69,7 @@ fun MediaList(
                                     uri = tracks[index].uri,
                                     duration = tracks[index].track?.duration_ms ?: 0L,
                                     tracks = tracks,
-                                    playlistName = PlaylistNames.RECENTLY_PLAYED,
+                                    playlistName = PlaylistNames.USER_PLAYLIST,
                                 )
                             )
                         }

@@ -401,10 +401,11 @@ class MainActivity : ComponentActivity() {
                         Playlist(
                             uri = action.uri,
                             index = action.index,
-                            name = PlaylistNames.RECENTLY_PLAYED,
+                            name = action.playlistName,
                             tracks = action.tracks,
                         )
                     )
+                    mainViewModel.playlist
                 }
             }
             is TrackSelectAction.PlayTrackWithUri -> {

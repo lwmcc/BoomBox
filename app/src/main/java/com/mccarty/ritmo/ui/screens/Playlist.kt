@@ -35,8 +35,8 @@ fun PlaylistScreen(
             }
         }
         
-        is MainViewModel.PlaylistState.Success -> {
-            val tracks = (playLists as MainViewModel.PlaylistState.Success).trackDetails
+        is MainViewModel.PlaylistState.Success<*> -> {
+            val tracks = (playLists as MainViewModel.PlaylistState.Success<*>).trackDetails
             LazyColumn {
                 item {
                     MediaList(
