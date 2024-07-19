@@ -1,4 +1,4 @@
-package com.mccarty.ritmo.model.tracks
+package com.mccarty.ritmo.domain.model.tracks
 
 data class TrackDetails(
     val imageUrl: String,

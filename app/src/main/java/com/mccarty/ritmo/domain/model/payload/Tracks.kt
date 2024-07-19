@@ -1,4 +1,4 @@
-package com.mccarty.ritmo.model.payload
+package com.mccarty.ritmo.domain.model.payload
 data class Playlist(
     val href: String,
     val items: List<PlaylistItem>,

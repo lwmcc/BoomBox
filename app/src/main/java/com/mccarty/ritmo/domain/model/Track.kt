@@ -1,4 +1,4 @@
-package com.mccarty.ritmo.model
+package com.mccarty.ritmo.domain.model
 
 class RecentlyPlayedTrack : ArrayList<TrackV2Item>()
 

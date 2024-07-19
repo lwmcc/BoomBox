@@ -1,4 +1,4 @@
-package com.mccarty.ritmo.model
+package com.mccarty.ritmo.domain.model
 
 data class AlbumXX(
     val album_type: String = "",

@@ -19,8 +19,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
-import com.mccarty.ritmo.model.MusicHeader
-import com.mccarty.ritmo.model.payload.MainItem
+import com.mccarty.ritmo.domain.model.MusicHeader
+import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.ui.MainComposeScreen
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.utils.positionProduct

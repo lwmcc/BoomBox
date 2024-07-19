@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.mccarty.ritmo.model.RecentlyPlayedItem
+import com.mccarty.ritmo.domain.model.RecentlyPlayedItem
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -1,6 +1,6 @@
-package com.mccarty.ritmo.model
+package com.mccarty.ritmo.domain.model
 
-import com.mccarty.ritmo.model.payload.Image
+import com.mccarty.ritmo.domain.model.payload.Image
 
 data class Album(
     val album_type: String ="",

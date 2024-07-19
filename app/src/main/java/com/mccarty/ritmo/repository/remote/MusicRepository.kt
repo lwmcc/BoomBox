@@ -3,13 +3,13 @@ package com.mccarty.ritmo.repository.remote
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.api.ApiHandler
 import com.mccarty.ritmo.api.ApiService
-import com.mccarty.ritmo.model.AlbumXX
-import com.mccarty.ritmo.model.CurrentlyPlayingTrack
-import com.mccarty.ritmo.model.payload.PlaybackState
-import com.mccarty.ritmo.model.payload.Playlist
-import com.mccarty.ritmo.model.payload.PlaylistData
-import com.mccarty.ritmo.model.payload.Seeds
-import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
+import com.mccarty.ritmo.domain.model.AlbumXX
+import com.mccarty.ritmo.domain.model.CurrentlyPlayingTrack
+import com.mccarty.ritmo.domain.model.payload.PlaybackState
+import com.mccarty.ritmo.domain.model.payload.Playlist
+import com.mccarty.ritmo.domain.model.payload.PlaylistData
+import com.mccarty.ritmo.domain.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
+import com.mccarty.ritmo.domain.model.payload.Seeds
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject

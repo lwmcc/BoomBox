@@ -39,7 +39,7 @@ import com.mccarty.ritmo.MainActivity
 import com.bumptech.glide.integration.compose.GlideImage as GlideImage
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.viewmodel.MainViewModel
-import com.mccarty.ritmo.model.payload.MainItem
+import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.ui.ItemColor
 import com.mccarty.ritmo.viewmodel.PlaylistNames

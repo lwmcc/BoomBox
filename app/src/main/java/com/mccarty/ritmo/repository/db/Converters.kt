@@ -2,8 +2,8 @@ package com.mccarty.ritmo.repository.db
 
 import androidx.room.TypeConverter
 import com.google.gson.Gson
-import com.mccarty.ritmo.model.Context
-import com.mccarty.ritmo.model.Track
+import com.mccarty.ritmo.domain.model.Context
+import com.mccarty.ritmo.domain.model.Track
 
 class Converters {
     @TypeConverter

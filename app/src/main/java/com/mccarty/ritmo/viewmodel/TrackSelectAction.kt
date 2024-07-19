@@ -1,6 +1,6 @@
 package com.mccarty.ritmo.viewmodel
 
-import com.mccarty.ritmo.model.payload.MainItem
+import com.mccarty.ritmo.domain.model.payload.MainItem
 
 sealed class TrackSelectAction {
     data class TrackSelect(

@@ -1,4 +1,4 @@
-package com.mccarty.ritmo.model
+package com.mccarty.ritmo.domain.model
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

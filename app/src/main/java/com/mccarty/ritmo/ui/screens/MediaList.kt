@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.R
-import com.mccarty.ritmo.model.TrackDetails
+import com.mccarty.ritmo.domain.model.TrackDetails
 import com.mccarty.ritmo.ui.ItemColor
 import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames

@@ -1,9 +1,9 @@
-package com.mccarty.ritmo.model
+package com.mccarty.ritmo.domain.model
 
-import com.mccarty.ritmo.model.payload.ArtistX
-import com.mccarty.ritmo.model.payload.Image
-import com.mccarty.ritmo.model.payload.MainItem
-import com.mccarty.ritmo.model.payload.Track
+import com.mccarty.ritmo.domain.model.payload.ArtistX
+import com.mccarty.ritmo.domain.model.payload.Image
+import com.mccarty.ritmo.domain.model.payload.MainItem
+import com.mccarty.ritmo.domain.model.payload.Track
 
 data class TrackDetails(
     override val id: String,

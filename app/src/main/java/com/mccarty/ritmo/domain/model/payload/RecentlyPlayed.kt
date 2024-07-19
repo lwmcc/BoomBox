@@ -1,6 +1,6 @@
-package com.mccarty.ritmo.model.payload
+package com.mccarty.ritmo.domain.model.payload
 
-import com.mccarty.ritmo.model.Artist
+import com.mccarty.ritmo.domain.model.Artist
 import com.mccarty.ritmo.ui.screens.CollectionType
 
 data class RecentlyPlayedItem(

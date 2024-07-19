@@ -1,16 +1,14 @@
-package com.mccarty.ritmo.model.payload
-
-import com.google.gson.annotations.SerializedName
+package com.mccarty.ritmo.domain.model.payload
 
 class PlaylistData{
     data class PlaylistItem(
-    val href: String,
-    val items: List<Item>,
-    val limit: Int,
-    val next: String,
-    val offset: Int,
-    val previous: String,
-    val total: Int
+        val href: String,
+        val items: List<Item>,
+        val limit: Int,
+        val next: String,
+        val offset: Int,
+        val previous: String,
+        val total: Int
 )
 
 data class Item(

@@ -2,24 +2,24 @@ package com.mccarty.ritmo.viewmodel
 
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.networkrequest.network.NetworkRequest.Success as NetworkRequestSuccess
-import com.mccarty.ritmo.model.AlbumXX
-import com.mccarty.ritmo.model.CurrentlyPlayingTrack
-import com.mccarty.ritmo.model.ExternalIds
-import com.mccarty.ritmo.model.ExternalUrlsX
-import com.mccarty.ritmo.model.Tracks
-import com.mccarty.ritmo.model.payload.Album
-import com.mccarty.ritmo.model.payload.Context
+import com.mccarty.ritmo.domain.model.AlbumXX
+import com.mccarty.ritmo.domain.model.CurrentlyPlayingTrack
+import com.mccarty.ritmo.domain.model.ExternalIds
+import com.mccarty.ritmo.domain.model.ExternalUrlsX
+import com.mccarty.ritmo.domain.model.Tracks
+import com.mccarty.ritmo.domain.model.payload.Album
+import com.mccarty.ritmo.domain.model.payload.Context
 import com.mccarty.ritmo.viewmodel.MainViewModel.RecentlyPlayedMusicState.Success as RecentlyPlayedMusicStateSuccess
 import com.mccarty.ritmo.viewmodel.MainViewModel.AllPlaylistsState.Success as PlaylistStateSuccess
-import com.mccarty.ritmo.model.payload.Cursors
-import com.mccarty.ritmo.model.payload.ExternalIds as PayloadExternalIds
-import com.mccarty.ritmo.model.payload.ExternalUrls
-import com.mccarty.ritmo.model.payload.Item
-import com.mccarty.ritmo.model.payload.LinkedFrom
-import com.mccarty.ritmo.model.payload.PlaylistData
-import com.mccarty.ritmo.model.payload.RecentlyPlayedItem
-import com.mccarty.ritmo.model.payload.Restrictions
-import com.mccarty.ritmo.model.payload.Track
+import com.mccarty.ritmo.domain.model.payload.Cursors
+import com.mccarty.ritmo.domain.model.payload.ExternalIds as PayloadExternalIds
+import com.mccarty.ritmo.domain.model.payload.ExternalUrls
+import com.mccarty.ritmo.domain.model.payload.Item
+import com.mccarty.ritmo.domain.model.payload.LinkedFrom
+import com.mccarty.ritmo.domain.model.payload.PlaylistData
+import com.mccarty.ritmo.domain.model.payload.RecentlyPlayedItem
+import com.mccarty.ritmo.domain.model.payload.Restrictions
+import com.mccarty.ritmo.domain.model.payload.Track
 import com.mccarty.ritmo.repository.remote.Repository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

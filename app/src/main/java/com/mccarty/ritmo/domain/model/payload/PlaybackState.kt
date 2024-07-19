@@ -1,4 +1,4 @@
-package com.mccarty.ritmo.model.payload
+package com.mccarty.ritmo.domain.model.payload
 
 data class PlaybackState(
     val actions: Actions,

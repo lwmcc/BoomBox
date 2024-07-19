@@ -1,7 +1,7 @@
 package com.mccarty.ritmo.ui
 
 import  androidx.compose.ui.graphics.Color as Color
-import com.mccarty.ritmo.model.payload.MainItem
+import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 
@@ -15,15 +15,12 @@ class ItemColor {
             PlaylistNames.RECOMMENDED_PLAYLIST -> {
                 Color.Black
             }
-            PlaylistNames.RECENTLY_PLAYED -> {
+            PlaylistNames.RECENTLY_PLAYED, PlaylistNames.USER_PLAYLIST -> {
                 if (playlist.uri == mainItem.track?.uri) {
                     Color.Red
                 } else {
                   Color.Black
                 }
-            }
-            PlaylistNames.USER_PLAYLIST -> {
-                Color.Black
             }
             else -> {
                 Color.Black

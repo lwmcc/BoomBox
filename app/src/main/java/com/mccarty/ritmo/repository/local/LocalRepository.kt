@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.mccarty.ritmo.model.RecentlyPlayedItem
+import com.mccarty.ritmo.domain.model.RecentlyPlayedItem
 import com.mccarty.ritmo.repository.Constants.INSERTION_TIME_PREFERENCES_KEY
 import com.mccarty.ritmo.repository.Constants.INTERVAL_PREFERENCES_KEY
 import com.mccarty.ritmo.repository.Constants.USER_PREFERENCES_NAME

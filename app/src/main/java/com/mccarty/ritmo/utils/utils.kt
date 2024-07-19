@@ -2,7 +2,18 @@ package com.mccarty.ritmo.utils
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.mccarty.ritmo.model.*
+import com.mccarty.ritmo.domain.model.AlbumXX
+import com.mccarty.ritmo.domain.model.CurrentQueue
+import com.mccarty.ritmo.domain.model.CurrentQueueItem
+import com.mccarty.ritmo.domain.model.CurrentlyPlaying
+import com.mccarty.ritmo.domain.model.CurrentlyPlayingTrack
+import com.mccarty.ritmo.domain.model.Image
+import com.mccarty.ritmo.domain.model.ItemV2
+import com.mccarty.ritmo.domain.model.Playlist
+import com.mccarty.ritmo.domain.model.PlaylistItem
+import com.mccarty.ritmo.domain.model.RecentlyPlayedTrack
+import com.mccarty.ritmo.domain.model.TrackDetails
+import com.mccarty.ritmo.domain.model.TrackV2Item
 import com.mccarty.ritmo.utils.Constants.CURRENTLY_PLAYING
 import com.mccarty.ritmo.utils.Constants.ITEMS
 import com.mccarty.ritmo.utils.Constants.QUEUE
@@ -10,10 +21,10 @@ import org.json.JSONException
 import retrofit2.Response
 import java.lang.NullPointerException
 import java.lang.NumberFormatException
-import com.mccarty.ritmo.model.payload.Item
-import com.mccarty.ritmo.model.payload.MainItem
-import com.mccarty.ritmo.model.payload.Track
-import com.mccarty.ritmo.model.payload.PlaylistItem as PItem
+import com.mccarty.ritmo.domain.model.payload.Item
+import com.mccarty.ritmo.domain.model.payload.MainItem
+import com.mccarty.ritmo.domain.model.payload.Track
+import com.mccarty.ritmo.domain.model.payload.PlaylistItem as PItem
 
 fun processPlaylist(response: Response<JsonObject>): List<PlaylistItem> {
     return if (response.isSuccessful) {

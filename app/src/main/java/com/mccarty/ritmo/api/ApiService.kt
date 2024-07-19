@@ -1,13 +1,13 @@
 package com.mccarty.ritmo.api
 import com.mccarty.networkrequest.network.NetworkRequest
-import com.mccarty.ritmo.model.AlbumXX
-import com.mccarty.ritmo.model.CurrentlyPlayingTrack
-import com.mccarty.ritmo.model.payload.PlaybackState
-import com.mccarty.ritmo.model.payload.Playlist
-import com.mccarty.ritmo.model.payload.PlaylistData
-import com.mccarty.ritmo.model.payload.Seeds
+import com.mccarty.ritmo.domain.model.AlbumXX
+import com.mccarty.ritmo.domain.model.CurrentlyPlayingTrack
+import com.mccarty.ritmo.domain.model.payload.PlaybackState
+import com.mccarty.ritmo.domain.model.payload.Playlist
+import com.mccarty.ritmo.domain.model.payload.PlaylistData
+import com.mccarty.ritmo.domain.model.payload.RecentlyPlayedItem
+import com.mccarty.ritmo.domain.model.payload.Seeds
 import retrofit2.Response
-import com.mccarty.ritmo.model.payload.RecentlyPlayedItem as RecentlyPlayedItem
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query

@@ -1,4 +1,4 @@
-package com.mccarty.ritmo.model
+package com.mccarty.ritmo.domain.model
 
 data class QueueX(
     val album: AlbumX,

@@ -1,9 +1,9 @@
 package com.mccarty.ritmo.domain
 
-import com.mccarty.ritmo.model.TrackDetails
-import com.mccarty.ritmo.model.payload.ArtistX
-import com.mccarty.ritmo.model.payload.Image
-import com.mccarty.ritmo.model.payload.MainItem
+import com.mccarty.ritmo.domain.model.TrackDetails
+import com.mccarty.ritmo.domain.model.payload.ArtistX
+import com.mccarty.ritmo.domain.model.payload.Image
+import com.mccarty.ritmo.domain.model.payload.MainItem
 import javax.inject.Inject
 
 class MediaDetailsCollections @Inject constructor(): MediaDetails {
