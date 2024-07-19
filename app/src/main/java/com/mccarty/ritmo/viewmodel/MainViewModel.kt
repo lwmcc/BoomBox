@@ -21,6 +21,7 @@ import com.mccarty.ritmo.domain.model.payload.ListItem
 import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.domain.model.payload.PlaylistData
 import com.mccarty.ritmo.domain.model.payload.TrackItem
+import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.utils.createTrackDetailsFromItems
 import com.mccarty.ritmo.utils.createTrackDetailsFromItemsRecommended

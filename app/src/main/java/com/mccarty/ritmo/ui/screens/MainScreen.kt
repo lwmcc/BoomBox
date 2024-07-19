@@ -43,7 +43,7 @@ import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.ui.ItemColor
 import com.mccarty.ritmo.viewmodel.PlaylistNames
-import com.mccarty.ritmo.viewmodel.TrackSelectAction
+import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 
 @OptIn(
     ExperimentalGlideComposeApi::class,

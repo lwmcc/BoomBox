@@ -34,7 +34,7 @@ import com.mccarty.ritmo.R
 import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.ui.MainImageHeader
 import com.mccarty.ritmo.ui.playPauseIcon
-import com.mccarty.ritmo.viewmodel.TrackSelectAction
+import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

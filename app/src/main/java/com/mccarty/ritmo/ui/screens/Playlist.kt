@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.ui.CircleSpinner
-import com.mccarty.ritmo.viewmodel.TrackSelectAction
+import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 
 @Composable
 fun PlaylistScreen(

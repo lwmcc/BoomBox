@@ -1,7 +1,6 @@
 package com.mccarty.ritmo.domain
 
-import com.mccarty.ritmo.viewmodel.TrackSelectAction
-import com.mccarty.ritmo.viewmodel.TrackSelectAction.TrackSelect as TrackSelect
+import com.mccarty.ritmo.domain.tracks.TrackSelectAction.TrackSelect as TrackSelect
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import javax.inject.Inject
 
