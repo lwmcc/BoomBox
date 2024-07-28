@@ -143,6 +143,10 @@ class MainViewModel @Inject constructor(
         val recommendedPlaylist: List<MainItem>
         get() = _recommendedPlaylist
 
+    private var _currentPlaylist = mutableListOf<MainItem>()
+    val currentPlaylist: List<MainItem>
+        get() = _currentPlaylist
+
     private suspend fun fetchAllPlaylists() {
         AllPlaylistsState.Pending(true)
         repository.fetchPlayLists().collect {
@@ -382,6 +386,8 @@ class MainViewModel @Inject constructor(
             job?.cancelAndJoin()
         }
     }
+
+    fun checkIfIndexesEqual(): Boolean =  (playlistData.value?.index ?: 0) == (playlistData.value?.tracks?.lastIndex)
 
     /** If index less than zero, then this is the first time setting up data */
     fun firstTimePlayingRecommended(): Boolean = (playlistData.value?.index ?: INITIAL_POSITION) < INITIAL_POSITION

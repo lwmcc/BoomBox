@@ -3,7 +3,7 @@ package com.mccarty.ritmo.repository.remote
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.domain.model.AlbumXX
 import com.mccarty.ritmo.domain.model.CurrentlyPlayingTrack
-import com.mccarty.ritmo.domain.model.payload.PlaybackState
+import com.mccarty.ritmo.domain.model.payload.PlaybackState as PlaybackState
 import com.mccarty.ritmo.domain.model.payload.Playlist
 import com.mccarty.ritmo.domain.model.payload.PlaylistData
 import com.mccarty.ritmo.domain.model.payload.RecentlyPlayedItem

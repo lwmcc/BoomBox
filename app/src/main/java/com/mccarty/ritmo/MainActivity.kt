@@ -310,8 +310,6 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.Skip -> {
-                println("MainActivity ***** playerControlAction()")
-
                 when(mainViewModel.playlistData.value?.name) {
                     PlaylistNames.RECOMMENDED_PLAYLIST -> {
                         println("MainActivity ***** playerControlAction() RECOMMENDED_PLAYLIST")
@@ -336,7 +334,12 @@ class MainActivity : ComponentActivity() {
                         }
                         setupSliderPosition(INCREMENT_INDEX)
                     }
-                    PlaylistNames.USER_PLAYLIST -> { /* TODO */}
+                    PlaylistNames.USER_PLAYLIST -> {
+                        if (!trackEnded) {
+                            mainViewModel.cancelJob()
+                        }
+                        setupSliderPosition(INCREMENT_INDEX)
+                    }
                     else -> { setupSliderPosition(INCREMENT_INDEX) }
                 }
             }
@@ -369,7 +372,8 @@ class MainActivity : ComponentActivity() {
                 if (isPaused.value) {
                     spotifyAppRemote?.let { remote ->
                         mainViewModel.isPaused(false)
-                        mainViewModel.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY))
+                        mainViewModel.playbackDuration(action.tracks[action.index].track
+                            ?.duration_ms?.quotientOf(TICKER_DELAY))
                         mainViewModel.handlePlayerActions(remote, action)
                     }
                     mainViewModel.setPlaybackPosition(INITIAL_POSITION)
@@ -377,7 +381,7 @@ class MainActivity : ComponentActivity() {
                         Playlist(
                             uri = action.uri,
                             index = action.index,
-                            name = PlaylistNames.RECENTLY_PLAYED,
+                            name = action.playlistName,
                             tracks = action.tracks,
                         )
                     )
@@ -405,7 +409,6 @@ class MainActivity : ComponentActivity() {
                             tracks = action.tracks,
                         )
                     )
-                    mainViewModel.playlist
                 }
             }
             is TrackSelectAction.PlayTrackWithUri -> {
@@ -431,8 +434,7 @@ class MainActivity : ComponentActivity() {
         spotifyAppRemote?.let { remote ->
             when(mainViewModel.playlistData.value?.name) {
                 PlaylistNames.RECENTLY_PLAYED -> {
-                    if ((mainViewModel.playlistData.value?.index ?: 0) == (mainViewModel.playlistData.value?.tracks?.lastIndex)) {
-                        println("MainActivity ***** WHAT IS IT IF")
+                    if (mainViewModel.checkIfIndexesEqual()) {
                         remote.playerApi.play(null)
                         mainViewModel.setPlaylistData(null)
                     } else {
@@ -458,7 +460,32 @@ class MainActivity : ComponentActivity() {
 
                     }
                 }
-                PlaylistNames.USER_PLAYLIST -> { }
+                PlaylistNames.USER_PLAYLIST -> {
+                    if (mainViewModel.checkIfIndexesEqual()) {
+                        remote.playerApi.play(null)
+                        mainViewModel.setPlaylistData(null)
+                    } else {
+                        val newIndex =  mainViewModel.newIndex(index)
+                        val theUri = mainViewModel.getUri(newIndex)
+
+                        mainViewModel.setPlaylistData(
+                            mainViewModel.playlistData.value?.copy(
+                                uri = theUri,
+                                index =  newIndex,
+                            )
+                        )
+                        mainViewModel.setPlaybackPosition(INITIAL_POSITION)
+                        mainViewModel.playbackDuration(mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(TICKER_DELAY) ?: 0)
+                        remote.playerApi.play(theUri)
+
+                        mainViewModel.setMusicHeaderUrl(
+                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.images?.get(0)?.url,
+                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.artists?.get(0)?.name ?: getString(R.string.artist_name), // TODO: move duplicate code to own function
+                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.name ?: getString(R.string.album_name),
+                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.name ?: getString(R.string.track_name),
+                        )
+                    }
+                }
                 PlaylistNames.RECOMMENDED_PLAYLIST -> {
                     mainViewModel.setPlaylistData(
                         Playlist(
