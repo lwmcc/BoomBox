@@ -1,7 +1,6 @@
 package com.mccarty.ritmo.api
 
 import android.content.SharedPreferences
-import android.net.NetworkCapabilities
 import com.mccarty.ritmo.MainActivity.Companion.SPOTIFY_TOKEN
 import com.mccarty.ritmo.repository.remote.Constants
 import okhttp3.Interceptor
@@ -9,11 +8,13 @@ import okhttp3.Response
 import javax.inject.Inject
 
 class MusicInterceptor @Inject constructor(
-    private val networkCapabilities: NetworkCapabilities,
     private val sharedPreferences: SharedPreferences,
-) : Interceptor {
+    private val isConnected: Boolean,
+
+    ) : Interceptor {
+
     override fun intercept(chain: Interceptor.Chain): Response {
-        if (networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+        if (isConnected) {
             val request = chain.request()
                 .newBuilder()
                 .addHeader(Constants.CONTENT_TYPE_SPOTIFY, Constants.APPLICATION_JSON_SPOTIFY)

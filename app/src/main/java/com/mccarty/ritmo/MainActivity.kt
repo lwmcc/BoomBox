@@ -77,8 +77,7 @@ class MainActivity : ComponentActivity() {
         }
 
         if (savedInstanceState == null) {
-            val request = getAuthenticationRequest()
-            AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, request)
+            AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, getAuthenticationRequest())
         }
 
         fetchData()
@@ -162,9 +161,6 @@ class MainActivity : ComponentActivity() {
                                 )
                             )
                         } else -> {
-                            // Entering app when no playlist data is in memory
-                            println("MainActivity ***** connect ELSE ")
-
                             spotifyAppRemote?.let { remote ->
                                 remote.playerApi.playerState.setResultCallback { playerState ->
                                     mainViewModel.setSliderPosition(
@@ -220,7 +216,7 @@ class MainActivity : ComponentActivity() {
                     "user-read-playback-state"
                 )
             )
-            .setCampaign("your-campaign-token")
+            .setCampaign("your-campaign-token") // TODO: set this
             .build()
     }
 
@@ -260,14 +256,6 @@ class MainActivity : ComponentActivity() {
                         action = PlayerControlAction.Skip(0),
                         trackEnded = trackEnded,
                     )
-                }
-            }
-        }
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.musicHeader.collect { header ->
-                    println("MainActivity ***** HEADER ${header.songName}")
                 }
             }
         }

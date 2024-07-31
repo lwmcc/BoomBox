@@ -57,27 +57,26 @@ class MainViewModel @Inject constructor(
     sealed class AllPlaylistsState {
         data class Pending(val pending: Boolean) : AllPlaylistsState()
         data class Success(val playLists: List<PlaylistData.Item>) : AllPlaylistsState()
-        data object Error : AllPlaylistsState()
+        data class Error<T>(val message: T) : AllPlaylistsState()
     }
 
     sealed class PlaylistState {
         data class Pending(val pending: Boolean) : PlaylistState()
-
         data class Success<T: TrackDetails>(val trackDetails: List<T>) : PlaylistState()
-        data object Error : PlaylistState()
+        data class Error<T>(val message: T) : PlaylistState()
     }
 
     sealed class CurrentlyPayingTrackState {
         data class Pending(val pending: Boolean) : CurrentlyPayingTrackState()
         data class Success<T : CurrentlyPlayingTrack>(val data: T) : CurrentlyPayingTrackState()
-        data object Error : CurrentlyPayingTrackState()
+        data class Error<T>(val message: T) : CurrentlyPayingTrackState()
     }
 
     /** Recently played items top of main screen */
-    sealed class MainItemsState {
+    sealed class  MainItemsState {
         data class Pending(val pending: Boolean) : MainItemsState()
         data class Success(val mainItems: Map<String, List<MainItem>>) : MainItemsState()
-        data class Error(val error: Boolean) : MainItemsState()
+        data class Error<T>(val message: T) : MainItemsState()
     }
 
     private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
@@ -151,7 +150,9 @@ class MainViewModel @Inject constructor(
         AllPlaylistsState.Pending(true)
         repository.fetchPlayLists().collect {
             when (it) {
-                is NetworkRequest.Error -> AllPlaylistsState.Error
+                is NetworkRequest.Error -> {
+                    AllPlaylistsState.Error(it.message)
+                }
                 is NetworkRequest.Success -> {
                     _allPlaylists.value = AllPlaylistsState.Success(it.data.items)
                 }
@@ -166,8 +167,7 @@ class MainViewModel @Inject constructor(
             repository.fetchUserPlayList(playlistId).collect {
                 when (it) {
                     is NetworkRequest.Error -> {
-                        println("MainViewModel ***** NET ERROR ${it.toString()}")
-                        // TODO: handle error
+                        PlaylistState.Error(it.message)
                     }
 
                     is NetworkRequest.Success -> {
@@ -212,7 +212,7 @@ class MainViewModel @Inject constructor(
             }.collect {
                 when (it) {
                     is NetworkRequest.Error -> {
-                        _mainItems.value = MainItemsState.Error(true)
+                        _mainItems.value = MainItemsState.Error(it.message)
                     }
 
                     is NetworkRequest.Success -> {
@@ -267,7 +267,7 @@ class MainViewModel @Inject constructor(
             repository.fetchCurrentlyPlayingTrack().collect { it ->
                 when (it) {
                     is NetworkRequest.Error -> {
-                        "handle error "
+                        CurrentlyPayingTrackState.Error(it.message)
                     }
 
                     is NetworkRequest.Success -> {
@@ -433,6 +433,10 @@ class MainViewModel @Inject constructor(
     override fun setPlaybackPosition(position: Int) {
         playbackPosition(position)
         setSliderPosition()
+    }
+
+    fun setMainItemsError(message: String) {
+        _mainItems.value = MainItemsState.Error(message)
     }
 }
 data class ControlTrackData(

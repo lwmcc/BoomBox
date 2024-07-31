@@ -38,24 +38,31 @@ object AppModule {
     }
 
     private fun getOkHttp(
-        networkCapabilities: NetworkCapabilities,
+        connectivityManager: ConnectivityManager,
         sharedPreferences: SharedPreferences,
-        ): OkHttpClient {
+    ): OkHttpClient {
         return OkHttpClient()
             .newBuilder()
-            .addInterceptor(MusicInterceptor(networkCapabilities, sharedPreferences))
+            .addInterceptor(
+                MusicInterceptor(
+                    sharedPreferences,
+                    connectivityManager.getNetworkCapabilities(
+                        connectivityManager.activeNetwork
+                    )?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false,
+                )
+            )
             .build()
     }
 
     @Provides
     @Singleton
     fun provideRetrofit(
-        networkCapabilities: NetworkCapabilities,
+        connectivityManager: ConnectivityManager,
         sharedPreferences: SharedPreferences,
         ): ApiService {
         return Retrofit.Builder()
             .baseUrl(BASE_SPOTIFY_URL)
-            .client(getOkHttp(networkCapabilities, sharedPreferences))
+            .client(getOkHttp(connectivityManager, sharedPreferences))
             .addConverterFactory(GsonConverterFactory.create())
             .addCallAdapterFactory(NetworkRequestAdapterFactory.create())
             .build().create(ApiService::class.java)
@@ -69,21 +76,6 @@ object AppModule {
     @Singleton
     fun provideConnectionManager(context: Context): ConnectivityManager {
         return context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    }
-
-    @Provides
-    @Singleton
-    fun provideCapabilities(connectivityManager: ConnectivityManager): NetworkCapabilities {
-        return connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)!!
-    }
-
-    @Provides
-    @Singleton
-    fun provideApiClient(
-        networkCapabilities: NetworkCapabilities,
-        sharedPreferences: SharedPreferences,
-        ): MusicInterceptor {
-            return MusicInterceptor(networkCapabilities, sharedPreferences)
     }
 
     @Provides

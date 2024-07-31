@@ -21,8 +21,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -44,6 +47,7 @@ import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.ui.ItemColor
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
+import kotlinx.coroutines.delay
 
 @OptIn(
     ExperimentalGlideComposeApi::class,
@@ -64,6 +68,8 @@ fun MainScreen(
     val playlistsHeader = context.getString(R.string.playlists)
     val playListItem by model.playlistData.collectAsStateWithLifecycle()
 
+    val timeOut by remember { mutableLongStateOf(5000L) }
+
     when (music.value) {
         is MainViewModel.MainItemsState.Pending -> {
             Column(
@@ -71,7 +77,12 @@ fun MainScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                val noInternet =  stringResource(id = R.string.no_internet_connection)
                 CircleSpinner(32.dp)
+                LaunchedEffect(Unit) {
+                    delay(timeOut)
+                    model.setMainItemsError(noInternet)
+                }
             }
         }
 
@@ -262,8 +273,9 @@ fun MainScreen(
             }
         }
 
-        is MainViewModel.MainItemsState.Error -> {
-            // TODO: show on UI
+        is MainViewModel.MainItemsState.Error<*> -> {
+            val error = (mainMusic as MainViewModel.MainItemsState.Error<*>).message.toString()
+            ErrorScreen(error)
         }
     }
 }

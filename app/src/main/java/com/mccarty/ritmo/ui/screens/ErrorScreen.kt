@@ -1,38 +1,30 @@
 package com.mccarty.ritmo.ui.screens
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mccarty.ritmo.R
 
 @Composable
-fun ErrorScreen() {
-    LazyColumn(
-        modifier = Modifier.padding(horizontal = 25.dp),
+fun ErrorScreen(message: String) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        item {
-            Text(
-                text = "ERROR SCREEN",
-                color = MaterialTheme.colorScheme.primary,
-                fontStyle = FontStyle.Normal,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                modifier = Modifier
-                    .paddingFromBaseline(top = 40.dp)
-                    .fillMaxWidth(),
-            )
-        }
+        Text(
+            text = message,
+            color = MaterialTheme.colorScheme.error,
+            fontStyle = FontStyle.Normal,
+            fontWeight = FontWeight.Bold,
+            fontSize = 32.sp,
+        )
     }
 }

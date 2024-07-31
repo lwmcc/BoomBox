@@ -20,7 +20,7 @@ interface ApiService {
     suspend fun fetchPlayList(@Path("playlist_id") playlistIdd: String): NetworkRequest<Playlist>
 
     @GET("/v1/playlists/{playlist_id}/tracks")
-    suspend fun fetchUserPlayList(@Path("playlist_id") playlistIdd: String): Response<Playlist>
+    suspend fun fetchUserPlayList(@Path("playlist_id") playlistIdd: String): NetworkRequest<Playlist>
 
     @GET("/v1/me/player/recently-played?limit=50")
     suspend fun fetchRecentlyPlayedItem(): NetworkRequest<RecentlyPlayedItem>
