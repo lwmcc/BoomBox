@@ -1,15 +1,16 @@
 package com.mccarty.networkrequest.network
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.google.gson.JsonSyntaxException
 import okhttp3.Request
 import okio.Timeout
-import org.json.JSONException
-import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.IOException
 
-class NetworkRequestCall <T : Any>(private val delegate: Call<T>) : Call<NetworkRequest<T>> {
+class NetworkRequestCall <T>(private val delegate: Call<T>) : Call<NetworkRequest<T>> {
     override fun enqueue(callback: Callback<NetworkRequest<T>>) {
         return delegate.enqueue(object : Callback<T> {
 
@@ -31,17 +32,17 @@ class NetworkRequestCall <T : Any>(private val delegate: Call<T>) : Call<Network
                     }
                 } else {
                     try {
-                        val message = "Code: $code ${
-                            JSONObject(error?.string() ?: "Response failure ").getString("message")
-                        }"
+                        val message = Gson().fromJson(error?.string(), JsonObject::class.java)
+                            .get("message")?.asString
+                            ?: "Response Error"
                         callback.onResponse(
                             this@NetworkRequestCall,
                             Response.success(NetworkRequest.Error("Response code error $message")),
                         )
-                    } catch (je: JSONException) {
+                    } catch (jse: JsonSyntaxException) {
                         callback.onResponse(
                             this@NetworkRequestCall,
-                            Response.success(NetworkRequest.Error("JSON Parse Error")),
+                            Response.success(NetworkRequest.Error("JSON Parse Error $code")),
                         )
                     }
                 }

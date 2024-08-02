@@ -7,7 +7,6 @@ import com.mccarty.ritmo.domain.model.payload.Playlist
 import com.mccarty.ritmo.domain.model.payload.PlaylistData
 import com.mccarty.ritmo.domain.model.payload.RecentlyPlayedItem
 import com.mccarty.ritmo.domain.model.payload.Seeds
-import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
