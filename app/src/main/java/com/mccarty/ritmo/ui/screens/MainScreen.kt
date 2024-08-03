@@ -192,7 +192,7 @@ fun MainScreen(
                                             )
                                             if (item.track?.artists?.isNotEmpty() == true) {
                                                 Text(
-                                                    text = item.track?.artists!![0].name, // TODO: fix
+                                                    text = item.track?.artists?.get(0)?.name ?: androidx.ui.res.stringResource(R.string.track_name),
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     modifier = Modifier
                                                         .paddingFromBaseline(top = 25.dp)

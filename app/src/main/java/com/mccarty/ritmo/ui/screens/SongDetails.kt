@@ -21,13 +21,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.ui.res.stringResource
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.R
@@ -122,7 +122,7 @@ fun MediaDetails(
             )
             tracks[page].artists?.forEach { artist ->
                 Text(
-                    text = artist.name,
+                    text = artist.name ?: stringResource(R.string.track_name),
                     style = MaterialTheme.typography.titleSmall,
                 )
             }
@@ -133,11 +133,11 @@ fun MediaDetails(
             pagerState.scrollToPage(index)
         }
 
-        LaunchedEffect(key1 = 2) {
+/*        LaunchedEffect(key1 = 2) {
             snapshotFlow { pagerState.currentPage }.collect { page ->
                 // TODO: don't pass in model
                 //model.setArtistName(tracks[page].artists.firstOrNull()?.name)
             }
-        }
+        }*/
     }
 }

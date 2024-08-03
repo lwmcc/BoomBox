@@ -113,7 +113,7 @@ fun MediaList(
 
                         if (track.artists.isNotEmpty()) {
                             Text(
-                                text = track.artists[0].name,
+                                text = track.artists[0].name ?: stringResource(id = R.string.track_name),
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
                                     .paddingFromBaseline(top = 25.dp)
