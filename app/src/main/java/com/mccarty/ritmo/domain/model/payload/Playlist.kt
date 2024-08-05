@@ -17,7 +17,7 @@ data class Item(
     val external_urls: ExternalUrls,
     val href: String,
     val id: String,
-    val images: List<Image>,
+    val images: List<Image> = emptyList(),
     val name: String,
     val owner: Owner,
     val public: Boolean,

@@ -62,13 +62,13 @@ class MainViewModel @Inject constructor(
 
     sealed class PlaylistState {
         data class Pending(val pending: Boolean) : PlaylistState()
-        data class Success<T: TrackDetails>(val trackDetails: List<T>) : PlaylistState()
+        data class Success(val trackDetails: List<TrackDetails>) : PlaylistState()
         data class Error<T>(val message: T) : PlaylistState()
     }
 
     sealed class CurrentlyPayingTrackState {
         data class Pending(val pending: Boolean) : CurrentlyPayingTrackState()
-        data class Success<T : CurrentlyPlayingTrack>(val data: T) : CurrentlyPayingTrackState()
+        data class Success(val data: CurrentlyPlayingTrack) : CurrentlyPayingTrackState()
         data class Error<T>(val message: T) : CurrentlyPayingTrackState()
     }
 
@@ -244,7 +244,7 @@ class MainViewModel @Inject constructor(
                                 external_urls = item.external_urls,
                                 href = item.href,
                                 id = item.id,
-                                images = item.images, // TODO: null image fix
+                                images = item.images,
                                 name = item.name,
                                 owner = item.owner,
                                 public = item.public,
@@ -264,7 +264,7 @@ class MainViewModel @Inject constructor(
 
     fun fetchCurrentlyPlayingTrack() {
         viewModelScope.launch {
-            repository.fetchCurrentlyPlayingTrack().collect { it ->
+            repository.fetchCurrentlyPlayingTrack().collect {
                 when (it) {
                     is NetworkRequest.Error -> {
                         CurrentlyPayingTrackState.Error(it.message)
@@ -292,10 +292,11 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             repository.fetchRecommendedPlaylists(trackIds, artistIds).collect { items ->
                 when(items) {
-                    is NetworkRequest.Error -> {  println("MainViewModel ***** DATA ITEMS ERROR ${items.toString()}") }
+                    is NetworkRequest.Error -> {
+                        // TODO: handle error
+                    }
                     is NetworkRequest.Success -> {
                         _recommendedPlaylist.addAll(items.data.tracks.createTrackDetailsFromItemsRecommended())
-                        println("MainViewModel ***** THE TRACKS ${items.data.tracks.createTrackDetailsFromItemsRecommended().toString()}}")
                     }
                 }
             }
@@ -318,7 +319,6 @@ class MainViewModel @Inject constructor(
             ).collect { position ->
                 _playbackPosition.update { position }
                 if (position == playbackDuration.value) {
-                    println("MainViewModel ***** IF TRACK END")
                     _playbackPosition.update { 0L }
                     _trackEnd.tryEmit(true)
                 }

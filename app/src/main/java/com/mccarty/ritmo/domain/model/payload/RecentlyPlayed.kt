@@ -49,7 +49,7 @@ open class ListItem(
     override val images: List<Image>,
     override val name: String,
     val owner: PlaylistData.Owner,
-    val `public`: Boolean,
+    val public: Boolean,
     val snapshot_id: String,
     override val tracks: PlaylistData.Tracks,
     override val type: String,
