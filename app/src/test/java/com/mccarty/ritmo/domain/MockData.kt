@@ -6,7 +6,6 @@ import com.mccarty.ritmo.domain.model.payload.Context
 import com.mccarty.ritmo.domain.model.payload.ExternalIds
 import com.mccarty.ritmo.domain.model.payload.ExternalUrls
 import com.mccarty.ritmo.domain.model.payload.Followers
-import com.mccarty.ritmo.domain.model.payload.Image
 import com.mccarty.ritmo.domain.model.payload.Item
 import com.mccarty.ritmo.domain.model.payload.LinkedFrom
 import com.mccarty.ritmo.domain.model.payload.MainItem
@@ -16,6 +15,8 @@ import com.mccarty.ritmo.domain.model.payload.PlaylistItem
 import com.mccarty.ritmo.domain.model.payload.Restrictions
 import com.mccarty.ritmo.domain.model.payload.Track
 import com.mccarty.ritmo.domain.model.payload.TrackItem
+import  com.mccarty.ritmo.domain.model.payload.PlaylistData.Item as ItemP
+import  com.mccarty.ritmo.domain.model.payload.PlaylistData.ExternalUrls as External
 
 
 val album = Album(
@@ -134,4 +135,35 @@ val trackItem = TrackItem(
     context = context,
     played_at = "5",
     track = track,
+)
+
+val owner = PlaylistData.Owner(
+    display_name = "",
+    external_urls = PlaylistData.ExternalUrls("spotify-url"),
+    followers = PlaylistData.Followers(
+        href = "",
+        total = 50,
+    ),
+    href = "",
+    id = "",
+    type = "",
+    uri = "",
+)
+
+val playlistItem = ItemP(
+    collaborative = true,
+    description = "",
+    external_urls = External(
+        spotify = "spotify-string"
+    ),
+    href = "",
+    id = "",
+    images = emptyList(),
+    name = "",
+    owner = owner,
+    public = true,
+    snapshot_id = "",
+    tracks = tracks,
+    type = "",
+    uri = "",
 )

@@ -252,7 +252,7 @@ class MainViewModel @Inject constructor(
                     }
                 }
             }
-            _mainItems.value = MainItemsState.Success(mainItems.groupBy { it.type ?: "" }) // TODO: null ok
+            _mainItems.value = MainItemsState.Success(mainItems.groupBy { it.type ?: "" }) // TODO: null ok double check why type is empty
         }
     }
 

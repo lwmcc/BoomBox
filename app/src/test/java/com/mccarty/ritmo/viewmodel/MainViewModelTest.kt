@@ -26,6 +26,7 @@ import com.mccarty.ritmo.domain.model.payload.PlaylistData
 import com.mccarty.ritmo.domain.model.payload.RecentlyPlayedItem
 import com.mccarty.ritmo.domain.model.payload.Seeds
 import com.mccarty.ritmo.domain.playlist
+import com.mccarty.ritmo.domain.playlistItem
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.repository.remote.Repository
 import com.spotify.android.appremote.api.SpotifyAppRemote
@@ -36,48 +37,47 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.MatcherAssert.assertThat
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
 class MainViewModelTest {
+
+    private lateinit var mainViewModel: MainViewModel
+
     @get:Rule
     val coroutineRule = CoroutineRule()
 
-    @Test
-    fun `assert instanceOf RecentlyPlayedMusicState Success`() = runTest {
+    @Before
+    fun setup() {
         // Arrange
-        val viewModel = MainViewModel(
+        mainViewModel = MainViewModel(
             repository = RepositoryFake(),
             remoteService = RemoteServiceFake(),
             details = MediaDetailsFake(),
             sliderTicker = TickerFake(),
         )
+    }
 
+    @Test
+    fun `assert instanceOf RecentlyPlayedMusicState Success`() = runTest {
         // Act
-        viewModel.fetchRecentlyPlayedMusic()
+        mainViewModel.fetchRecentlyPlayedMusic()
 
         // Assert
         assertThat(
-            viewModel.recentlyPlayedMusic.value,
+            mainViewModel.recentlyPlayedMusic.value,
             instanceOf(RecentlyPlayedMusicStateSuccess::class.java)
         )
     }
 
     @Test
     fun `assert instanceOf PlaylistState`() = runTest {
-        // Arrange
-        val viewModel = MainViewModel(
-            repository = RepositoryFake(),
-            remoteService = RemoteServiceFake(),
-            details = MediaDetailsFake(),
-            sliderTicker = TickerFake(),
-        )
-
         // Act
-        viewModel.fetchPlaylist("playlist_id")
+        mainViewModel.fetchPlaylist("playlist_id")
 
         // Assert
-        assertThat(viewModel.playLists.value, instanceOf(PlaylistState::class.java))
+        assertThat(mainViewModel.playLists.value, instanceOf(PlaylistState::class.java))
     }
 
     @Test
@@ -92,6 +92,22 @@ class MainViewModelTest {
         viewModel.fetchMainMusic()
 
         assertThat(viewModel.mainItems.value, instanceOf(MainItemsState::class.java))
+    }
+
+    @Test
+    fun `assert tracks href`() = runTest {
+        mainViewModel.fetchMainMusic()
+        mainViewModel.mainItems.test {
+            when (val item = awaitItem()) {
+                is MainItemsState.Error<*> -> {}
+                MainItemsState.Pending -> {}
+                is MainItemsState.Success -> {
+                    item.mainItems.forEach { s, mainItems -> println("KEY $s") }
+                    val items = item.mainItems
+                    assertEquals("some tracks", items[""]?.get(0)?.tracks?.href)
+                }
+            }
+        }
     }
 
     @Test
@@ -245,7 +261,7 @@ class MainViewModelTest {
                     NetworkRequestSuccess(
                         PlaylistData.PlaylistItem(
                             href = "www.google.com",
-                            items = emptyList(),
+                            items = listOf(playlistItem),
                             limit = 1,
                             next = "next",
                             offset = 1,
