@@ -441,7 +441,7 @@ data class Playlist(
     val uri: String?,
     var index: Int,
     val name: PlaylistNames?,
-    val tracks: List<MainItem>?,
+    val tracks: List<MainItem>,
 )
 
 enum class PlaylistNames {

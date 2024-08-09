@@ -15,8 +15,10 @@ import com.mccarty.ritmo.domain.model.payload.PlaylistItem
 import com.mccarty.ritmo.domain.model.payload.Restrictions
 import com.mccarty.ritmo.domain.model.payload.Track
 import com.mccarty.ritmo.domain.model.payload.TrackItem
+import com.mccarty.ritmo.viewmodel.PlaylistNames
 import  com.mccarty.ritmo.domain.model.payload.PlaylistData.Item as ItemP
 import  com.mccarty.ritmo.domain.model.payload.PlaylistData.ExternalUrls as External
+import com.mccarty.ritmo.viewmodel.Playlist as PlaylistVM
 
 
 val album = Album(
@@ -81,14 +83,14 @@ val addedBy =  AddedBy(
     uri = "",
 )
 
-val playlistItems = mutableListOf(
-    PlaylistItem(
-        added_at = "2",
-        added_by = addedBy,
-        is_local = true,
-        track = track,
-    )
+val playlistItem = PlaylistItem(
+    added_at = "2",
+    added_by = addedBy,
+    is_local = true,
+    track = track,
 )
+
+val playlistItems = mutableListOf(playlistItem)
 
 val playlist = Playlist(
     href = "www.google.com",
@@ -150,7 +152,7 @@ val owner = PlaylistData.Owner(
     uri = "",
 )
 
-val playlistItem = ItemP(
+val playlistItemP = ItemP(
     collaborative = true,
     description = "",
     external_urls = External(
@@ -166,4 +168,13 @@ val playlistItem = ItemP(
     tracks = tracks,
     type = "",
     uri = "",
+
 )
+
+val playlistVM = PlaylistVM(
+    uri = "some-uri",
+    index = 5,
+    name = PlaylistNames.RECOMMENDED_PLAYLIST,
+    tracks = listOf(mainItem),
+)
+

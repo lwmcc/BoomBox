@@ -26,11 +26,14 @@ import com.mccarty.ritmo.domain.model.payload.PlaylistData
 import com.mccarty.ritmo.domain.model.payload.RecentlyPlayedItem
 import com.mccarty.ritmo.domain.model.payload.Seeds
 import com.mccarty.ritmo.domain.playlist
-import com.mccarty.ritmo.domain.playlistItem
+import com.mccarty.ritmo.domain.playlistItemP
+import com.mccarty.ritmo.domain.playlistVM
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.repository.remote.Repository
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -45,6 +48,7 @@ class MainViewModelTest {
 
     private lateinit var mainViewModel: MainViewModel
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @get:Rule
     val coroutineRule = CoroutineRule()
 
@@ -78,6 +82,24 @@ class MainViewModelTest {
 
         // Assert
         assertThat(mainViewModel.playLists.value, instanceOf(PlaylistState::class.java))
+    }
+
+    @Test
+    fun `assert playlist name is correct`() = runTest {
+        mainViewModel.setPlaylistData(playlistVM)
+
+        mainViewModel.playlistData.test {
+            assertEquals(PlaylistNames.RECOMMENDED_PLAYLIST.name , awaitItem()?.name.toString())
+        }
+    }
+
+    @Test
+    fun `assert tracks is not empty`() = runTest {
+        mainViewModel.setPlaylistData(playlistVM)
+
+        mainViewModel.playlistData.test {
+           assertTrue(awaitItem()?.tracks?.isNotEmpty() ?: false)
+        }
     }
 
     @Test
@@ -251,17 +273,17 @@ class MainViewModelTest {
             }
         }
 
-        override suspend fun fetchCurrentlyPlayingTrack(): Flow<com.mccarty.networkrequest.network.NetworkRequest<CurrentlyPlayingTrack>> {
+        override suspend fun fetchCurrentlyPlayingTrack(): Flow<NetworkRequest<CurrentlyPlayingTrack>> {
             return flow { }
         }
 
-        override suspend fun fetchPlayLists(): Flow<com.mccarty.networkrequest.network.NetworkRequest<PlaylistData.PlaylistItem>> {
+        override suspend fun fetchPlayLists(): Flow<NetworkRequest<PlaylistData.PlaylistItem>> {
             return flow {
                 emit(
                     NetworkRequestSuccess(
                         PlaylistData.PlaylistItem(
                             href = "www.google.com",
-                            items = listOf(playlistItem),
+                            items = listOf(playlistItemP),
                             limit = 1,
                             next = "next",
                             offset = 1,
