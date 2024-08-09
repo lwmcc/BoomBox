@@ -69,7 +69,7 @@ fun MainScreen(
     val playlistsHeader = context.getString(R.string.playlists)
     val playListItem by model.playlistData.collectAsStateWithLifecycle()
 
-    val timeOut by remember { mutableLongStateOf(5000L) }
+    val timeOut by remember { mutableLongStateOf(8000L) }
 
     when (music.value) {
         is MainViewModel.MainItemsState.Pending -> {

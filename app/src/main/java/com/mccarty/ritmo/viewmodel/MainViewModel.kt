@@ -55,13 +55,13 @@ class MainViewModel @Inject constructor(
     }
 
     sealed class AllPlaylistsState {
-        data class Pending(val pending: Boolean) : AllPlaylistsState()
+        data object Pending: AllPlaylistsState()
         data class Success(val playLists: List<PlaylistData.Item>) : AllPlaylistsState()
         data class Error<T>(val message: T) : AllPlaylistsState()
     }
 
     sealed class PlaylistState {
-        data class Pending(val pending: Boolean) : PlaylistState()
+        data object Pending : PlaylistState()
         data class Success(val trackDetails: List<TrackDetails>) : PlaylistState()
         data class Error<T>(val message: T) : PlaylistState()
     }
@@ -74,13 +74,10 @@ class MainViewModel @Inject constructor(
 
     /** Recently played items top of main screen */
     sealed class  MainItemsState {
-        data class Pending(val pending: Boolean) : MainItemsState()
+        data object Pending : MainItemsState()
         data class Success(val mainItems: Map<String, List<MainItem>>) : MainItemsState()
         data class Error<T>(val message: T) : MainItemsState()
     }
-
-    // private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
-    // val recentlyPlayed: StateFlow<List<TrackV2Item>> = _recentlyPlayed
 
     private var _album = MutableStateFlow(AlbumXX())
     val album: StateFlow<AlbumXX> = _album
@@ -90,13 +87,13 @@ class MainViewModel @Inject constructor(
     )
     val recentlyPlayedMusic: StateFlow<RecentlyPlayedMusicState> = _recentlyPlayedMusic
 
-    private var _playLists = MutableStateFlow<PlaylistState>(PlaylistState.Pending(true))
+    private var _playLists = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
     val playLists: StateFlow<PlaylistState> = _playLists
 
-    private var _allPlaylists = MutableStateFlow<AllPlaylistsState>(AllPlaylistsState.Pending(true))
+    private var _allPlaylists = MutableStateFlow<AllPlaylistsState>(AllPlaylistsState.Pending)
     val allPlaylists: StateFlow<AllPlaylistsState> = _allPlaylists
 
-    private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending(true))
+    private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
     val playlist: StateFlow<PlaylistState> = _playlist
 
     private var _currentlyPlayingTrack = MutableStateFlow<CurrentlyPayingTrackState>(CurrentlyPayingTrackState.Pending(true))
@@ -126,7 +123,7 @@ class MainViewModel @Inject constructor(
     private var _playbackPosition = MutableStateFlow(0L)
     val playbackPosition: StateFlow<Long> = _playbackPosition
 
-    private var _mainItems = MutableStateFlow<MainItemsState>(MainItemsState.Pending(true))
+    private var _mainItems = MutableStateFlow<MainItemsState>(MainItemsState.Pending)
     val mainItems: StateFlow<MainItemsState> = _mainItems
 
     private var _trackEnd = MutableSharedFlow<Boolean>(1)
@@ -147,7 +144,6 @@ class MainViewModel @Inject constructor(
         get() = _currentPlaylist
 
     private suspend fun fetchAllPlaylists() {
-        AllPlaylistsState.Pending(true)
         repository.fetchPlayLists().collect {
             when (it) {
                 is NetworkRequest.Error -> {
@@ -158,11 +154,9 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
-        AllPlaylistsState.Pending(false)
     }
 
     fun fetchPlaylist(playlistId: String) {
-        _playLists.value = PlaylistState.Pending(true)
         viewModelScope.launch {
             repository.fetchUserPlayList(playlistId).collect {
                 when (it) {

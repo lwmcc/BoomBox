@@ -28,7 +28,7 @@ class SliderTickerTest {
             assertEquals(0, awaitItem())
             assertEquals(1, awaitItem())
             assertEquals(2, awaitItem())
-            assertEquals(3L, awaitItem())
+            assertEquals(3, awaitItem())
 
             awaitComplete()
         }

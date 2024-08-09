@@ -1,37 +1,35 @@
 package com.mccarty.ritmo.viewmodel
 
+import app.cash.turbine.test
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.domain.MediaDetails
 import com.mccarty.ritmo.domain.RemoteService
 import com.mccarty.ritmo.domain.Ticker
+import com.mccarty.ritmo.domain.context
+import com.mccarty.ritmo.domain.item
 import com.mccarty.networkrequest.network.NetworkRequest.Success as NetworkRequestSuccess
+import com.mccarty.ritmo.viewmodel.MainViewModel.PlaylistState
 import com.mccarty.ritmo.domain.model.AlbumXX
 import com.mccarty.ritmo.domain.model.CurrentlyPlayingTrack
 import com.mccarty.ritmo.domain.model.ExternalIds
 import com.mccarty.ritmo.domain.model.ExternalUrlsX
 import com.mccarty.ritmo.domain.model.Tracks
 import com.mccarty.ritmo.domain.model.payload.Actions
-import com.mccarty.ritmo.domain.model.payload.Album
-import com.mccarty.ritmo.domain.model.payload.Context
 import com.mccarty.ritmo.viewmodel.MainViewModel.RecentlyPlayedMusicState.Success as RecentlyPlayedMusicStateSuccess
-import com.mccarty.ritmo.viewmodel.MainViewModel.AllPlaylistsState.Success as PlaylistStateSuccess
+import com.mccarty.ritmo.viewmodel.MainViewModel.MainItemsState as MainItemsState
 import com.mccarty.ritmo.domain.model.payload.Cursors
 import com.mccarty.ritmo.domain.model.payload.Device
-import com.mccarty.ritmo.domain.model.payload.ExternalIds as PayloadExternalIds
-import com.mccarty.ritmo.domain.model.payload.ExternalUrls
-import com.mccarty.ritmo.domain.model.payload.Item
-import com.mccarty.ritmo.domain.model.payload.LinkedFrom
 import com.mccarty.ritmo.domain.model.payload.PlaybackState
 import com.mccarty.ritmo.domain.model.payload.Playlist
 import com.mccarty.ritmo.domain.model.payload.PlaylistData
 import com.mccarty.ritmo.domain.model.payload.RecentlyPlayedItem
-import com.mccarty.ritmo.domain.model.payload.Restrictions
 import com.mccarty.ritmo.domain.model.payload.Seeds
-import com.mccarty.ritmo.domain.model.payload.Track
+import com.mccarty.ritmo.domain.playlist
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.repository.remote.Repository
 import com.spotify.android.appremote.api.SpotifyAppRemote
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -66,7 +64,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `assert instanceOf PlaylistState Success`() = runTest {
+    fun `assert instanceOf PlaylistState`() = runTest {
         // Arrange
         val viewModel = MainViewModel(
             repository = RepositoryFake(),
@@ -79,7 +77,42 @@ class MainViewModelTest {
         viewModel.fetchPlaylist("playlist_id")
 
         // Assert
-        assertThat(viewModel.allPlaylists.value, instanceOf(PlaylistStateSuccess::class.java))
+        assertThat(viewModel.playLists.value, instanceOf(PlaylistState::class.java))
+    }
+
+    @Test
+    fun `assert instanceOf MainItemsState`() {
+        val viewModel = MainViewModel(
+            repository = RepositoryFake(),
+            remoteService = RemoteServiceFake(),
+            details = MediaDetailsFake(),
+            sliderTicker = TickerFake(),
+        )
+
+        viewModel.fetchMainMusic()
+
+        assertThat(viewModel.mainItems.value, instanceOf(MainItemsState::class.java))
+    }
+
+    @Test
+    fun `assert trackName on success`() = runTest {
+        val viewModel = MainViewModel(
+            repository = RepositoryFake(),
+            remoteService = RemoteServiceFake(),
+            details = MediaDetailsFake(),
+            sliderTicker = TickerFake(),
+        )
+
+        viewModel.mainItems.test {
+            when (val item = awaitItem()) {
+                is MainItemsState.Error<*> -> {}
+                MainItemsState.Pending -> {}
+                is MainItemsState.Success -> {
+                    val items = item.mainItems
+                    assertEquals("trackName", items["track"]?.get(0)?.track?.name)
+                }
+            }
+        }
     }
 
     class RemoteServiceFake: RemoteService {
@@ -87,7 +120,7 @@ class MainViewModelTest {
             remote: SpotifyAppRemote?,
             action: TrackSelectAction.TrackSelect
         ) {
-
+            // TODO: will implement
         }
     }
 
@@ -110,67 +143,6 @@ class MainViewModelTest {
     }
 
     class RepositoryFake: Repository {
-        val externalUrls = ExternalUrls(
-            spotify = "spotifyString"
-        )
-
-        val context = Context(
-            external_urls = externalUrls,
-            href = "contextHref",
-            type = "contextType",
-            uri = "contextUri"
-        )
-
-        val album = Album(
-            album_type = "albumType",
-            artists = emptyList(),
-            available_markets = emptyList(),
-            external_urls = ExternalUrls(spotify = "spotify"),
-            href = "albumHref",
-            id = "1234",
-            images = emptyList(),
-            name = "albumName",
-            release_date = "date",
-            release_date_precision = "date",
-            restrictions = Restrictions(reason = "some reasons"),
-            total_tracks = 77,
-            type = "albumType",
-            uri = "albumUrl",
-        )
-
-        val track = Track(
-            album = album,
-            artists = emptyList(), //List<ArtistX>,
-            available_markets = emptyList(),
-            disc_number = 3,
-            duration_ms = 30000,
-            explicit = true,
-            external_ids = PayloadExternalIds(
-                ean = "ean",
-                isrc = "isrc",
-                upc = "upc"
-            ),
-            external_urls = ExternalUrls(spotify = "spotify"),
-            href = "trackHref",
-            id = "trackId",
-            is_local = false,
-            is_playable = true,
-            linked_from = LinkedFrom(),
-            name = "trackName",
-            popularity = 66,
-            preview_url = "trackPreviewUrl",
-            restrictions = Restrictions(reason = "some reasons"),
-            track_number = 33,
-            type = "trackType",
-            uri = "trackUri"
-        )
-
-        val item = Item(
-            context = context,
-            played_at = "playedAt",
-            track = track,
-        )
-
         val device = Device(
             id = "",
             is_active = true,
@@ -208,29 +180,19 @@ class MainViewModelTest {
             timestamp = 10L,
         )
 
-        val playList = Playlist(
-            href = "",
-            items = emptyList(),
-            limit = 50,
-            next = "",
-            offset = 1,
-            previous = "",
-            total = 1,
-        )
-
-        override suspend fun fetchRecentlyPlayedItem(): Flow<com.mccarty.networkrequest.network.NetworkRequest<RecentlyPlayedItem>> {
+        override suspend fun fetchRecentlyPlayedItem(): Flow<NetworkRequest<RecentlyPlayedItem>> {
             return flow {
                 emit(
                     NetworkRequestSuccess(
                         RecentlyPlayedItem(
                             cursors = Cursors(
-                                after = "",
-                                before = "",
+                                after = "after",
+                                before = "before",
                             ),
-                            href = "",
-                            items = emptyList(),
+                            href = "www.google.com",
+                            items = listOf(item),
                             limit = 1,
-                            next = "",
+                            next = "next",
                             total = 1,
                         )
                     )
@@ -238,7 +200,7 @@ class MainViewModelTest {
             }
         }
 
-        override suspend fun fetchAlbumInfo(id: String): Flow<com.mccarty.networkrequest.network.NetworkRequest<AlbumXX>> {
+        override suspend fun fetchAlbumInfo(id: String): Flow<NetworkRequest<AlbumXX>> {
             return flow {
                 emit(
                     NetworkRequestSuccess(
@@ -282,12 +244,12 @@ class MainViewModelTest {
                 emit(
                     NetworkRequestSuccess(
                         PlaylistData.PlaylistItem(
-                            href = "",
+                            href = "www.google.com",
                             items = emptyList(),
                             limit = 1,
-                            next = "",
+                            next = "next",
                             offset = 1,
-                            previous = "",
+                            previous = "previous",
                             total = 1,
                         )
                     )
@@ -297,7 +259,7 @@ class MainViewModelTest {
 
         override suspend fun fetchUserPlayList(playlistId: String): Flow<NetworkRequest<Playlist>> {
             return flow {
-                emit(NetworkRequest.Success(playList))
+                emit(NetworkRequest.Success(playlist))
             }
         }
 
