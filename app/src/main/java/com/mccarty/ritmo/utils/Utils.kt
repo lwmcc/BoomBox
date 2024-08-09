@@ -211,10 +211,13 @@ fun Float.positionProduct(factor: Long): Long {
     return this.toLong() * factor
 }
 
-// TODO: this could be an Int
-fun Long.quotientOf(divisor: Long): Long {
+inline fun<reified N: Number> Long.quotientOf(divisor: N): Long {
+    if (divisor.toLong() <= 0L) {
+        return 0L
+    }
+
     return if (this > 0L) {
-        this / divisor
+        this / divisor.toLong()
     } else {
         0L
     }

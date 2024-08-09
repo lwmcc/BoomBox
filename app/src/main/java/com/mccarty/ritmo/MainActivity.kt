@@ -382,7 +382,9 @@ class MainActivity : ComponentActivity() {
                     )
 
                     mainViewModel.isPaused(false)
-                    mainViewModel.playbackDuration(action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY))
+                    mainViewModel.playbackDuration(
+                        action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY)
+                    )
 
                     spotifyAppRemote?.let { remote ->
                         mainViewModel.handlePlayerActions(remote, action)
