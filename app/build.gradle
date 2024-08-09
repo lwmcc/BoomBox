@@ -164,8 +164,6 @@ dependencies {
     kaptTest 'com.google.dagger:hilt-compiler:2.51.1'
 
     implementation project(':NetworkRequest')
-    //implementation project(':spotify-app-remote')
-    //implementation files('../libs/spotify-app-remote-release-0.8.0.aar')
 
     // Spotify
     implementation 'com.spotify.android:auth:2.1.1'
@@ -176,9 +174,10 @@ dependencies {
     androidTestImplementation 'org.mockito:mockito-android:2.24.5'
 
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0'
+
+    testImplementation("app.cash.turbine:turbine:1.1.0")
 }
 
-// Allow references to generated code
 kapt {
     correctErrorTypes = true
 }

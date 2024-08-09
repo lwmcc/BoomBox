@@ -79,8 +79,8 @@ class MainViewModel @Inject constructor(
         data class Error<T>(val message: T) : MainItemsState()
     }
 
-    private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
-    val recentlyPlayed: StateFlow<List<TrackV2Item>> = _recentlyPlayed
+    // private var _recentlyPlayed = MutableStateFlow<List<TrackV2Item>>(emptyList())
+    // val recentlyPlayed: StateFlow<List<TrackV2Item>> = _recentlyPlayed
 
     private var _album = MutableStateFlow(AlbumXX())
     val album: StateFlow<AlbumXX> = _album
@@ -102,11 +102,11 @@ class MainViewModel @Inject constructor(
     private var _currentlyPlayingTrack = MutableStateFlow<CurrentlyPayingTrackState>(CurrentlyPayingTrackState.Pending(true))
     val currentlyPayingTrackState: StateFlow<CurrentlyPayingTrackState> = _currentlyPlayingTrack
 
-    private var _playlistTracks = MutableStateFlow<List<MainItem>>(emptyList())
-    val playlistTracks: StateFlow<List<MainItem>> = _playlistTracks
+    // private var _playlistTracks = MutableStateFlow<List<MainItem>>(emptyList())
+    // val playlistTracks: StateFlow<List<MainItem>> = _playlistTracks
 
-    private var _recommendedTracks = MutableStateFlow<List<MainItem>>(emptyList())
-    val recommendedTracks: StateFlow<List<MainItem>> = _recommendedTracks
+    // private var _recommendedTracks = MutableStateFlow<List<MainItem>>(emptyList())
+    // val recommendedTracks: StateFlow<List<MainItem>> = _recommendedTracks
 
     private var _mediaDetails = MutableStateFlow<List<Details>>(emptyList())
     val mediaDetails: StateFlow<List<Details>> = _mediaDetails
