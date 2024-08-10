@@ -33,7 +33,7 @@ import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.ui.MainImageHeader
-import com.mccarty.ritmo.ui.playPauseIcon
+import com.mccarty.ritmo.ui.PlayPauseIcon
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -101,18 +101,18 @@ fun MediaDetails(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primaryContainer)
                     .clickable {
-                        onPlayPauseClicked(TrackSelectAction.PlayTrackWithUri(tracks[page]?.uri ?: ""))
+                        onPlayPauseClicked(TrackSelectAction.PlayTrackWithUri(tracks[page]?.uri ?: "")) // TODO: null
                     },
                     contentAlignment = Alignment.Center,
                 ) {
                     if (!isPaused) {
                         if (uri.value == tracks[page].uri) {
-                            playPauseIcon(painterResource(R.drawable.pause))
+                            PlayPauseIcon(painterResource(R.drawable.pause))
                         } else {
-                            playPauseIcon(Icons.Default.PlayArrow)
+                            PlayPauseIcon(Icons.Default.PlayArrow)
                         }
                     } else {
-                        playPauseIcon(Icons.Default.PlayArrow)
+                        PlayPauseIcon(Icons.Default.PlayArrow)
                     }
                 }
             }
@@ -132,12 +132,5 @@ fun MediaDetails(
         LaunchedEffect(key1 = index) {
             pagerState.scrollToPage(index)
         }
-
-/*        LaunchedEffect(key1 = 2) {
-            snapshotFlow { pagerState.currentPage }.collect { page ->
-                // TODO: don't pass in model
-                //model.setArtistName(tracks[page].artists.firstOrNull()?.name)
-            }
-        }*/
     }
 }

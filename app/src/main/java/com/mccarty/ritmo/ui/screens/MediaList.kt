@@ -44,7 +44,7 @@ fun MediaList(
 
     if (tracks.isNotEmpty()) {
         Text(
-            text = title ?: "${stringResource(R.string.playlist)}",
+            text = title ?: stringResource(R.string.playlist),
             color = MaterialTheme.colorScheme.primary,
             fontStyle = FontStyle.Normal,
             fontWeight = FontWeight.Bold,
@@ -84,7 +84,7 @@ fun MediaList(
                     val imageUrl = track.images.firstOrNull()?.url
                     GlideImage(
                         model = imageUrl,
-                        contentDescription = "", // TODO: add description
+                        contentDescription = stringResource(id = R.string.description_for_image),
                         modifier = Modifier.size(100.dp)
                     )
 

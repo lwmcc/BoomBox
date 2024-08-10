@@ -16,6 +16,7 @@ class ItemColor {
                 Color.Black
             }
             PlaylistNames.RECENTLY_PLAYED, PlaylistNames.USER_PLAYLIST -> {
+                println("ItemColor ***** ${playlist.uri} ----- ${mainItem.track?.uri}")
                 if (playlist.uri == mainItem.track?.uri) {
                     Color.Red
                 } else {

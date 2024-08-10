@@ -149,9 +149,9 @@ fun PlayerControls(
                 )
             ) {
                 if (isPaused) {
-                    playPauseIcon(playPause = R.drawable.play)
+                    PlayPauseIcon(playPause = R.drawable.play)
                 } else {
-                    playPauseIcon(playPause = R.drawable.pause)
+                    PlayPauseIcon(playPause = R.drawable.pause)
                 }
             }
 
@@ -176,7 +176,7 @@ fun PlayerControls(
 }
 
 @Composable
-fun playPauseIcon(@DrawableRes playPause: Int) {
+fun PlayPauseIcon(@DrawableRes playPause: Int) {
     Icon(
         painter = painterResource(playPause),
         contentDescription = "play or pause",
@@ -185,7 +185,7 @@ fun playPauseIcon(@DrawableRes playPause: Int) {
 }
 
 @Composable
-fun playPauseIcon(playPause: Painter) {
+fun PlayPauseIcon(playPause: Painter) {
     Icon(
         painter = playPause,
         contentDescription = "play or pause",
@@ -194,7 +194,7 @@ fun playPauseIcon(playPause: Painter) {
 }
 
 @Composable
-fun playPauseIcon(playPause: ImageVector) {
+fun PlayPauseIcon(playPause: ImageVector) {
     Icon(
         imageVector = playPause,
         contentDescription = "play or pause",
