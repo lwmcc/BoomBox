@@ -16,7 +16,6 @@ import com.mccarty.ritmo.domain.model.AlbumXX
 import com.mccarty.ritmo.domain.model.CurrentlyPlayingTrack
 import com.mccarty.ritmo.domain.model.MusicHeader
 import com.mccarty.ritmo.domain.model.TrackDetails
-import com.mccarty.ritmo.domain.model.TrackV2Item
 import com.mccarty.ritmo.domain.model.payload.ListItem
 import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.domain.model.payload.PlaylistData
@@ -199,7 +198,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun fetchMainMusic() {
-        val mainItems = mutableListOf<MainItem>()
+        val recentItems = mutableListOf<MainItem>()
+        val playlistItems = mutableListOf<MainItem>()
+
         viewModelScope.launch {
             repository.fetchRecentlyPlayedItem().catch {
                 _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(emptyList())
@@ -218,7 +219,7 @@ class MainViewModel @Inject constructor(
                                     track = track.track,
                                 )
                             }
-                        mainItems.addAll(trackItems)
+                        recentItems.addAll(trackItems)
                         _recommendedPlaylist.clear()
                         _recommendedPlaylist.addAll(trackItems)
                     }
@@ -248,11 +249,17 @@ class MainViewModel @Inject constructor(
                                 uri = item.uri,
                             )
                         }
-                        mainItems.addAll(listItems)
+                        playlistItems.addAll(listItems)
                     }
                 }
             }
-            _mainItems.value = MainItemsState.Success(mainItems.groupBy { it.type ?: "" }) // TODO: null ok double check why type is empty
+
+            _mainItems.update {
+                MainItemsState.Success(buildMap(2) {
+                    put("track", recentItems)
+                    put("playlist", playlistItems)
+                })
+            }
         }
     }
 

@@ -141,7 +141,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         PlaylistNames.USER_PLAYLIST -> {
-                            println("MainActivity ***** USER PLAYLIST")
+                            println("MainActivity ***** USER PLAYLIST *****") // TODO: reentry from background
                         }
                         PlaylistNames.RECOMMENDED_PLAYLIST -> {
                             println("MainActivity ***** connect RECOMMENDED_PLAYLIST")

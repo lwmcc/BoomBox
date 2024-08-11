@@ -69,7 +69,7 @@ fun MainScreen(
     val playlistsHeader = context.getString(R.string.playlists)
     val playListItem by model.playlistData.collectAsStateWithLifecycle()
 
-    val timeOut by remember { mutableLongStateOf(8000L) }
+    val timeOut by remember { mutableLongStateOf(10_000L) }
 
     when (music.value) {
         is MainViewModel.MainItemsState.Pending -> {
@@ -164,7 +164,7 @@ fun MainScreen(
                                         val imageUrl = item.track?.album?.images?.firstOrNull()?.url
                                         GlideImage(
                                             model = imageUrl,
-                                            contentDescription = "", // TODO: add description
+                                            contentDescription = stringResource(R.string.description_for_image),
                                             modifier = Modifier.size(100.dp)
                                         )
 
