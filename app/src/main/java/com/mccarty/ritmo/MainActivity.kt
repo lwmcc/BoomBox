@@ -30,9 +30,11 @@ import com.mccarty.ritmo.viewmodel.PlayerControlAction
 import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
+import com.mccarty.ritmo.viewmodel.PlayControlViewModel
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
+import com.spotify.protocol.types.PlayerState
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
@@ -108,91 +110,90 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun connect() {
-        spotifyAppRemote?.let {
-            it.playerApi.playerState
-                .setResultCallback { playerState ->
-                    mainViewModel.setMusicHeader(MusicHeader().apply {
-                        imageUrl = StringBuilder().apply {
-                            append(IMAGE_URL)
-                            append(playerState.track.imageUri.toString().drop(22).dropLast(2))
-                        }.toString()
-                        artistName = playerState.track.artist.name ?: getString(R.string.artist_name)
-                        albumName = playerState.track.album.name ?: getString(R.string.album_name)
-                        songName = playerState.track.name ?: getString(R.string.track_name)
-                    })
-                    mainViewModel.setTrackUri(playerState.track.uri)
-                    mainViewModel.isPaused(playerState.isPaused)
-                    mainViewModel.setSliderPosition(
-                        position = playerState.playbackPosition,
-                        duration = playerState.track?.duration ?: 0,
-                        delay = TICKER_DELAY,
+        spotifyAppRemote?.let { remote ->
+            remote.playerApi.playerState.setResultCallback { playerState ->
+                mainViewModel.setMusicHeader(MusicHeader().apply {
+                    imageUrl = StringBuilder().apply {
+                        append(IMAGE_URL)
+                        append(playerState.track.imageUri.toString().drop(22).dropLast(2))
+                    }.toString()
+                    artistName = playerState.track.artist.name ?: getString(R.string.artist_name)
+                    albumName = playerState.track.album.name ?: getString(R.string.album_name)
+                    songName = playerState.track.name ?: getString(R.string.track_name)
+                })
+
+                mainViewModel.setTrackUri(playerState.track.uri)
+                mainViewModel.isPaused(playerState.isPaused)
+                mainViewModel.setSliderPosition(
+                    position = playerState.playbackPosition,
+                    duration = playerState.track?.duration ?: 0,
+                    delay = TICKER_DELAY,
+                )
+                mainViewModel.fetchMainMusic()
+                setPlaylistData(playerState)
+            }.setErrorCallback {
+                mainViewModel.setMainMusicError(it?.message ?: "Could Not Connect to Spotify")
+            }
+        }
+    }
+
+    private fun setPlaylistData(playerState: PlayerState) {
+        when (mainViewModel.playlistData.value?.name) {
+            PlaylistNames.RECENTLY_PLAYED -> {
+                mainViewModel.setSliderPosition(
+                    position = playerState.playbackPosition,
+                    duration = playerState.track?.duration ?: 0,
+                    delay = TICKER_DELAY,
+                    setPosition = true,
+                )
+            }
+
+            PlaylistNames.USER_PLAYLIST -> {
+                println("MainActivity ***** USER PLAYLIST *****") // TODO: reentry from background
+            }
+
+            PlaylistNames.RECOMMENDED_PLAYLIST -> {
+                mainViewModel.setSliderPosition(
+                    position = playerState.playbackPosition,
+                    duration = playerState.track?.duration ?: 0,
+                    delay = TICKER_DELAY,
+                    setPosition = true,
+                )
+
+                mainViewModel.setPlaylistData(
+                    Playlist(
+                        uri = null,
+                        index = 0,
+                        name = PlaylistNames.RECOMMENDED_PLAYLIST,
+                        tracks = emptyList(),
                     )
-
-                    mainViewModel.fetchMainMusic()
-
-                    when (mainViewModel.playlistData.value?.name) {
-                        PlaylistNames.RECENTLY_PLAYED -> {
-                            println("MainActivity ***** connect RECENTLY_PLAYED")
-                            mainViewModel.setSliderPosition(
-                                position = playerState.playbackPosition,
-                                duration = playerState.track?.duration ?: 0,
-                                delay = TICKER_DELAY,
-                                setPosition = true,
+                )
+            } else -> {
+                mainViewModel.setSliderPosition(
+                    position = playerState.playbackPosition,
+                    duration = playerState.track?.duration ?: 0,
+                    delay = TICKER_DELAY,
+                    setPosition = true,
+                )
+                mainViewModel.setPlaylistData(
+                    Playlist(
+                        uri = playerState.track?.uri,
+                        index = INITIAL_POSITION,
+                        name = PlaylistNames.RECOMMENDED_PLAYLIST,
+                        tracks = listOf(
+                            MainItem(
+                                id = null,
+                                uri = playerState.track?.uri,
+                                type = null,
+                                name = playerState.track?.name,
+                                description = null,
+                                images = emptyList(),
+                                tracks = null,
                             )
-                        }
-                        PlaylistNames.USER_PLAYLIST -> {
-                            println("MainActivity ***** USER PLAYLIST *****") // TODO: reentry from background
-                        }
-                        PlaylistNames.RECOMMENDED_PLAYLIST -> {
-                            println("MainActivity ***** connect RECOMMENDED_PLAYLIST")
-                            mainViewModel.setSliderPosition(
-                                position = playerState.playbackPosition,
-                                duration = playerState.track?.duration ?: 0,
-                                delay = TICKER_DELAY,
-                                setPosition = true,
-                            )
-
-                            mainViewModel.setPlaylistData(
-                                Playlist(
-                                    uri = null,
-                                    index = 0,
-                                    name = PlaylistNames.RECOMMENDED_PLAYLIST,
-                                    tracks = emptyList(),
-                                )
-                            )
-                        } else -> {
-                            spotifyAppRemote?.let { remote ->
-                                remote.playerApi.playerState.setResultCallback { playerState ->
-                                    mainViewModel.setSliderPosition(
-                                        position = playerState.playbackPosition,
-                                        duration = playerState.track?.duration ?: 0,
-                                        delay = TICKER_DELAY,
-                                        setPosition = true,
-                                    )
-                                    mainViewModel.setPlaylistData(
-                                        Playlist(
-                                            uri = playerState.track?.uri,
-                                            index = INITIAL_POSITION,
-                                            name = PlaylistNames.RECOMMENDED_PLAYLIST,
-                                            tracks = listOf(
-                                                MainItem(
-                                                    id = null,
-                                                    uri = playerState.track?.uri,
-                                                    type = null,
-                                                    name = playerState.track?.name,
-                                                    description = null,
-                                                    images = emptyList(),
-                                                    tracks = null,
-                                                )
-                                            ),
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-                .setErrorCallback { throwable -> println("MainActivity ***** ERROR ${throwable.message}") } // TODO: handle this
+                        ),
+                    )
+                )
+            }
         }
     }
 
@@ -357,6 +358,14 @@ class MainActivity : ComponentActivity() {
     ) {
         when(action) {
             is TrackSelectAction.TrackSelect -> {
+
+                mainViewModel.setMusicHeaderUrl(
+                    action.tracks[action.index].track?.album?.images?.get(0)?.url,
+                    action.tracks[action.index].track?.artists?.get(0)?.name ?: getString(R.string.artist_name),
+                    action.tracks[action.index].track?.album?.name ?: getString(R.string.album_name),
+                    action.tracks[action.index].track?.name ?: getString(R.string.track_name),
+                )
+
                 if (isPaused.value) {
                     spotifyAppRemote?.let { remote ->
                         mainViewModel.isPaused(false)
@@ -374,13 +383,6 @@ class MainActivity : ComponentActivity() {
                         )
                     )
                 } else {
-                    mainViewModel.setMusicHeaderUrl(
-                        action.tracks[action.index].track?.album?.images?.get(0)?.url,
-                        action.tracks[action.index].track?.artists?.get(0)?.name ?: getString(R.string.artist_name),
-                        action.tracks[action.index].track?.album?.name ?: getString(R.string.album_name),
-                        action.tracks[action.index].track?.name ?: getString(R.string.track_name),
-                    )
-
                     mainViewModel.isPaused(false)
                     mainViewModel.playbackDuration(
                         action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY)

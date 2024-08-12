@@ -388,6 +388,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun setMainMusicError(message: String) { _mainItems.value = MainItemsState.Error(message) }
+
     fun checkIfIndexesEqual(): Boolean =  (playlistData.value?.index ?: 0) == (playlistData.value?.tracks?.lastIndex)
 
     /** If index less than zero, then this is the first time setting up data */

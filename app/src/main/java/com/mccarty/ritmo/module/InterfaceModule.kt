@@ -6,6 +6,8 @@ import com.mccarty.ritmo.domain.RemoteService
 import com.mccarty.ritmo.domain.RemoteServiceControls
 import com.mccarty.ritmo.domain.SliderTicker
 import com.mccarty.ritmo.domain.Ticker
+import com.mccarty.ritmo.domain.usecases.SetupMusicHeader
+import com.mccarty.ritmo.domain.usecases.SetupMusicHeaderUseCase
 import com.mccarty.ritmo.repository.remote.MusicRepository
 import com.mccarty.ritmo.repository.remote.Repository
 import dagger.Binds
@@ -27,4 +29,7 @@ abstract class InterfaceModule {
 
     @Binds
     abstract fun bindSliderTicker(sliderTicker: SliderTicker): Ticker
+
+    @Binds
+    abstract fun bindSetupMusicHeader(setupMusicHeaderUseCase: SetupMusicHeaderUseCase): SetupMusicHeader
 }

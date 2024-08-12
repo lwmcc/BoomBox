@@ -22,7 +22,6 @@ import androidx.navigation.compose.rememberNavController
 import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.ui.screens.StartScreen
 import com.mccarty.ritmo.viewmodel.MainViewModel
-import com.mccarty.ritmo.viewmodel.PlaylistNames
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -32,7 +31,7 @@ fun MainComposeScreen(
     mainViewModel: MainViewModel,
     viewMore: String,
     padding: PaddingValues,
-    mediaEvents: MainActivity.MediaEvents
+    mediaEvents: MainActivity.MediaEvents,
 ) {
 
     val sheetState = rememberModalBottomSheetState()
@@ -55,14 +54,14 @@ fun MainComposeScreen(
                 )
         ) {
             StartScreen(
-                navController,
                 music = music,
+                navController = navController,
                 onViewMoreClick = { bottomSheet, index ->
                     showBottomSheet = bottomSheet
                     trackIndex = index
                 },
                 onAction = {
-                    mediaEvents.trackSelectionAction(it, isPaused)
+                    mediaEvents.trackSelectionAction(it, isPaused) // TODO: send up another level
                 },
                 onPlayPauseClicked = {
                     mediaEvents.trackSelectionAction(it, isPaused)
