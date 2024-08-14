@@ -1,12 +1,16 @@
 package com.mccarty.ritmo
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.Messenger
@@ -21,6 +25,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.Lifecycle
@@ -76,8 +82,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        startPlaybackService()
-
         receiver = PlaybackServiceReceiver()
         ContextCompat.registerReceiver(this, receiver, IntentFilter(INTENT_ACTION), ContextCompat.RECEIVER_EXPORTED)
         setContent {
@@ -101,7 +105,6 @@ class MainActivity : ComponentActivity() {
                             trackSelectAction: TrackSelectAction,
                             isPaused: State<Boolean>,
                         ) {
-                            startPlaybackService()
                             trackSelection(trackSelectAction, isPaused)
                         }
                     }
@@ -109,11 +112,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        notificationChannel()
+        //launchPlayerNotificaiton(notificationManager())
+
         if (savedInstanceState == null) {
             AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, getAuthenticationRequest())
         }
 
         fetchData()
+        startPlaybackService()
     }
 
     override fun onStart() {
@@ -126,10 +133,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (this::playbackService.isInitialized) {
-            startPlaybackService()
-
-            //playbackService.buildNotification()
-            playbackService.remote()?.playerApi?.subscribeToPlayerState()?.setEventCallback { playerState ->
+            playbackService.remote()?.playerApi?.subscribeToPlayerState()?.setEventCallback { playerState -> // TODO: don't think I need this
                 val name = playerState.track?.name
                 val album = playerState.track?.album?.name
                 val uri = playerState.track?.uri
@@ -149,7 +153,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        //unregisterReceiver(BroadcastReceiver())
+        unregisterReceiver(receiver)
     }
 
     private fun connect() {
@@ -180,36 +184,36 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun setup(player: PlaybackService.Player, bound: Boolean) {
+    private fun setupTrackInformation(player: PlaybackService.Player, bound: Boolean) {
         if (bound) {
-            playbackService.connect()?.setResultCallback {playerState ->
-                mainViewModel.setMusicHeader(MusicHeader().apply {
-                    imageUrl = StringBuilder().apply {
-                        append(IMAGE_URL)
-                        append(playerState.track.imageUri.toString().drop(22).dropLast(2))
-                    }.toString()
-                    artistName = player.trackArtist ?: getString(R.string.artist_name)
-                    albumName = player.albumName ?: getString(R.string.album_name)
-                    songName = player.trackName ?: getString(R.string.track_name)
-                })
+            // playbackService.connect()?.setResultCallback {playerState ->
+            mainViewModel.setMusicHeader(MusicHeader().apply {
+                imageUrl = StringBuilder().apply {
+                    append(IMAGE_URL)
+                    append(player.imageUri?.drop(22)?.dropLast(2)) // TODO: revisit
+                }.toString()
+                artistName = player.trackArtist ?: getString(R.string.artist_name)
+                albumName = player.albumName ?: getString(R.string.album_name)
+                songName = player.trackName ?: getString(R.string.track_name)
+            })
 
-                mainViewModel.setTrackUri(player.trackUri)
-                mainViewModel.isPaused(player.isTrackPaused)
-                mainViewModel.setSliderPosition(
-                    position = player.position,
-                    duration = player.duration,
-                    delay = TICKER_DELAY,
-                )
-                mainViewModel.fetchMainMusic()
-                setPlaylistData(
-                    uri = player.trackUri ?: "", // TODO: pass something
-                    name = player.trackName?: "", // TODO: pass something
-                    position = player.position,
-                    duration = player.duration,
-                    )
-            }?.setErrorCallback {
-                mainViewModel.setMainMusicError(it?.message ?: "Could Not Connect to Spotify")
-            }
+            mainViewModel.setTrackUri(player.trackUri)
+            mainViewModel.isPaused(player.isTrackPaused)
+            mainViewModel.setSliderPosition(
+                position = player.position,
+                duration = player.duration,
+                delay = TICKER_DELAY,
+            )
+            mainViewModel.fetchMainMusic()
+            setPlaylistData(
+                uri = player.trackUri ?: "", // TODO: pass something
+                name = player.trackName ?: "", // TODO: pass something
+                position = player.position,
+                duration = player.duration,
+            )
+            /*  }?.setErrorCallback {
+                  mainViewModel.setMainMusicError(it?.message ?: "Could Not Connect to Spotify")
+              }*/
         }
     }
 
@@ -341,7 +345,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 playerViewModel.playerState.collect { player ->
-                    setup(player, bound)
+                    setupTrackInformation(player, bound)
                 }
             }
         }
@@ -352,8 +356,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun playerControlAction(action: PlayerControlAction, trackEnded: Boolean = false) {
-        startPlaybackService()
-
         when(action) {
             PlayerControlAction.Back -> {
                 playbackService.remote()?.let { remote ->
@@ -454,6 +456,8 @@ class MainActivity : ComponentActivity() {
                 )
 
                 if (isPaused.value) {
+
+
                     playbackService.remote()?.let { remote ->
                         mainViewModel.isPaused(false)
                         mainViewModel.playbackDuration(action.tracks[action.index].track
@@ -585,13 +589,81 @@ class MainActivity : ComponentActivity() {
     private fun startPlaybackService() {
         if (bound) {
             println("PlaybackService ***** ${bound} startPlaybackService")
-            playbackService.connect()
+            // playbackService.connect()
         }
 
         this.startForegroundService(Intent(this, PlaybackService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
-            println("PlaybackService ***** ${bound} startForegroundService")
         })
+    }
+
+    private fun notificationChannel() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.POST_NOTIFICATIONS,
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                println("MainActivity ***** granted")
+                // User allowed
+            }
+
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                this, android.Manifest.permission.POST_NOTIFICATIONS
+            ) -> {
+                println("MainActivity ***** shouldShowRequestPermissionRationale")
+                // User granted then removed
+            }
+
+            else -> {
+                println("MainActivity ***** not granted")
+                // First load
+                // on start
+            }
+
+        }
+
+
+
+        val notificationManager: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if(notificationManager.areNotificationsEnabled()) {
+
+            println("MainActivity ***** ENABLED")
+        } else {
+            println("MainActivity ***** NOT ENABLED")
+        }
+
+        val notification = NotificationCompat.Builder(this, PlaybackService.CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_baseline_music_note_24)
+            .setContentTitle("mccarty title")
+            .setContentText("larry text will be here")
+            .build()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name ="larry mccarty"
+            val desc = "what a description"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(PlaybackService.CHANNEL_ID, name, importance).apply {
+                description = desc
+            }
+
+            notificationManager.createNotificationChannel(channel)
+            notificationManager.notify(PlaybackService.NOTIFICATION_ID, notification)
+        }
+    }
+
+    fun notificationManager() = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    fun launchPlayerNotificaiton(manager: NotificationManager) {
+        val not = manager.areNotificationsEnabled()
+        val mine = manager.activeNotifications
+        this.packageName
+        // NOTIFICATION_ID
+        mine.forEach {
+            println("MainActivity ***** KEY ${it.key} MINE ${this.packageName}")
+        }
+
     }
 
     companion object {

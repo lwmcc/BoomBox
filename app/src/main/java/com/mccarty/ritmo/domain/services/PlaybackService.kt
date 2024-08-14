@@ -66,8 +66,6 @@ class PlaybackService: Service() {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
 
-        println("PlaybackService ***** onStartCommand()")
-
         val notification = NotificationCompat.Builder(this,CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_baseline_music_note_24)
             .setContentTitle("mccarty title")
@@ -111,12 +109,17 @@ class PlaybackService: Service() {
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
+
             notificationManager.createNotificationChannel(channel)
             return notificationManager
         }
         return notificationManager
     }
 
+    /**
+     * All of the data needed to setup track information
+     * from the Spotify API
+     */
     fun sendBroadCast(playerState: PlayerState) {
         Intent().also { intent ->
             intent.setAction(INTENT_ACTION)
