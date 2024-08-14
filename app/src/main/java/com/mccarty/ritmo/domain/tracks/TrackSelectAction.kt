@@ -11,5 +11,5 @@ sealed class TrackSelectAction {
         val tracks: List<MainItem>,
         val playlistName: PlaylistNames,
     ) : TrackSelectAction()
-    data class PlayTrackWithUri(val playTrackWithUri: String): TrackSelectAction()
+    data class PlayTrackWithUri(val playTrackWithUri: String?): TrackSelectAction()
 }

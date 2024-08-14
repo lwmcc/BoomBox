@@ -21,7 +21,6 @@ fun StartScreen(
     navController: NavHostController,
     onViewMoreClick: (Boolean, Int) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
-    onPlayPauseClicked: (TrackSelectAction) -> Unit,
     music: State<MainViewModel.MainItemsState>,
 ) {
     val mainViewModel: MainViewModel = viewModel()
@@ -34,7 +33,7 @@ fun StartScreen(
                 model = mainViewModel,
                 music = music,
                 navController = navController,
-                onViewMoreClick = { showBottom, index, tracks ->
+                onViewMoreClick = { showBottom, index, _->
                     onViewMoreClick(showBottom, index)
                 },
                 onAction = {
@@ -51,7 +50,7 @@ fun StartScreen(
                 model = mainViewModel,
                 index = backStackEntry.arguments?.getString(INDEX_KEY)?.toInt() ?: 0,
                 onPlayPauseClicked = {
-                    onPlayPauseClicked(it)
+                    onAction(it)
                 }
             )
         }

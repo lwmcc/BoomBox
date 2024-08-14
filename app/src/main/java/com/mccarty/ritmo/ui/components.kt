@@ -61,7 +61,7 @@ fun MainImageHeader(
 ) {
     GlideImage(
         model = imageUrl,
-        contentDescription = "", // TODO: add description
+        contentDescription = androidx.compose.ui.res.stringResource(R.string.description_for_image),
         modifier = modifier
             .size(imageSize)
             .padding(
@@ -72,11 +72,10 @@ fun MainImageHeader(
 }
 
 @SuppressLint("UnrememberedMutableState")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerControls(
     mainViewModel: MainViewModel = viewModel(),
-    onSlide: (PlayerControlAction) -> Unit,
+    onAction: (PlayerControlAction) -> Unit,
 ) {
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle(false).value
     val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle(0).value.toFloat()
@@ -109,7 +108,7 @@ fun PlayerControls(
             steps = 1_000,
 
             onValueChangeFinished = {
-                onSlide(PlayerControlAction.Seek(value))
+                onAction(PlayerControlAction.Seek(value))
             },
             interactionSource = interactionSource,
         )
@@ -123,7 +122,7 @@ fun PlayerControls(
             ) {
             Button(
                 onClick = {
-                    onSlide(PlayerControlAction.Back)
+                    onAction(PlayerControlAction.Back)
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -140,7 +139,7 @@ fun PlayerControls(
 
             Button(
                 onClick = {
-                    onSlide(PlayerControlAction.Play(pausedPosition = position.toLong()))
+                    onAction(PlayerControlAction.Play(pausedPosition = position.toLong()))
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -157,7 +156,7 @@ fun PlayerControls(
 
             Button(
                 onClick = {
-                    onSlide(PlayerControlAction.Skip(index?.index ?: 0))
+                    onAction(PlayerControlAction.Skip(index?.index ?: 0))
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(

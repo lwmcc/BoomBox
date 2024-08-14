@@ -28,7 +28,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.ui.res.stringResource
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.domain.Details
@@ -40,9 +39,9 @@ import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 @Composable
 fun SongDetailsScreen(
     isPaused: Boolean,
+    index: Int,
     model: MainViewModel,
     details: List<Details>,
-    index: Int,
     onPlayPauseClicked: (TrackSelectAction) -> Unit,
 ) {
     Column(
@@ -63,7 +62,7 @@ fun SongDetailsScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalGlideComposeApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MediaDetails(
     isPaused: Boolean,
@@ -75,62 +74,67 @@ fun MediaDetails(
     ) {
 
     val uri = model.trackUri.collectAsStateWithLifecycle()
-    VerticalPager(state = pagerState) { page ->
-        val image = tracks[page].images!![0].url // TODO: fix !!
-        if (image.isNotEmpty()) {
-            MainImageHeader(
-                image,
-                400.dp,
-                50.dp,
-                50.dp,
-                Modifier,
-            )
-        }
-
-        Spacer(modifier = Modifier.height(200.dp) )
+    VerticalPager(
+        state = pagerState,
+        beyondBoundsPageCount = 2,
+    ) { page ->
         Column(modifier = Modifier.fillMaxWidth()) {
-            Row {
-                Text(
-                    text = tracks[page].trackName.toString(),
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.weight(1f)
+            val image = tracks[page].images?.get(0)?.url
+            if (image?.isNotEmpty() == true) {
+                MainImageHeader(
+                    image,
+                    400.dp,
+                    50.dp,
+                    50.dp,
+                    Modifier,
                 )
+            }
 
-                Box(modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .clickable {
-                        onPlayPauseClicked(TrackSelectAction.PlayTrackWithUri(tracks[page]?.uri ?: "")) // TODO: null
-                    },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (!isPaused) {
-                        if (uri.value == tracks[page].uri) {
-                            PlayPauseIcon(painterResource(R.drawable.pause))
+            Spacer(modifier = Modifier.height(200.dp) )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row {
+                    Text(
+                        text = tracks[page].trackName.toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Box(modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .clickable {
+                            onPlayPauseClicked(TrackSelectAction.PlayTrackWithUri(tracks[page].uri))
+                        },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (!isPaused) {
+                            if (uri.value == tracks[page].uri) {
+                                PlayPauseIcon(painterResource(R.drawable.pause))
+                            } else {
+                                PlayPauseIcon(Icons.Default.PlayArrow)
+                            }
                         } else {
                             PlayPauseIcon(Icons.Default.PlayArrow)
                         }
-                    } else {
-                        PlayPauseIcon(Icons.Default.PlayArrow)
                     }
                 }
-            }
-            Text(
-                text = "${tracks[page].albumName}",
-                style = MaterialTheme.typography.titleLarge
-            )
-            tracks[page].artists?.forEach { artist ->
                 Text(
-                    text = artist.name ?: stringResource(R.string.track_name),
-                    style = MaterialTheme.typography.titleSmall,
+                    text = "${tracks[page].albumName}",
+                    style = MaterialTheme.typography.titleLarge
                 )
+                tracks[page].artists?.forEach { artist ->
+                    Text(
+                        text = artist.name ?: stringResource(R.string.track_name),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                }
+                Text("${tracks[page].explicit}")
             }
-            Text("${tracks[page].explicit}")
-        }
 
-        LaunchedEffect(key1 = index) {
-            pagerState.scrollToPage(index)
+            LaunchedEffect(key1 = tracks[page].uri) {
+                pagerState.scrollToPage(index)
+            }
         }
     }
 }

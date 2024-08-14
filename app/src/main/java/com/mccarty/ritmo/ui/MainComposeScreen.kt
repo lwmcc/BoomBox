@@ -63,9 +63,6 @@ fun MainComposeScreen(
                 onAction = {
                     mediaEvents.trackSelectionAction(it, isPaused) // TODO: send up another level
                 },
-                onPlayPauseClicked = {
-                    mediaEvents.trackSelectionAction(it, isPaused)
-                }
             )
         }
     }

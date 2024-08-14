@@ -1,9 +1,15 @@
 package com.mccarty.ritmo
 
+import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Bundle
+import android.os.IBinder
+import android.os.Messenger
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,12 +21,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.content.IntentCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.domain.model.MusicHeader
 import com.mccarty.ritmo.domain.model.payload.MainItem
+import com.mccarty.ritmo.domain.services.PlaybackService
 import com.mccarty.ritmo.ui.MainComposeScreen
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.utils.positionProduct
@@ -30,10 +39,8 @@ import com.mccarty.ritmo.viewmodel.PlayerControlAction
 import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
-import com.spotify.android.appremote.api.ConnectionParams
-import com.spotify.android.appremote.api.Connector
+import com.mccarty.ritmo.viewmodel.PlayerViewModel
 import com.spotify.android.appremote.api.SpotifyAppRemote
-import com.spotify.protocol.types.PlayerState
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
@@ -44,11 +51,35 @@ import java.io.IOException
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
+    private val playerViewModel: PlayerViewModel by viewModels()
     private var spotifyAppRemote: SpotifyAppRemote? = null
     private var accessCode: String? = null
 
+    private lateinit var playbackService: PlaybackService
+    private lateinit var messenger: Messenger
+
+    private var bound: Boolean = false
+
+    lateinit var receiver :  PlaybackServiceReceiver
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(component: ComponentName?, service: IBinder?) {
+            val binder = service as PlaybackService.PlaybackBinder
+            playbackService = binder.getService()
+            bound = true
+        }
+
+        override fun onServiceDisconnected(component: ComponentName?) {
+            bound = false
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        startPlaybackService()
+
+        receiver = PlaybackServiceReceiver()
+        ContextCompat.registerReceiver(this, receiver, IntentFilter(INTENT_ACTION), ContextCompat.RECEIVER_EXPORTED)
         setContent {
             Scaffold(
                 bottomBar = {
@@ -57,7 +88,7 @@ class MainActivity : ComponentActivity() {
                         contentColor = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.height(100.dp),
                     ) {
-                        PlayerControls(onSlide = this@MainActivity::playerControlAction)
+                        PlayerControls(onAction = this@MainActivity::playerControlAction)
                     }
                 }) { padding ->
 
@@ -70,6 +101,7 @@ class MainActivity : ComponentActivity() {
                             trackSelectAction: TrackSelectAction,
                             isPaused: State<Boolean>,
                         ) {
+                            startPlaybackService()
                             trackSelection(trackSelectAction, isPaused)
                         }
                     }
@@ -86,26 +118,38 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        SpotifyAppRemote.connect(this, ConnectionParams.Builder(CLIENT_ID).apply {
-            setRedirectUri(REDIRECT_URI)
-            showAuthView(true)
-        }.build(), object : Connector.ConnectionListener {
-            override fun onConnected(appRemote: SpotifyAppRemote) {
-                spotifyAppRemote = appRemote
-                connect()
-            }
-
-            override fun onFailure(throwable: Throwable) {
-                // TODO: show an error message
-                println("SpotifyBroadcastReceiver ***** ${throwable.message}")
-            }
-        })
+        Intent(this, PlaybackService::class.java).also { intent ->
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (this::playbackService.isInitialized) {
+            startPlaybackService()
+
+            //playbackService.buildNotification()
+            playbackService.remote()?.playerApi?.subscribeToPlayerState()?.setEventCallback { playerState ->
+                val name = playerState.track?.name
+                val album = playerState.track?.album?.name
+                val uri = playerState.track?.uri
+            }
+        }
+    }
+
 
     override fun onStop() {
         super.onStop()
         disconnect()
         mainViewModel.cancelJob()
+
+        unbindService(connection)
+        bound = false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        //unregisterReceiver(BroadcastReceiver())
     }
 
     private fun connect() {
@@ -129,21 +173,55 @@ class MainActivity : ComponentActivity() {
                     delay = TICKER_DELAY,
                 )
                 mainViewModel.fetchMainMusic()
-                setPlaylistData(playerState)
+                //setPlaylistData(playerState.) TODO: fix
             }.setErrorCallback {
                 mainViewModel.setMainMusicError(it?.message ?: "Could Not Connect to Spotify")
             }
         }
     }
 
-    private fun setPlaylistData(playerState: PlayerState) {
+    fun setup(player: PlaybackService.Player, bound: Boolean) {
+        if (bound) {
+            playbackService.connect()?.setResultCallback {playerState ->
+                mainViewModel.setMusicHeader(MusicHeader().apply {
+                    imageUrl = StringBuilder().apply {
+                        append(IMAGE_URL)
+                        append(playerState.track.imageUri.toString().drop(22).dropLast(2))
+                    }.toString()
+                    artistName = player.trackArtist ?: getString(R.string.artist_name)
+                    albumName = player.albumName ?: getString(R.string.album_name)
+                    songName = player.trackName ?: getString(R.string.track_name)
+                })
+
+                mainViewModel.setTrackUri(player.trackUri)
+                mainViewModel.isPaused(player.isTrackPaused)
+                mainViewModel.setSliderPosition(
+                    position = player.position,
+                    duration = player.duration,
+                    delay = TICKER_DELAY,
+                )
+                mainViewModel.fetchMainMusic()
+                setPlaylistData(
+                    uri = player.trackUri ?: "", // TODO: pass something
+                    name = player.trackName?: "", // TODO: pass something
+                    position = player.position,
+                    duration = player.duration,
+                    )
+            }?.setErrorCallback {
+                mainViewModel.setMainMusicError(it?.message ?: "Could Not Connect to Spotify")
+            }
+        }
+    }
+
+
+    private fun setPlaylistData(uri: String, name: String, position: Long, duration: Long) {
         when (mainViewModel.playlistData.value?.name) {
             PlaylistNames.RECENTLY_PLAYED -> {
                 mainViewModel.setSliderPosition(
-                    position = playerState.playbackPosition,
-                    duration = playerState.track?.duration ?: 0,
+                    position = position,
+                    duration = duration,
                     delay = TICKER_DELAY,
-                    setPosition = true,
+                    setPosition = true, // TODO: pass in
                 )
             }
 
@@ -153,8 +231,8 @@ class MainActivity : ComponentActivity() {
 
             PlaylistNames.RECOMMENDED_PLAYLIST -> {
                 mainViewModel.setSliderPosition(
-                    position = playerState.playbackPosition,
-                    duration = playerState.track?.duration ?: 0,
+                    position = position,
+                    duration = duration,
                     delay = TICKER_DELAY,
                     setPosition = true,
                 )
@@ -169,22 +247,22 @@ class MainActivity : ComponentActivity() {
                 )
             } else -> {
                 mainViewModel.setSliderPosition(
-                    position = playerState.playbackPosition,
-                    duration = playerState.track?.duration ?: 0,
+                    position = position,
+                    duration = duration,
                     delay = TICKER_DELAY,
                     setPosition = true,
                 )
                 mainViewModel.setPlaylistData(
                     Playlist(
-                        uri = playerState.track?.uri,
+                        uri = uri,
                         index = INITIAL_POSITION,
                         name = PlaylistNames.RECOMMENDED_PLAYLIST,
                         tracks = listOf(
                             MainItem(
                                 id = null,
-                                uri = playerState.track?.uri,
+                                uri = uri,
                                 type = null,
-                                name = playerState.track?.name,
+                                name = name,
                                 description = null,
                                 images = emptyList(),
                                 tracks = null,
@@ -259,6 +337,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                playerViewModel.playerState.collect { player ->
+                    setup(player, bound)
+                }
+            }
+        }
     }
 
     private fun getRedirectUri(): Uri? {
@@ -266,9 +352,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun playerControlAction(action: PlayerControlAction, trackEnded: Boolean = false) {
-        when (action) {
+        startPlaybackService()
+
+        when(action) {
             PlayerControlAction.Back -> {
-                spotifyAppRemote?.let { remote ->
+                playbackService.remote()?.let { remote ->
                     remote.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
                         mainViewModel.setLastPlayedTrackData(playerState.track)
                     }
@@ -280,7 +368,7 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.Play -> {
-                spotifyAppRemote?.let {
+                playbackService.remote()?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
                         mainViewModel.resumePlayback(
                             position = playerState.playbackPosition.quotientOf(TICKER_DELAY),
@@ -294,7 +382,7 @@ class MainActivity : ComponentActivity() {
             is PlayerControlAction.Seek -> {
                 mainViewModel.cancelJob()
                 mainViewModel.setPlaybackPosition(action.position.toInt())
-                spotifyAppRemote?.playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
+                playbackService.remote()?.playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
             }
 
             is PlayerControlAction.Skip -> {
@@ -333,13 +421,13 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.PlayWithUri -> {
-                spotifyAppRemote?.let {
+                playbackService.remote()?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
                         mainViewModel.isPaused(playerState.isPaused)
                         if (playerState.isPaused) {
-                            spotifyAppRemote?.playerApi?.play(action.uri)
+                            playbackService.remote()?.playerApi?.play(action.uri)
                         } else {
-                            spotifyAppRemote?.playerApi?.pause()
+                            playbackService.remote()?.playerApi?.pause()
                         }
                     }
                 }
@@ -366,7 +454,7 @@ class MainActivity : ComponentActivity() {
                 )
 
                 if (isPaused.value) {
-                    spotifyAppRemote?.let { remote ->
+                    playbackService.remote()?.let { remote ->
                         mainViewModel.isPaused(false)
                         mainViewModel.playbackDuration(action.tracks[action.index].track
                             ?.duration_ms?.quotientOf(TICKER_DELAY))
@@ -387,7 +475,7 @@ class MainActivity : ComponentActivity() {
                         action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY)
                     )
 
-                    spotifyAppRemote?.let { remote ->
+                    playbackService.remote()?.let { remote ->
                         mainViewModel.handlePlayerActions(remote, action)
                     }
                     mainViewModel.cancelJob()
@@ -404,10 +492,10 @@ class MainActivity : ComponentActivity() {
             }
             is TrackSelectAction.PlayTrackWithUri -> {
                 if (isPaused.value) {
-                    spotifyAppRemote?.playerApi?.play(action.playTrackWithUri)
+                    playbackService.remote()?.playerApi?.play(action.playTrackWithUri)
                     mainViewModel.isPaused(false)
                 } else {
-                    spotifyAppRemote?.playerApi?.pause()
+                    playbackService.remote()?.playerApi?.pause()
                     mainViewModel.isPaused(true)
                 }
             }
@@ -494,6 +582,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun startPlaybackService() {
+        if (bound) {
+            println("PlaybackService ***** ${bound} startPlaybackService")
+            playbackService.connect()
+        }
+
+        this.startForegroundService(Intent(this, PlaybackService::class.java).also { intent ->
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+            println("PlaybackService ***** ${bound} startForegroundService")
+        })
+    }
+
     companion object {
         const val INDEX_KEY = "index"
         const val PLAYLIST_NAME_KEY = "playlist_name/"
@@ -512,10 +612,30 @@ class MainActivity : ComponentActivity() {
         const val API_SEED_ARTISTS = 3
         const val  INITIAL_POSITION = 0
 
+        const val INTENT_ACTION = "com.mccarty.ritmo.PlayerState-Broadcast"
+
         val TAG = MainActivity::class.qualifiedName
     }
 
     interface MediaEvents {
         fun trackSelectionAction(trackSelectAction: TrackSelectAction, isPaused: State<Boolean>)
+    }
+
+    inner class PlaybackServiceReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val player: PlaybackService.Player? = intent?.let {
+                IntentCompat.getParcelableExtra(
+                    it,
+                    PlaybackService.PLAYER_STATE,
+                    PlaybackService.Player::class.java,
+                )
+            }
+
+            lifecycleScope.launch {
+                player?.let {
+                    playerViewModel.setPlayerState(player)
+                }
+            }
+        }
     }
 }

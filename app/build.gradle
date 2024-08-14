@@ -6,6 +6,7 @@ plugins {
     id "com.google.protobuf" version '0.9.0'
     id 'kover'
     id("com.google.dagger.hilt.android")
+    id("kotlin-parcelize")
 }
 protobuf {
     protoc {
@@ -31,7 +32,7 @@ android {
 
     defaultConfig {
         applicationId "com.mccarty.ritmo"
-        minSdk 24
+        minSdk 26
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -72,6 +73,7 @@ android {
 }
 
 dependencies {
+    implementation('androidx.core:core-ktx:1.13.1')
     implementation 'androidx.compose.material3:material3'
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"

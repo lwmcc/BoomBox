@@ -27,7 +27,4 @@ abstract class InterfaceModule {
 
     @Binds
     abstract fun bindSliderTicker(sliderTicker: SliderTicker): Ticker
-
-    //@Binds
-    //abstract fun bindSetupMusicHeader(setupMusicHeaderUseCase: SetupMusicHeaderUseCase): SetupMusicHeader
 }
