@@ -26,7 +26,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -61,6 +60,7 @@ fun MainScreen(
     onAction: (TrackSelectAction) -> Unit,
     navController: NavHostController = rememberNavController(),
     music: State<MainViewModel.MainItemsState>,
+    trackUri: State<String?>,
 ) {
     val musicHeader by model.musicHeader.collectAsStateWithLifecycle()
     val mainMusic by model.mainItems.collectAsStateWithLifecycle()
@@ -181,7 +181,7 @@ fun MainScreen(
                                                 modifier = Modifier
                                                     .paddingFromBaseline(top = 25.dp)
                                                     .fillMaxWidth(),
-                                                color = ItemColor.currentItemColor().textColor(playListItem, item),
+                                                color = ItemColor.currentItemColor().textColor(playListItem, item, trackUri.value),
                                             )
                                             Text(
                                                 text = item.track?.album?.name ?: "",

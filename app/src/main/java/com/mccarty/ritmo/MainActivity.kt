@@ -137,6 +137,11 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (this::playbackService.isInitialized) {
+            playbackService.getTrackData { trackData ->
+                trackData?.let {
+                    mainViewModel.setBackgroundTrackData(TrackData(it.uri))
+                }
+            }
             playbackService.cancelJob()
         }
     }
@@ -661,9 +666,9 @@ class MainActivity : ComponentActivity() {
 
     }
 
-    data class PlaylistData(
-        val playlist: List<MainItem> = emptyList()
-    )
+    data class PlaylistData(val playlist: List<MainItem> = emptyList())
+
+    data class TrackData(val trackUri: String)
 
     companion object {
         const val INDEX_KEY = "index"

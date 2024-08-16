@@ -36,6 +36,7 @@ import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 @Composable
 fun MediaList(
     title: String?,
+    trackUri: String?,
     playListItem: Playlist?,
     tracks: List<TrackDetails>,
     onViewMoreClick: (Boolean, Int, List<TrackDetails>) -> Unit,
@@ -101,7 +102,11 @@ fun MediaList(
                             modifier = Modifier
                                 .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth(),
-                            color =  ItemColor.currentItemColor().textColor(playListItem, track),
+                            color =  ItemColor.currentItemColor().textColor(
+                                playListItem,
+                                track,
+                                trackUri,
+                            ),
                         )
                         Text(
                             text = track.albumName,

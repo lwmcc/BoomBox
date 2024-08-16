@@ -6,9 +6,13 @@ import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 
 class ItemColor {
-    fun textColor(playlist: Playlist?, mainItem: MainItem): Color {
+    fun textColor(playlist: Playlist?, mainItem: MainItem, trackUri: String?): Color {
         if (playlist == null || mainItem.track == null || mainItem.track?.uri == null) {
             return  Color.Black
+        }
+
+        if (mainItem.uri == trackUri) {
+            return Color.Red
         }
 
         return  when (playlist.name) {

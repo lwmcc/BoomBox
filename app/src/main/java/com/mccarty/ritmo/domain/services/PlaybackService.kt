@@ -22,6 +22,7 @@ import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.protocol.client.CallResult
 import com.spotify.protocol.client.Subscription
 import com.spotify.protocol.types.PlayerState
+import com.spotify.protocol.types.Track
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -115,39 +116,20 @@ class PlaybackService: LifecycleService() {
         }
     }
 
-    fun isJobActive(): Boolean {
-        return if (this::scope.isInitialized) {
-            scope.isActive
-        } else {
-            false
-        }
-    }
-
     fun tracksHasEnded(playlistData: MainActivity.PlaylistData) {
         job = SupervisorJob()
         scope = CoroutineScope(Dispatchers.IO + job)
 
-        playlistData.playlist.forEach {
-            println("PlaybackService ***** PB NAME ${it.track?.uri}")
-        }
-
-
         scope.launch {
-
 
             while (isActive) {
                 delay(TICKER_DELAY)
                 spotifyAppRemote?.let { remote ->
                     remote.playerApi.playerState?.setResultCallback { playerState ->
-                        val duration = playerState.track?.duration?.quotientOf(TICKER_DELAY)
-                        val position = playerState.playbackPosition.quotientOf(TICKER_DELAY)
-
-                        val lastUri = playlistData.playlist[playlistData.playlist.size - 1]
-
-                        if (position == (duration?.minus(1L))) {
+                        if (playerState.playbackPosition.quotientOf(TICKER_DELAY) == (playerState.track?.duration?.quotientOf(TICKER_DELAY)?.minus(1L))) {
                             val index = playlistData.playlist.indexOfFirst { it.uri == playerState.track?.uri } + 1
-                            if (playerState.track?.uri == lastUri.track?.uri.toString()) {
-                                remote.playerApi.play(playlistData.playlist[0].uri)
+                            if (playerState.track?.uri ==  playlistData.playlist[playlistData.playlist.size - 1].track?.uri.toString()) {
+                                remote.playerApi.play(playlistData.playlist[0].track?.uri)
                             } else {
                                 remote.playerApi.play(playlistData.playlist[index].track?.uri)
                             }
@@ -172,13 +154,25 @@ class PlaybackService: LifecycleService() {
                     trackArtist = playerState.track?.artist?.name,
                     albumName = playerState.track?.album?.name,
                     trackName = playerState.track?.name,
-                    trackUri = playerState.track?.uri,
+                    trackUri = playerState.track.uri,
                     isTrackPaused = playerState.isPaused,
                     position = playerState.playbackPosition,
                     duration = playerState.track.duration,
                 ),
             )
             sendBroadcast(intent)
+        }
+    }
+
+    /**
+     * Information about the track that was playing while
+     * app was in background. Call this before the job is cancelled
+     */
+    fun getTrackData(trackData: (track: Track?) -> Unit) {
+        spotifyAppRemote?.playerApi?.playerState?.setResultCallback { playerState ->
+            trackData(playerState.track)
+        }?.setErrorCallback { throwable ->
+            Timber.e(throwable.message)
         }
     }
 
@@ -190,6 +184,7 @@ class PlaybackService: LifecycleService() {
         const val CHANNEL_ID = "playback-service-channel-id"
         const val NOTIFICATION_ID = 888
         const val PLAYER_STATE = "player-state"
+        const val TRACK_DATA = "track-data"
     }
 
     @Parcelize

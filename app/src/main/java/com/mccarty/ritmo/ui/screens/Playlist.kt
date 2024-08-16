@@ -23,6 +23,7 @@ fun PlaylistScreen(
 ) {
     val playLists by model.playLists.collectAsStateWithLifecycle()
     val playListItem by model.playlistData.collectAsStateWithLifecycle()
+    val trackUri by model.trackUri.collectAsStateWithLifecycle()
 
     when (playLists) {
         is MainViewModel.PlaylistState.Pending -> {
@@ -41,6 +42,7 @@ fun PlaylistScreen(
                 item {
                     MediaList(
                         title = title,
+                        trackUri = trackUri,
                         playListItem = playListItem,
                         tracks = tracks,
                         onViewMoreClick = { showBottom, index, tracks ->

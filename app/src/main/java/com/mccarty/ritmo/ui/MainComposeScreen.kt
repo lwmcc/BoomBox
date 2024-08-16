@@ -42,6 +42,7 @@ fun MainComposeScreen(
     val music by remember { mutableStateOf(mainItems) }
     val scope = rememberCoroutineScope()
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle()
+    val trackUri = mainViewModel.trackUri.collectAsStateWithLifecycle()
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
@@ -55,6 +56,7 @@ fun MainComposeScreen(
         ) {
             StartScreen(
                 music = music,
+                trackUri = trackUri,
                 navController = navController,
                 onViewMoreClick = { bottomSheet, index ->
                     showBottomSheet = bottomSheet

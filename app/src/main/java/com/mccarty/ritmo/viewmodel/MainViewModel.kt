@@ -3,6 +3,7 @@ package com.mccarty.ritmo.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
+import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.MainActivity.Companion.API_SEED_ARTISTS
 import com.mccarty.ritmo.MainActivity.Companion.API_SEED_TRACKS
 import com.mccarty.ritmo.MainActivity.Companion.INITIAL_POSITION
@@ -98,12 +99,6 @@ class MainViewModel @Inject constructor(
     private var _currentlyPlayingTrack = MutableStateFlow<CurrentlyPayingTrackState>(CurrentlyPayingTrackState.Pending(true))
     val currentlyPayingTrackState: StateFlow<CurrentlyPayingTrackState> = _currentlyPlayingTrack
 
-    // private var _playlistTracks = MutableStateFlow<List<MainItem>>(emptyList())
-    // val playlistTracks: StateFlow<List<MainItem>> = _playlistTracks
-
-    // private var _recommendedTracks = MutableStateFlow<List<MainItem>>(emptyList())
-    // val recommendedTracks: StateFlow<List<MainItem>> = _recommendedTracks
-
     private var _mediaDetails = MutableStateFlow<List<Details>>(emptyList())
     val mediaDetails: StateFlow<List<Details>> = _mediaDetails
 
@@ -133,6 +128,9 @@ class MainViewModel @Inject constructor(
 
     private val _playlistData = MutableStateFlow<Playlist?>(null)
     val playlistData = _playlistData
+
+    private var _trackData = MutableStateFlow<MainActivity.TrackData?>(null)
+    val trackData: StateFlow<MainActivity.TrackData?> = _trackData
 
     private var _recommendedPlaylist = mutableListOf<MainItem>()
         val recommendedPlaylist: List<MainItem>
@@ -449,7 +447,10 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
+    fun setBackgroundTrackData(trackData: MainActivity.TrackData) = _trackData.update { trackData }
 }
+
 data class ControlTrackData(
     var duration: Long
 )

@@ -22,6 +22,7 @@ fun StartScreen(
     onViewMoreClick: (Boolean, Int) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
     music: State<MainViewModel.MainItemsState>,
+    trackUri: State<String?>,
 ) {
     val mainViewModel: MainViewModel = viewModel()
     val details by mainViewModel.mediaDetails.collectAsStateWithLifecycle()
@@ -30,8 +31,9 @@ fun StartScreen(
     NavHost(navController = navController, startDestination = MAIN_SCREEN_KEY) {
         composable(MAIN_SCREEN_KEY) {
             MainScreen(
-                model = mainViewModel,
+                model = mainViewModel, // TODO: move view model
                 music = music,
+                trackUri = trackUri,
                 navController = navController,
                 onViewMoreClick = { showBottom, index, _->
                     onViewMoreClick(showBottom, index)
