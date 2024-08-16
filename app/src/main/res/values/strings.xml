@@ -21,4 +21,7 @@
 
     <string name="no_internet_connection">No Internet Connection</string>
     <string name="description_for_image">Item image</string>
+
+    <string name="track_playback_channel_name">Track Playback Channel</string>
+    <string name="track_playback_channel_description">Notification to allow control while app is in the background</string>
 </resources>

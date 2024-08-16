@@ -2,6 +2,17 @@ package com.mccarty.ritmo
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import timber.log.Timber
 
 @HiltAndroidApp
-class HiltApplication: Application()
+class HiltApplication: Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        } else {
+            // TODO: to implement
+        }
+    }
+}

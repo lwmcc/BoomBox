@@ -14,7 +14,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.os.Messenger
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -52,6 +51,7 @@ import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.IOException
 
 @AndroidEntryPoint
@@ -112,15 +112,11 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        notificationChannel()
-        //launchPlayerNotificaiton(notificationManager())
-
         if (savedInstanceState == null) {
             AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, getAuthenticationRequest())
         }
 
         fetchData()
-        startPlaybackService()
     }
 
     override fun onStart() {
@@ -130,14 +126,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+
+        if (this::playbackService.isInitialized) {
+            playbackService.tracksHasEnded(PlaylistData(playlist = mainViewModel.recentlyPlayedMusic()))
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         if (this::playbackService.isInitialized) {
-            playbackService.remote()?.playerApi?.subscribeToPlayerState()?.setEventCallback { playerState -> // TODO: don't think I need this
-                val name = playerState.track?.name
-                val album = playerState.track?.album?.name
-                val uri = playerState.track?.uri
-            }
+            playbackService.cancelJob()
         }
     }
 
@@ -146,7 +146,6 @@ class MainActivity : ComponentActivity() {
         super.onStop()
         disconnect()
         mainViewModel.cancelJob()
-
         unbindService(connection)
         bound = false
     }
@@ -311,8 +310,7 @@ class MainActivity : ComponentActivity() {
                 try {
                     mainViewModel.fetchRecentlyPlayedMusic()
                 } catch (ioe: IOException) {
-                    // TODO: show some error
-                    Log.e(TAG, "${ioe.message}")
+                    Timber.e(ioe.message ?: "Error on return from Spotify auth")
                 }
             } else if (requestCode == AUTH_CODE_REQUEST_CODE) {
                 accessCode = response.code
@@ -370,6 +368,7 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.Play -> {
+                startPlaybackService()
                 playbackService.remote()?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
                         mainViewModel.resumePlayback(
@@ -388,6 +387,7 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.Skip -> {
+                startPlaybackService()
                 when(mainViewModel.playlistData.value?.name) {
                     PlaylistNames.RECOMMENDED_PLAYLIST -> {
                         println("MainActivity ***** playerControlAction() RECOMMENDED_PLAYLIST")
@@ -406,7 +406,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     PlaylistNames.RECENTLY_PLAYED -> {
-                        println("MainActivity ***** playerControlAction() RECENTLY_PLAYED")
+                        println("MainActivity ***** playerControlAction() RECENTLY_PLAYED mmmm")
                         if (!trackEnded) {
                             mainViewModel.cancelJob()
                         }
@@ -423,6 +423,7 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.PlayWithUri -> {
+                startPlaybackService()
                 playbackService.remote()?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
                         mainViewModel.isPaused(playerState.isPaused)
@@ -445,9 +446,9 @@ class MainActivity : ComponentActivity() {
         action: TrackSelectAction,
         isPaused: State<Boolean>,
     ) {
+        startPlaybackService()
         when(action) {
             is TrackSelectAction.TrackSelect -> {
-
                 mainViewModel.setMusicHeaderUrl(
                     action.tracks[action.index].track?.album?.images?.get(0)?.url,
                     action.tracks[action.index].track?.artists?.get(0)?.name ?: getString(R.string.artist_name),
@@ -456,8 +457,6 @@ class MainActivity : ComponentActivity() {
                 )
 
                 if (isPaused.value) {
-
-
                     playbackService.remote()?.let { remote ->
                         mainViewModel.isPaused(false)
                         mainViewModel.playbackDuration(action.tracks[action.index].track
@@ -514,10 +513,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setupSliderPosition(index: Int = INITIAL_POSITION) {
-        spotifyAppRemote?.let { remote ->
+        playbackService.remote()?.let { remote ->
             when(mainViewModel.playlistData.value?.name) {
                 PlaylistNames.RECENTLY_PLAYED -> {
                     if (mainViewModel.checkIfIndexesEqual()) {
+                        println("MainActivity ***** then IF")
                         remote.playerApi.play(null)
                         mainViewModel.setPlaylistData(null)
                     } else {
@@ -540,10 +540,10 @@ class MainActivity : ComponentActivity() {
                             mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.name ?: getString(R.string.album_name),
                             mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.name ?: getString(R.string.track_name),
                         )
-
                     }
                 }
                 PlaylistNames.USER_PLAYLIST -> {
+                    println("MainActivity ***** USER_PLAYLIST")
                     if (mainViewModel.checkIfIndexesEqual()) {
                         remote.playerApi.play(null)
                         mainViewModel.setPlaylistData(null)
@@ -570,6 +570,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 PlaylistNames.RECOMMENDED_PLAYLIST -> {
+                    println("MainActivity ***** RECOMMENDED_PLAYLIST")
                     mainViewModel.setPlaylistData(
                         Playlist(
                             uri = mainViewModel.recommendedPlaylist[INITIAL_POSITION].track?.uri,
@@ -580,6 +581,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 else -> {
+                    println("MainActivity ***** else")
                     setupSliderPosition()
                 }
             }
@@ -587,11 +589,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startPlaybackService() {
-        if (bound) {
-            println("PlaybackService ***** ${bound} startPlaybackService")
-            // playbackService.connect()
-        }
-
         this.startForegroundService(Intent(this, PlaybackService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         })
@@ -621,8 +618,6 @@ class MainActivity : ComponentActivity() {
             }
 
         }
-
-
 
         val notificationManager: NotificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -665,6 +660,10 @@ class MainActivity : ComponentActivity() {
         }
 
     }
+
+    data class PlaylistData(
+        val playlist: List<MainItem> = emptyList()
+    )
 
     companion object {
         const val INDEX_KEY = "index"

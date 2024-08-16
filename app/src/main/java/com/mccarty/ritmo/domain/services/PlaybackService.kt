@@ -1,26 +1,21 @@
 package com.mccarty.ritmo.domain.services
 
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.Service
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
 import android.os.Parcelable
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
+import androidx.lifecycle.LifecycleService
 import com.mccarty.ritmo.KeyConstants
 import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.MainActivity.Companion.INTENT_ACTION
 import com.mccarty.ritmo.R
+import com.mccarty.ritmo.MainActivity.Companion.TICKER_DELAY as TICKER_DELAY
+import com.mccarty.ritmo.utils.quotientOf
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
@@ -28,16 +23,28 @@ import com.spotify.protocol.client.CallResult
 import com.spotify.protocol.client.Subscription
 import com.spotify.protocol.types.PlayerState
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
-import kotlinx.parcelize.RawValue
+import timber.log.Timber
 
 @AndroidEntryPoint
-class PlaybackService: Service() {
+class PlaybackService: LifecycleService() {
     private val binder = PlaybackBinder()
     private var spotifyAppRemote: SpotifyAppRemote? = null
-    private var accessCode: String? = null
 
-    override fun onBind(intent: Intent): IBinder { return binder }
+    private lateinit var job: Job
+    private lateinit var scope: CoroutineScope
+
+    override fun onBind(intent: Intent): IBinder {
+        super.onBind(intent)
+        return binder
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -53,43 +60,46 @@ class PlaybackService: Service() {
             }
 
             override fun onFailure(throwable: Throwable) {
-                println("PlaybackService ***** ERROR ${throwable.message}")
+                Timber.e(throwable)
             }
         })
-
-        notificationChannel()
     }
 
     override fun onDestroy() {
-
+        super.onDestroy()
+        spotifyAppRemote?.let {
+            SpotifyAppRemote.disconnect(it)
+        }
     }
 
-    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
 
-        val notification = NotificationCompat.Builder(this,CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_baseline_music_note_24)
-            .setContentTitle("mccarty title")
-            .setContentText("larry text will be here")
-            .build()
+        spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback { playerState ->
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                getString(R.string.track_playback_channel_name),
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).also { it.description = getString(R.string.track_playback_channel_description) }
 
-        val channel = NotificationChannel(
-            "PLAYBACK_SERVICE",
-            "BoomBox",
-            NotificationManager.IMPORTANCE_HIGH,
-        )
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
 
-        channel.description = "PennSkanvTic channel for foreground service notification"
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_baseline_music_note_24)
+                .setContentTitle(playerState.track?.name)
+                .setContentText(playerState.track?.album?.name)
+                .setSilent(true)
+                .setStyle(
+                    NotificationCompat.BigTextStyle().bigText(playerState.track?.artist?.name)
+                )
+                .build()
 
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannel(channel)
-        notificationManager.notify(NOTIFICATION_ID, notification)
+            ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
 
-        ServiceCompat.startForeground(
-            this,
-            NOTIFICATION_ID,
-            notification,
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
-        )
+            notificationManager.notify(NOTIFICATION_ID, notification)
+        }
+
         return START_STICKY
     }
 
@@ -99,21 +109,53 @@ class PlaybackService: Service() {
 
     fun remote() = spotifyAppRemote
 
-    private fun notificationChannel(): NotificationManager {
-        val notificationManager: NotificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name ="larry mccarty"
-            val descriptionText = "what a description"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-
-            notificationManager.createNotificationChannel(channel)
-            return notificationManager
+    fun cancelJob() {
+        if (this::job.isInitialized && job.isActive) {
+            job.cancel()
         }
-        return notificationManager
+    }
+
+    fun isJobActive(): Boolean {
+        return if (this::scope.isInitialized) {
+            scope.isActive
+        } else {
+            false
+        }
+    }
+
+    fun tracksHasEnded(playlistData: MainActivity.PlaylistData) {
+        job = SupervisorJob()
+        scope = CoroutineScope(Dispatchers.IO + job)
+
+        playlistData.playlist.forEach {
+            println("PlaybackService ***** PB NAME ${it.track?.uri}")
+        }
+
+
+        scope.launch {
+
+
+            while (isActive) {
+                delay(TICKER_DELAY)
+                spotifyAppRemote?.let { remote ->
+                    remote.playerApi.playerState?.setResultCallback { playerState ->
+                        val duration = playerState.track?.duration?.quotientOf(TICKER_DELAY)
+                        val position = playerState.playbackPosition.quotientOf(TICKER_DELAY)
+
+                        val lastUri = playlistData.playlist[playlistData.playlist.size - 1]
+
+                        if (position == (duration?.minus(1L))) {
+                            val index = playlistData.playlist.indexOfFirst { it.uri == playerState.track?.uri } + 1
+                            if (playerState.track?.uri == lastUri.track?.uri.toString()) {
+                                remote.playerApi.play(playlistData.playlist[0].uri)
+                            } else {
+                                remote.playerApi.play(playlistData.playlist[index].track?.uri)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**

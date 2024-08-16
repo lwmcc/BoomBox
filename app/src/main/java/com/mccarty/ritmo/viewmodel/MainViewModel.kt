@@ -319,7 +319,7 @@ class MainViewModel @Inject constructor(
                 delay = TICKER_DELAY,
             ).collect { position ->
                 _playbackPosition.update { position }
-                if (position == playbackDuration.value) {
+                if (position == playbackDuration.value) { // TODO: move to reuse
                     _playbackPosition.update { 0L }
                     _trackEnd.tryEmit(true)
                 }
@@ -440,6 +440,14 @@ class MainViewModel @Inject constructor(
 
     fun setMainItemsError(message: String) {
         _mainItems.value = MainItemsState.Error(message)
+    }
+
+    fun recentlyPlayedMusic(): List<MainItem> {
+        return when (val music = recentlyPlayedMusic.value) {
+            is RecentlyPlayedMusicState.Success -> {
+                music.trackDetails
+            }
+        }
     }
 }
 data class ControlTrackData(

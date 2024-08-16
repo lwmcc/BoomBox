@@ -222,3 +222,7 @@ inline fun<reified N: Number> Long.quotientOf(divisor: N): Long {
         0L
     }
 }
+
+inline fun<reified P: Number, reified D: Number> trackHasEnded(position: P, duration: D): Boolean {
+    return position.toLong().compareTo(duration.toLong()) == 0
+}
