@@ -38,7 +38,6 @@ import com.mccarty.ritmo.domain.services.PlaybackService
 import com.mccarty.ritmo.ui.MainComposeScreen
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.utils.positionProduct
-import com.mccarty.ritmo.utils.quotientOf
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
 import com.mccarty.ritmo.viewmodel.Playlist
@@ -53,6 +52,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.IOException
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.DurationUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -376,8 +377,9 @@ class MainActivity : ComponentActivity() {
                 startPlaybackService()
                 playbackService.remote()?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
+                        val test = playerState.playbackPosition.milliseconds.toLong(DurationUnit.SECONDS)
                         mainViewModel.resumePlayback(
-                            position = playerState.playbackPosition.quotientOf(TICKER_DELAY),
+                            position = playerState.playbackPosition.milliseconds.inWholeSeconds,
                             playerState = playerState,
                             remote = it,
                         )
@@ -460,12 +462,11 @@ class MainActivity : ComponentActivity() {
                     action.tracks[action.index].track?.album?.name ?: getString(R.string.album_name),
                     action.tracks[action.index].track?.name ?: getString(R.string.track_name),
                 )
-
                 if (isPaused.value) {
                     playbackService.remote()?.let { remote ->
-                        mainViewModel.isPaused(false)
+                        mainViewModel.isPaused(false) // TODO: remote
                         mainViewModel.playbackDuration(action.tracks[action.index].track
-                            ?.duration_ms?.quotientOf(TICKER_DELAY))
+                            ?.duration_ms?.milliseconds?.inWholeSeconds)
                         mainViewModel.handlePlayerActions(remote, action)
                     }
                     mainViewModel.setPlaybackPosition(INITIAL_POSITION)
@@ -479,10 +480,7 @@ class MainActivity : ComponentActivity() {
                     )
                 } else {
                     mainViewModel.isPaused(false)
-                    mainViewModel.playbackDuration(
-                        action.tracks[action.index].track?.duration_ms?.quotientOf(TICKER_DELAY)
-                    )
-
+                    mainViewModel.playbackDuration(action.tracks[action.index].track?.duration_ms?.milliseconds?.inWholeSeconds)
                     playbackService.remote()?.let { remote ->
                         mainViewModel.handlePlayerActions(remote, action)
                     }
@@ -536,7 +534,7 @@ class MainActivity : ComponentActivity() {
                             )
                         )
                         mainViewModel.setPlaybackPosition(INITIAL_POSITION)
-                        mainViewModel.playbackDuration(mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(TICKER_DELAY) ?: 0)
+                        mainViewModel.playbackDuration(mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.milliseconds?.inWholeSeconds)
                         remote.playerApi.play(theUri)
 
                         mainViewModel.setMusicHeaderUrl(
@@ -563,7 +561,7 @@ class MainActivity : ComponentActivity() {
                             )
                         )
                         mainViewModel.setPlaybackPosition(INITIAL_POSITION)
-                        mainViewModel.playbackDuration(mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(TICKER_DELAY) ?: 0)
+                        mainViewModel.playbackDuration(mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.milliseconds?.inWholeSeconds)
                         remote.playerApi.play(theUri)
 
                         mainViewModel.setMusicHeaderUrl(

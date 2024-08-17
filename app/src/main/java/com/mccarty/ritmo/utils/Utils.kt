@@ -211,18 +211,6 @@ fun Float.positionProduct(factor: Long): Long {
     return this.toLong() * factor
 }
 
-inline fun<reified N: Number> Long.quotientOf(divisor: N): Long {
-    if (divisor.toLong() <= 0L) {
-        return 0L
-    }
-
-    return if (this > 0L) {
-        this / divisor.toLong()
-    } else {
-        0L
-    }
-}
-
 inline fun<reified P: Number, reified D: Number> trackHasEnded(position: P, duration: D): Boolean {
     return position.toLong().compareTo(duration.toLong()) == 0
 }

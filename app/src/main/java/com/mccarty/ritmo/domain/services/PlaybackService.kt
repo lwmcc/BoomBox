@@ -15,7 +15,6 @@ import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.MainActivity.Companion.INTENT_ACTION
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.MainActivity.Companion.TICKER_DELAY as TICKER_DELAY
-import com.mccarty.ritmo.utils.quotientOf
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
@@ -33,6 +32,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import timber.log.Timber
+import kotlin.time.Duration.Companion.milliseconds
 
 @AndroidEntryPoint
 class PlaybackService: LifecycleService() {
@@ -126,7 +126,7 @@ class PlaybackService: LifecycleService() {
                 delay(TICKER_DELAY)
                 spotifyAppRemote?.let { remote ->
                     remote.playerApi.playerState?.setResultCallback { playerState ->
-                        if (playerState.playbackPosition.quotientOf(TICKER_DELAY) == (playerState.track?.duration?.quotientOf(TICKER_DELAY)?.minus(1L))) {
+                        if (playerState.playbackPosition.milliseconds?.inWholeSeconds == (playerState.track?.duration?.milliseconds?.inWholeSeconds?.minus(1L))) {
                             val index = playlistData.playlist.indexOfFirst { it.uri == playerState.track?.uri } + 1
                             if (playerState.track?.uri ==  playlistData.playlist[playlistData.playlist.size - 1].track?.uri.toString()) {
                                 remote.playerApi.play(playlistData.playlist[0].track?.uri)

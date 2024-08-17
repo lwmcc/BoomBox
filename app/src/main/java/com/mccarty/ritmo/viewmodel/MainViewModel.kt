@@ -26,7 +26,6 @@ import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.utils.createTrackDetailsFromItems
 import com.mccarty.ritmo.utils.createTrackDetailsFromItemsRecommended
 import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
-import com.mccarty.ritmo.utils.quotientOf
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.protocol.types.PlayerState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,6 +38,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import com.spotify.protocol.types.Track as Track
 
 @HiltViewModel
@@ -362,7 +362,7 @@ class MainViewModel @Inject constructor(
 
     fun playbackDurationWithIndex(newIndex: Int) {
         _playbackDuration.update {
-            playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.quotientOf(TICKER_DELAY) ?: 0
+            playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.milliseconds?.inWholeSeconds ?: 0
         }
     }
 
@@ -406,7 +406,7 @@ class MainViewModel @Inject constructor(
         }
 
         isPaused(playerState.isPaused)
-        playbackPosition(playerState.playbackPosition.quotientOf(TICKER_DELAY))
+        playbackPosition(playerState.playbackPosition.milliseconds.inWholeSeconds)
     }
 
     override fun newIndex(index: Int) = playlistData.value?.index?.plus(index) ?: INITIAL_POSITION
@@ -419,8 +419,8 @@ class MainViewModel @Inject constructor(
         delay: Long,
         setPosition: Boolean,
     ) {
-        playbackPosition(position.quotientOf(delay))
-        playbackDuration(duration.quotientOf(delay))
+        playbackPosition(position.milliseconds.inWholeSeconds)
+        playbackDuration(duration.milliseconds.inWholeSeconds)
 
         if (setPosition) {
             setSliderPosition()
