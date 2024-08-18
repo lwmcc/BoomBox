@@ -13,7 +13,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.os.Messenger
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -44,7 +43,6 @@ import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.viewmodel.PlayerViewModel
-import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
@@ -59,11 +57,9 @@ import kotlin.time.DurationUnit
 class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
     private val playerViewModel: PlayerViewModel by viewModels()
-    private var spotifyAppRemote: SpotifyAppRemote? = null
     private var accessCode: String? = null
 
     private lateinit var playbackService: PlaybackService
-    private lateinit var messenger: Messenger
 
     private var bound: Boolean = false
 
@@ -150,7 +146,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
-        disconnect()
         mainViewModel.cancelJob()
         unbindService(connection)
         bound = false
@@ -161,37 +156,8 @@ class MainActivity : ComponentActivity() {
         unregisterReceiver(receiver)
     }
 
-    private fun connect() {
-        spotifyAppRemote?.let { remote ->
-            remote.playerApi.playerState.setResultCallback { playerState ->
-                mainViewModel.setMusicHeader(MusicHeader().apply {
-                    imageUrl = StringBuilder().apply {
-                        append(IMAGE_URL)
-                        append(playerState.track.imageUri.toString().drop(22).dropLast(2))
-                    }.toString()
-                    artistName = playerState.track.artist.name ?: getString(R.string.artist_name)
-                    albumName = playerState.track.album.name ?: getString(R.string.album_name)
-                    songName = playerState.track.name ?: getString(R.string.track_name)
-                })
-
-                mainViewModel.setTrackUri(playerState.track.uri)
-                mainViewModel.isPaused(playerState.isPaused)
-                mainViewModel.setSliderPosition(
-                    position = playerState.playbackPosition,
-                    duration = playerState.track?.duration ?: 0,
-                    delay = TICKER_DELAY,
-                )
-                mainViewModel.fetchMainMusic()
-                //setPlaylistData(playerState.) TODO: fix
-            }.setErrorCallback {
-                mainViewModel.setMainMusicError(it?.message ?: "Could Not Connect to Spotify")
-            }
-        }
-    }
-
     private fun setupTrackInformation(player: PlaybackService.Player, bound: Boolean) {
         if (bound) {
-            // playbackService.connect()?.setResultCallback {playerState ->
             mainViewModel.setMusicHeader(MusicHeader().apply {
                 imageUrl = StringBuilder().apply {
                     append(IMAGE_URL)
@@ -204,88 +170,10 @@ class MainActivity : ComponentActivity() {
 
             mainViewModel.setTrackUri(player.trackUri)
             mainViewModel.isPaused(player.isTrackPaused)
-            mainViewModel.setSliderPosition(
-                position = player.position,
-                duration = player.duration,
-                delay = TICKER_DELAY,
-            )
             mainViewModel.fetchMainMusic()
-            setPlaylistData(
-                uri = player.trackUri ?: "", // TODO: pass something
-                name = player.trackName ?: "", // TODO: pass something
-                position = player.position,
-                duration = player.duration,
-            )
             /*  }?.setErrorCallback {
                   mainViewModel.setMainMusicError(it?.message ?: "Could Not Connect to Spotify")
               }*/
-        }
-    }
-
-
-    private fun setPlaylistData(uri: String, name: String, position: Long, duration: Long) {
-        when (mainViewModel.playlistData.value?.name) {
-            PlaylistNames.RECENTLY_PLAYED -> {
-                mainViewModel.setSliderPosition(
-                    position = position,
-                    duration = duration,
-                    delay = TICKER_DELAY,
-                    setPosition = true, // TODO: pass in
-                )
-            }
-
-            PlaylistNames.USER_PLAYLIST -> {
-                println("MainActivity ***** USER PLAYLIST *****") // TODO: reentry from background
-            }
-
-            PlaylistNames.RECOMMENDED_PLAYLIST -> {
-                mainViewModel.setSliderPosition(
-                    position = position,
-                    duration = duration,
-                    delay = TICKER_DELAY,
-                    setPosition = true,
-                )
-
-                mainViewModel.setPlaylistData(
-                    Playlist(
-                        uri = null,
-                        index = 0,
-                        name = PlaylistNames.RECOMMENDED_PLAYLIST,
-                        tracks = emptyList(),
-                    )
-                )
-            } else -> {
-                mainViewModel.setSliderPosition(
-                    position = position,
-                    duration = duration,
-                    delay = TICKER_DELAY,
-                    setPosition = true,
-                )
-                mainViewModel.setPlaylistData(
-                    Playlist(
-                        uri = uri,
-                        index = INITIAL_POSITION,
-                        name = PlaylistNames.RECOMMENDED_PLAYLIST,
-                        tracks = listOf(
-                            MainItem(
-                                id = null,
-                                uri = uri,
-                                type = null,
-                                name = name,
-                                description = null,
-                                images = emptyList(),
-                                tracks = null,
-                            )
-                        ),
-                    )
-                )
-            }
-        }
-    }
-
-    private fun disconnect() {
-        spotifyAppRemote?.let {
-            SpotifyAppRemote.disconnect(it)
         }
     }
 
@@ -413,7 +301,6 @@ class MainActivity : ComponentActivity() {
                     }
 
                     PlaylistNames.RECENTLY_PLAYED -> {
-                        println("MainActivity ***** playerControlAction() RECENTLY_PLAYED mmmm")
                         if (!trackEnded) {
                             mainViewModel.cancelJob()
                         }
@@ -464,7 +351,7 @@ class MainActivity : ComponentActivity() {
                 )
                 if (isPaused.value) {
                     playbackService.remote()?.let { remote ->
-                        mainViewModel.isPaused(false) // TODO: remote
+                        mainViewModel.isPaused(false)
                         mainViewModel.playbackDuration(action.tracks[action.index].track
                             ?.duration_ms?.milliseconds?.inWholeSeconds)
                         mainViewModel.handlePlayerActions(remote, action)
@@ -520,11 +407,9 @@ class MainActivity : ComponentActivity() {
             when(mainViewModel.playlistData.value?.name) {
                 PlaylistNames.RECENTLY_PLAYED -> {
                     if (mainViewModel.checkIfIndexesEqual()) {
-                        println("MainActivity ***** then IF")
                         remote.playerApi.play(null)
                         mainViewModel.setPlaylistData(null)
                     } else {
-                        println("MainActivity ***** WHAT IS IT ELSE") // TODO: auto play
                         val newIndex =  mainViewModel.newIndex(index)
                         val theUri = mainViewModel.getUri(newIndex)
                         mainViewModel.setPlaylistData(
@@ -546,7 +431,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 PlaylistNames.USER_PLAYLIST -> {
-                    println("MainActivity ***** USER_PLAYLIST")
                     if (mainViewModel.checkIfIndexesEqual()) {
                         remote.playerApi.play(null)
                         mainViewModel.setPlaylistData(null)
@@ -573,7 +457,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 PlaylistNames.RECOMMENDED_PLAYLIST -> {
-                    println("MainActivity ***** RECOMMENDED_PLAYLIST")
                     mainViewModel.setPlaylistData(
                         Playlist(
                             uri = mainViewModel.recommendedPlaylist[INITIAL_POSITION].track?.uri,
@@ -584,7 +467,6 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 else -> {
-                    println("MainActivity ***** else")
                     setupSliderPosition()
                 }
             }
@@ -603,7 +485,6 @@ class MainActivity : ComponentActivity() {
                 this,
                 android.Manifest.permission.POST_NOTIFICATIONS,
             ) == PackageManager.PERMISSION_GRANTED -> {
-                println("MainActivity ***** granted")
                 // User allowed
             }
 
