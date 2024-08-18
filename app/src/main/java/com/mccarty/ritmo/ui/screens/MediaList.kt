@@ -17,6 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.DefaultShadowColor
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -46,7 +49,7 @@ fun MediaList(
     if (tracks.isNotEmpty()) {
         Text(
             text = title ?: stringResource(R.string.playlist),
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onBackground,
             fontStyle = FontStyle.Normal,
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp,
@@ -75,10 +78,17 @@ fun MediaList(
                             )
                         }
                     )
-                    .padding(5.dp),
+                    .padding(5.dp)
+                    .shadow(
+                        elevation = 2.dp,
+                        shape = RectangleShape,
+                        clip = false,
+                        ambientColor = DefaultShadowColor,
+                        spotColor = DefaultShadowColor,
+                    ),
                 shape = MaterialTheme.shapes.extraSmall,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    containerColor = MaterialTheme.colorScheme.background,
                 ),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

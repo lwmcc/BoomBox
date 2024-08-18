@@ -28,6 +28,9 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.DefaultShadowColor
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -96,20 +99,31 @@ fun MainScreen(
                 )
             }
 
+            /**
+             * Section holding header, recently played, and playlist
+             */
             LazyColumn(
-                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 tracks.forEachIndexed { index, group ->
                     stickyHeader {
+                        /**
+                         * Section header, ie Recently Played and Playlist
+                         */
                         Column(
                             modifier = Modifier
-                                .background(color = MaterialTheme.colorScheme.primaryContainer),
+                                .background(color = MaterialTheme.colorScheme.background),
                         ) {
+                            /**
+                             * Section header text Recently Played and Playlist
+                             */
                             Text(
                                 text = stickyHeaderText(group.type, tracksHeader, playlistsHeader),
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.onBackground,
                                 fontStyle = FontStyle.Normal,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
@@ -154,7 +168,14 @@ fun MainScreen(
                                                 )
                                             }
                                         )
-                                        .padding(5.dp),
+                                        .padding(5.dp)
+                                        .shadow(
+                                            elevation = 2.dp,
+                                            shape = RectangleShape,
+                                            clip = false,
+                                            ambientColor = DefaultShadowColor,
+                                            spotColor = DefaultShadowColor,
+                                        ),
                                     shape = MaterialTheme.shapes.extraSmall,
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.background,
@@ -215,16 +236,23 @@ fun MainScreen(
                             }
 
                            CollectionType.PLAYLIST.collectionType -> {
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(5.dp)
-                                        .clickable(onClick = {
-                                            model.fetchPlaylist(item.id ?: "")
-                                            navController.navigate(
-                                                "${MainActivity.PLAYLIST_SCREEN_KEY}${item.name}"
-                                            )
-                                        }),
+                               Card(
+                                   modifier = Modifier
+                                       .fillMaxWidth()
+                                       .padding(5.dp)
+                                       .clickable(onClick = {
+                                           model.fetchPlaylist(item.id ?: "")
+                                           navController.navigate(
+                                               "${MainActivity.PLAYLIST_SCREEN_KEY}${item.name}"
+                                           )
+                                       })
+                                       .shadow(
+                                           elevation = 2.dp,
+                                           shape = RectangleShape,
+                                           clip = false,
+                                           ambientColor = DefaultShadowColor,
+                                           spotColor = DefaultShadowColor,
+                                       ),
                                     shape = MaterialTheme.shapes.extraSmall,
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.surface,

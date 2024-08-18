@@ -85,8 +85,8 @@ class MainActivity : ComponentActivity() {
             Scaffold(
                 bottomBar = {
                     BottomAppBar(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.colorScheme.background,
+                        contentColor = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.height(100.dp),
                     ) {
                         PlayerControls(onAction = this@MainActivity::playerControlAction)
