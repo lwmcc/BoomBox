@@ -6,29 +6,36 @@ import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 
 class ItemColor {
-    fun textColor(playlist: Playlist?, mainItem: MainItem, trackUri: String?): Color {
+    fun textColor(
+        playlist: Playlist?,
+        mainItem: MainItem,
+        trackUri: String?,
+        primary: Color,
+        onBackground: Color,
+    ): Color {
         if (playlist == null || mainItem.track == null || mainItem.track?.uri == null) {
-            return  Color.Black
+            return onBackground
         }
 
         if (mainItem.uri == trackUri) {
-            return Color.Red
+            return primary
         }
 
-        return  when (playlist.name) {
+        return when (playlist.name) {
             PlaylistNames.RECOMMENDED_PLAYLIST -> {
-                Color.Black
+                onBackground
             }
+
             PlaylistNames.RECENTLY_PLAYED, PlaylistNames.USER_PLAYLIST -> {
-                println("ItemColor ***** ${playlist.uri} ----- ${mainItem.track?.uri}")
                 if (playlist.uri == mainItem.track?.uri) {
-                    Color.Red
+                    primary
                 } else {
-                  Color.Black
+                    onBackground
                 }
             }
+
             else -> {
-                Color.Black
+                onBackground
             }
         }
     }

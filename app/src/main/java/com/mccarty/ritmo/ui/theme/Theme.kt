@@ -1,51 +1,34 @@
 package com.mccarty.ritmo.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.lightColorScheme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import androidx.ui.material.MaterialTheme.colors
 
-/*private val DarkColorPalette = darkColors(
-    primary = Orange700,
-    primaryVariant = Purple700,
-    secondary = Teal200
-)
-
-private val LightColorPalette = lightColors(
+private val LightColorPalette = lightColorScheme(
     primary = Blue700,
-    primaryVariant = Purple700,
-    secondary = Teal200*/
-
-    /* Other default colors to override
+    secondary = Blue100,
     background = Color.White,
     surface = Color.White,
     onPrimary = Color.White,
     onSecondary = Color.Black,
     onBackground = Color.Black,
     onSurface = Color.Black,
-    */
-//)
+)
 
 @Composable
 fun BoomBoxTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-/*    val uiController = rememberSystemUiController()
-    val colors = if (darkTheme) {
-        DarkColorPalette
-    } else {
+    //val colors = if (darkTheme) {
+        // DarkColorPalette to implement
+    //} else {
         LightColorPalette
-    }
-
-    if(darkTheme) {
-        uiController.setSystemBarsColor(color = Color.Black)
-    } else {
-        uiController.setSystemBarsColor(color = Color.White)
-    }
+    //}
 
     MaterialTheme(
-        colors = colors,
-        typography = Typography,
-        shapes = Shapes,
+        colorScheme = LightColorPalette,
         content = content
-    )*/
+    )
 }

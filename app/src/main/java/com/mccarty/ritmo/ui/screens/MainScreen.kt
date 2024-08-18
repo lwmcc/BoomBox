@@ -202,22 +202,43 @@ fun MainScreen(
                                                 modifier = Modifier
                                                     .paddingFromBaseline(top = 25.dp)
                                                     .fillMaxWidth(),
-                                                color = ItemColor.currentItemColor().textColor(playListItem, item, trackUri.value),
+                                                color = ItemColor.currentItemColor().textColor(
+                                                    playlist = playListItem,
+                                                    mainItem = item,
+                                                    trackUri = trackUri.value,
+                                                    primary = MaterialTheme.colorScheme.primary,
+                                                    onBackground = MaterialTheme.colorScheme.onBackground,
+                                                ),
                                             )
                                             Text(
                                                 text = item.track?.album?.name ?: "",
                                                 style = MaterialTheme.typography.bodyMedium,
                                                 modifier = Modifier
                                                     .paddingFromBaseline(top = 25.dp)
-                                                    .fillMaxWidth()
+                                                    .fillMaxWidth(),
+                                                color = ItemColor.currentItemColor().textColor(
+                                                    playlist = playListItem,
+                                                    mainItem = item,
+                                                    trackUri = trackUri.value,
+                                                    primary = MaterialTheme.colorScheme.primary,
+                                                    onBackground = MaterialTheme.colorScheme.onBackground,
+                                                ),
                                             )
                                             if (item.track?.artists?.isNotEmpty() == true) {
                                                 Text(
-                                                    text = item.track?.artists?.get(0)?.name ?: androidx.ui.res.stringResource(R.string.track_name),
+                                                    text = item.track?.artists?.get(0)?.name ?:
+                                                    androidx.ui.res.stringResource(R.string.track_name),
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     modifier = Modifier
                                                         .paddingFromBaseline(top = 25.dp)
-                                                        .fillMaxWidth()
+                                                        .fillMaxWidth(),
+                                                    color = ItemColor.currentItemColor().textColor(
+                                                        playlist = playListItem,
+                                                        mainItem = item,
+                                                        trackUri = trackUri.value,
+                                                        primary = MaterialTheme.colorScheme.primary,
+                                                        onBackground = MaterialTheme.colorScheme.onBackground,
+                                                    ),
                                                 )
                                             }
                                         }

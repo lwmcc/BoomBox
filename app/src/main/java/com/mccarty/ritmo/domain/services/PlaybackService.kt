@@ -61,7 +61,7 @@ class PlaybackService: LifecycleService() {
             }
 
             override fun onFailure(throwable: Throwable) {
-                Timber.e(throwable)
+                Timber.e(throwable.message)
             }
         })
     }

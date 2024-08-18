@@ -112,10 +112,12 @@ fun MediaList(
                             modifier = Modifier
                                 .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth(),
-                            color =  ItemColor.currentItemColor().textColor(
-                                playListItem,
-                                track,
-                                trackUri,
+                            color = ItemColor.currentItemColor().textColor(
+                                playlist = playListItem,
+                                mainItem = track,
+                                trackUri = trackUri,
+                                primary = MaterialTheme.colorScheme.primary,
+                                onBackground = MaterialTheme.colorScheme.onBackground,
                             ),
                         )
                         Text(
@@ -124,6 +126,13 @@ fun MediaList(
                             modifier = Modifier
                                 .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth(),
+                            color = ItemColor.currentItemColor().textColor(
+                                playlist = playListItem,
+                                mainItem = track,
+                                trackUri = trackUri,
+                                primary = MaterialTheme.colorScheme.primary,
+                                onBackground = MaterialTheme.colorScheme.onBackground,
+                            ),
                         )
 
                         if (track.artists.isNotEmpty()) {
@@ -132,7 +141,14 @@ fun MediaList(
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier
                                     .paddingFromBaseline(top = 25.dp)
-                                    .fillMaxWidth()
+                                    .fillMaxWidth(),
+                                color = ItemColor.currentItemColor().textColor(
+                                    playlist = playListItem,
+                                    mainItem = track,
+                                    trackUri = trackUri,
+                                    primary = MaterialTheme.colorScheme.primary,
+                                    onBackground = MaterialTheme.colorScheme.onBackground,
+                                ),
                             )
                         }
                     }

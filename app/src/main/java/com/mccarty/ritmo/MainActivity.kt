@@ -42,6 +42,7 @@ import com.mccarty.ritmo.viewmodel.PlayerControlAction
 import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
+import com.mccarty.ritmo.ui.theme.BoomBoxTheme
 import com.mccarty.ritmo.viewmodel.PlayerViewModel
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
@@ -82,30 +83,32 @@ class MainActivity : ComponentActivity() {
         receiver = PlaybackServiceReceiver()
         ContextCompat.registerReceiver(this, receiver, IntentFilter(INTENT_ACTION), ContextCompat.RECEIVER_EXPORTED)
         setContent {
-            Scaffold(
-                bottomBar = {
-                    BottomAppBar(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        contentColor = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.height(100.dp),
-                    ) {
-                        PlayerControls(onAction = this@MainActivity::playerControlAction)
-                    }
-                }) { padding ->
-
-                MainComposeScreen(
-                    mainViewModel = mainViewModel,
-                    padding = padding,
-                    viewMore = getString(R.string.sheets_view_more),
-                    mediaEvents = object : MediaEvents {
-                        override fun trackSelectionAction(
-                            trackSelectAction: TrackSelectAction,
-                            isPaused: State<Boolean>,
+            BoomBoxTheme {
+                Scaffold(
+                    bottomBar = {
+                        BottomAppBar(
+                            containerColor = MaterialTheme.colorScheme.background,
+                            contentColor = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.height(100.dp),
                         ) {
-                            trackSelection(trackSelectAction, isPaused)
+                            PlayerControls(onAction = this@MainActivity::playerControlAction)
                         }
-                    }
-                )
+                    }) { padding ->
+
+                    MainComposeScreen(
+                        mainViewModel = mainViewModel,
+                        padding = padding,
+                        viewMore = getString(R.string.sheets_view_more),
+                        mediaEvents = object : MediaEvents {
+                            override fun trackSelectionAction(
+                                trackSelectAction: TrackSelectAction,
+                                isPaused: State<Boolean>,
+                            ) {
+                                trackSelection(trackSelectAction, isPaused)
+                            }
+                        }
+                    )
+                }
             }
         }
 

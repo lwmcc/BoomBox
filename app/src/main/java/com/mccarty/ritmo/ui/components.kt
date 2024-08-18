@@ -246,8 +246,8 @@ fun BottomSheet(
 fun CircleSpinner(width: Dp = 64.dp) {
     CircularProgressIndicator(
         modifier = Modifier.width(width),
-        color = MaterialTheme.colorScheme.onBackground,
-        trackColor = MaterialTheme.colorScheme.onBackground,
+        color = MaterialTheme.colorScheme.primary,
+        trackColor = MaterialTheme.colorScheme.secondary,
     )
 }
 
