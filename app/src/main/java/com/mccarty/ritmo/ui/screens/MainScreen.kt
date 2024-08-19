@@ -198,7 +198,7 @@ fun MainScreen(
 
                                             Text(
                                                 text = item.track?.name.toString(),
-                                                style = MaterialTheme.typography.titleMedium,
+                                                style = MaterialTheme.typography.titleLarge,
                                                 modifier = Modifier
                                                     .paddingFromBaseline(top = 25.dp)
                                                     .fillMaxWidth(),
@@ -212,7 +212,7 @@ fun MainScreen(
                                             )
                                             Text(
                                                 text = item.track?.album?.name ?: "",
-                                                style = MaterialTheme.typography.bodyMedium,
+                                                style = MaterialTheme.typography.bodyLarge,
                                                 modifier = Modifier
                                                     .paddingFromBaseline(top = 25.dp)
                                                     .fillMaxWidth(),
@@ -228,7 +228,7 @@ fun MainScreen(
                                                 Text(
                                                     text = item.track?.artists?.get(0)?.name ?:
                                                     androidx.ui.res.stringResource(R.string.track_name),
-                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    style = MaterialTheme.typography.bodyLarge,
                                                     modifier = Modifier
                                                         .paddingFromBaseline(top = 25.dp)
                                                         .fillMaxWidth(),

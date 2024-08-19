@@ -97,14 +97,10 @@ class MainActivity : ComponentActivity() {
                         }
                     }) { padding ->
 
-                    //val trackUri = playerViewModel.currentUri.collectAsStateWithLifecycle().value
-                    val trackUri by mainViewModel.trackUri.collectAsStateWithLifecycle()
-                    println("MainActivity ***** Current URI $trackUri")
                     MainComposeScreen(
                         mainViewModel = mainViewModel,
                         padding = padding,
                         viewMore = getString(R.string.sheets_view_more),
-                        trackUri = trackUri,
                         mediaEvents = object : MediaEvents {
                             override fun trackSelectionAction(
                                 trackSelectAction: TrackSelectAction,
@@ -127,9 +123,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-
-        println("MainActivity ***** INIT onStart() ${this::playbackService.isInitialized}")
-
         Intent(this, PlaybackService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
@@ -138,9 +131,41 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
 
-        println("MainActivity ***** INIT onResume() ${this::playbackService.isInitialized}")
-
         if (this::playbackService.isInitialized) {
+            playbackService.currentUri { currentUri ->
+
+                val playlistName = mainViewModel.playlistData.value?.name
+
+                playbackService.isCurrentlyPlaying { isPlaying ->
+                    // TODO: move duplicate code
+                    val index = mainViewModel.playlistData.value?.tracks?.indexOfFirst {
+                        it.track?.uri == currentUri
+                    } ?: 0
+
+                    if (isPlaying) {
+                        if (playlistName == PlaylistNames.RECENTLY_PLAYED) {
+                            mainViewModel.setPlaylistData(
+                                mainViewModel.playlistData.value?.copy(
+                                    uri = currentUri,
+                                    index = index,
+                                )
+                            )
+                        } else if (playlistName == PlaylistNames.USER_PLAYLIST) {
+                            val index = mainViewModel.playlistData.value?.tracks?.indexOfFirst {
+                                it.track?.uri == currentUri
+                            } ?: 0
+
+                            mainViewModel.setPlaylistData(
+                                mainViewModel.playlistData.value?.copy(
+                                    uri = currentUri,
+                                    index = index,
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
             playbackService.getTrackData { trackData ->
                 trackData?.let {
                     mainViewModel.setBackgroundTrackData(TrackData(it.uri))
@@ -155,10 +180,20 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-
-
         if (this::playbackService.isInitialized) {
-            playbackService.tracksHasEnded(PlaylistData(playlist = mainViewModel.recentlyPlayedMusic()))
+            when (mainViewModel.playlistData.value?.name) {
+                PlaylistNames.RECENTLY_PLAYED -> {
+                    playbackService.tracksHasEnded(PlaylistData(playlist = mainViewModel.recentlyPlayedMusic()))
+                }
+
+                PlaylistNames.USER_PLAYLIST -> {
+                    playbackService.tracksHasEnded(PlaylistData(playlist = mainViewModel.currentPlaylist))
+                }
+
+                else -> {
+                    // TODO: to implement
+                }
+            }
         }
     }
 

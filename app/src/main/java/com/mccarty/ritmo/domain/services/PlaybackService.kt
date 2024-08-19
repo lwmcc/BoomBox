@@ -153,6 +153,14 @@ class PlaybackService: LifecycleService() {
         }
     }
 
+    fun isCurrentlyPlaying(isPlaying: (Boolean) -> Unit) {
+        spotifyAppRemote?.let { remote ->
+            remote.playerApi.playerState.setResultCallback { playerState ->
+                isPlaying(!playerState.isPaused)
+            }
+        }
+    }
+
     /**
      * All of the data needed to setup track information
      * from the Spotify API

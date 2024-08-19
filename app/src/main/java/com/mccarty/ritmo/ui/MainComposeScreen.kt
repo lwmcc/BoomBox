@@ -31,7 +31,6 @@ fun MainComposeScreen(
     mainViewModel: MainViewModel,
     viewMore: String,
     padding: PaddingValues,
-    trackUri: String?,
     mediaEvents: MainActivity.MediaEvents,
 ) {
 
@@ -43,7 +42,7 @@ fun MainComposeScreen(
     val music by remember { mutableStateOf(mainItems) }
     val scope = rememberCoroutineScope()
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle()
-    val trackUri = mainViewModel.trackUri.collectAsStateWithLifecycle()
+    val trackUri = mainViewModel.trackUri.collectAsStateWithLifecycle() // TODO: don't pass state all the way down
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,

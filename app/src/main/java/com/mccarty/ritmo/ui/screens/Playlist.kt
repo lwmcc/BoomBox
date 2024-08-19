@@ -23,7 +23,7 @@ fun PlaylistScreen(
 ) {
     val playLists by model.playLists.collectAsStateWithLifecycle()
     val playListItem by model.playlistData.collectAsStateWithLifecycle()
-    val trackUri by model.trackUri.collectAsStateWithLifecycle()
+    val trackUri = model.trackUri.collectAsStateWithLifecycle().value
 
     when (playLists) {
         is MainViewModel.PlaylistState.Pending -> {

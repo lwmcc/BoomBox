@@ -93,7 +93,7 @@ class MainViewModel @Inject constructor(
     private var _allPlaylists = MutableStateFlow<AllPlaylistsState>(AllPlaylistsState.Pending)
     val allPlaylists: StateFlow<AllPlaylistsState> = _allPlaylists
 
-    private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending)
+    private var _playlist = MutableStateFlow<PlaylistState>(PlaylistState.Pending) // TODO: remove duplicate code
     val playlist: StateFlow<PlaylistState> = _playlist
 
     private var _currentlyPlayingTrack = MutableStateFlow<CurrentlyPayingTrackState>(CurrentlyPayingTrackState.Pending(true))
@@ -162,8 +162,10 @@ class MainViewModel @Inject constructor(
                     }
 
                     is NetworkRequest.Success -> {
+                        val playlistItems = it.data.items.createTrackDetailsFromPlayListItems()
                         _playLists.value =
-                            PlaylistState.Success(it.data.items.createTrackDetailsFromPlayListItems())
+                            PlaylistState.Success(playlistItems)
+                        _currentPlaylist = playlistItems.toMutableList()
                     }
                 }
             }

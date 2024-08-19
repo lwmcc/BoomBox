@@ -105,10 +105,9 @@ fun MediaList(
                             .weight(1f),
 
                         ) {
-
                         Text(
                             text = track.trackName,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier
                                 .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth(),
@@ -122,7 +121,7 @@ fun MediaList(
                         )
                         Text(
                             text = track.albumName,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier
                                 .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth(),
@@ -138,7 +137,7 @@ fun MediaList(
                         if (track.artists.isNotEmpty()) {
                             Text(
                                 text = track.artists[0].name ?: stringResource(id = R.string.track_name),
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier
                                     .paddingFromBaseline(top = 25.dp)
                                     .fillMaxWidth(),
