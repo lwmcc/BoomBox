@@ -31,6 +31,7 @@ fun MainComposeScreen(
     mainViewModel: MainViewModel,
     viewMore: String,
     padding: PaddingValues,
+    trackUri: String?,
     mediaEvents: MainActivity.MediaEvents,
 ) {
 

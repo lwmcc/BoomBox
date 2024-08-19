@@ -39,7 +39,7 @@ class PlaybackService: LifecycleService() {
     private val binder = PlaybackBinder()
     private var spotifyAppRemote: SpotifyAppRemote? = null
 
-    private lateinit var job: Job
+    private lateinit var backgroundPlayJob: Job
     private lateinit var scope: CoroutineScope
 
     override fun onBind(intent: Intent): IBinder {
@@ -56,6 +56,7 @@ class PlaybackService: LifecycleService() {
             override fun onConnected(appRemote: SpotifyAppRemote) {
                 spotifyAppRemote = appRemote
                 appRemote.playerApi.subscribeToPlayerState().setEventCallback {
+                    println("PlaybackService ***** onCreate() $it")
                     sendBroadCast(it)
                 }
             }
@@ -75,6 +76,8 @@ class PlaybackService: LifecycleService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+
+        println("PlaybackService ***** onStartCommand()")
 
         spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback { playerState ->
             val channel = NotificationChannel(
@@ -104,21 +107,29 @@ class PlaybackService: LifecycleService() {
         return START_STICKY
     }
 
-    fun connect(): CallResult<PlayerState>? = spotifyAppRemote.let { it?.playerApi?.playerState }
-
-    fun subscription(): Subscription<PlayerState>? = spotifyAppRemote.let { it?.playerApi?.subscribeToPlayerState() }
 
     fun remote() = spotifyAppRemote
 
-    fun cancelJob() {
-        if (this::job.isInitialized && job.isActive) {
-            job.cancel()
+    fun currentUri(currentUri: (String) -> Unit) {
+        spotifyAppRemote?.let { remote ->
+            remote.playerApi.playerState.setResultCallback { playerState ->
+                currentUri(playerState.track?.uri.toString())
+            }
+        }
+    }
+
+    /**
+     * This job for keeping track of play state while app is playing in background
+     */
+    fun cancelBackgroundPlayJob() {
+        if (this::backgroundPlayJob.isInitialized && backgroundPlayJob.isActive) {
+            backgroundPlayJob.cancel()
         }
     }
 
     fun tracksHasEnded(playlistData: MainActivity.PlaylistData) {
-        job = SupervisorJob()
-        scope = CoroutineScope(Dispatchers.IO + job)
+        backgroundPlayJob = SupervisorJob()
+        scope = CoroutineScope(Dispatchers.IO + backgroundPlayJob)
 
         scope.launch {
 
@@ -126,9 +137,11 @@ class PlaybackService: LifecycleService() {
                 delay(TICKER_DELAY)
                 spotifyAppRemote?.let { remote ->
                     remote.playerApi.playerState?.setResultCallback { playerState ->
-                        if (playerState.playbackPosition.milliseconds?.inWholeSeconds == (playerState.track?.duration?.milliseconds?.inWholeSeconds?.minus(1L))) {
+                        if (playerState.playbackPosition.milliseconds.inWholeSeconds == (playerState.track?.duration?.milliseconds?.inWholeSeconds?.minus(1L))) {
                             val index = playlistData.playlist.indexOfFirst { it.uri == playerState.track?.uri } + 1
-                            if (playerState.track?.uri ==  playlistData.playlist[playlistData.playlist.size - 1].track?.uri.toString()) {
+                            if (playlistData.playlist.size == 1) {
+                                remote.playerApi.play(null)
+                            } else if (playerState.track?.uri ==  playlistData.playlist[playlistData.playlist.size - 1].track?.uri.toString()) {
                                 remote.playerApi.play(playlistData.playlist[0].track?.uri)
                             } else {
                                 remote.playerApi.play(playlistData.playlist[index].track?.uri)

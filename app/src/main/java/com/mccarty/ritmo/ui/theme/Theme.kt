@@ -9,14 +9,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.ui.material.MaterialTheme.colors
 
 private val LightColorPalette = lightColorScheme(
-    primary = Blue700,
-    secondary = Blue100,
+    primary = Green700,
+    secondary = Green100,
     background = Color.White,
     surface = Color.White,
     onPrimary = Color.White,
     onSecondary = Color.Black,
     onBackground = Color.Black,
     onSurface = Color.Black,
+    surfaceVariant = Grey100,
 )
 
 @Composable

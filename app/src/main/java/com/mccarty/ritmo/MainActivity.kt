@@ -21,6 +21,7 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -28,6 +29,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
@@ -87,7 +89,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     bottomBar = {
                         BottomAppBar(
-                            containerColor = MaterialTheme.colorScheme.background,
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
                             contentColor = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.height(100.dp),
                         ) {
@@ -95,10 +97,14 @@ class MainActivity : ComponentActivity() {
                         }
                     }) { padding ->
 
+                    //val trackUri = playerViewModel.currentUri.collectAsStateWithLifecycle().value
+                    val trackUri by mainViewModel.trackUri.collectAsStateWithLifecycle()
+                    println("MainActivity ***** Current URI $trackUri")
                     MainComposeScreen(
                         mainViewModel = mainViewModel,
                         padding = padding,
                         viewMore = getString(R.string.sheets_view_more),
+                        trackUri = trackUri,
                         mediaEvents = object : MediaEvents {
                             override fun trackSelectionAction(
                                 trackSelectAction: TrackSelectAction,
@@ -121,31 +127,40 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+
+        println("MainActivity ***** INIT onStart() ${this::playbackService.isInitialized}")
+
         Intent(this, PlaybackService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-
-        if (this::playbackService.isInitialized) {
-            playbackService.tracksHasEnded(PlaylistData(playlist = mainViewModel.recentlyPlayedMusic()))
-        }
-    }
-
     override fun onResume() {
         super.onResume()
+
+        println("MainActivity ***** INIT onResume() ${this::playbackService.isInitialized}")
+
         if (this::playbackService.isInitialized) {
             playbackService.getTrackData { trackData ->
                 trackData?.let {
                     mainViewModel.setBackgroundTrackData(TrackData(it.uri))
                 }
             }
-            playbackService.cancelJob()
+            playbackService.cancelBackgroundPlayJob()
+            playbackService.currentUri { currentUri ->
+               playerViewModel.setCurrentUri(currentUri)
+            }
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+
+
+        if (this::playbackService.isInitialized) {
+            playbackService.tracksHasEnded(PlaylistData(playlist = mainViewModel.recentlyPlayedMusic()))
+        }
+    }
 
     override fun onStop() {
         super.onStop()
@@ -288,7 +303,6 @@ class MainActivity : ComponentActivity() {
                 startPlaybackService()
                 when(mainViewModel.playlistData.value?.name) {
                     PlaylistNames.RECOMMENDED_PLAYLIST -> {
-                        println("MainActivity ***** playerControlAction() RECOMMENDED_PLAYLIST")
                         mainViewModel.setPlaylistData(
                             Playlist(
                                 uri = mainViewModel.recommendedPlaylist[INITIAL_POSITION].track?.uri,
