@@ -13,6 +13,7 @@ import com.mccarty.ritmo.MainActivity.Companion.MAIN_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_NAME_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.SONG_DETAILS_KEY
+import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 
@@ -21,6 +22,7 @@ fun StartScreen(
     navController: NavHostController,
     onViewMoreClick: (Boolean, Int) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
+    onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     music: State<MainViewModel.MainItemsState>,
     trackUri: State<String?>,
 ) {
@@ -40,7 +42,10 @@ fun StartScreen(
                 },
                 onAction = {
                     onAction(it)
-                }
+                },
+                onPlaylistSelectAction = {
+                    onPlaylistSelectAction(it)
+                },
             )
         }
         composable(

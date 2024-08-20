@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.DefaultShadowColor
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
@@ -40,12 +41,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import androidx.ui.viewmodel.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.MainActivity
 import com.bumptech.glide.integration.compose.GlideImage as GlideImage
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.domain.model.payload.MainItem
+import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.ui.ItemColor
 import com.mccarty.ritmo.viewmodel.PlaylistNames
@@ -61,6 +64,7 @@ fun MainScreen(
     model: MainViewModel,
     onViewMoreClick: (Boolean, Int, List<MainItem>) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
+    onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     navController: NavHostController = rememberNavController(),
     music: State<MainViewModel.MainItemsState>,
     trackUri: State<String?>,
@@ -71,6 +75,7 @@ fun MainScreen(
     val tracksHeader = context.getString(R.string.recently_played)
     val playlistsHeader = context.getString(R.string.playlists)
     val playListItem by model.playlistData.collectAsStateWithLifecycle()
+    val playListId by model.playlistId.collectAsStateWithLifecycle()
 
     val timeOut by remember { mutableLongStateOf(10_000L) }
 
@@ -263,6 +268,11 @@ fun MainScreen(
                                        .padding(5.dp)
                                        .clickable(onClick = {
                                            model.fetchPlaylist(item.id ?: "")
+                                           onPlaylistSelectAction(
+                                               PlaylistSelectAction.PlaylistSelect(
+                                                   item.id
+                                               )
+                                           )
                                            navController.navigate(
                                                "${MainActivity.PLAYLIST_SCREEN_KEY}${item.name}"
                                            )
@@ -288,6 +298,8 @@ fun MainScreen(
                                                 .size(100.dp),
                                         )
 
+                                        val playlist = playListItem?.name?.name == PlaylistNames.USER_PLAYLIST.name
+
                                         Column(modifier = Modifier.padding(start = 20.dp)) {
                                             Text(
                                                 text = item.name.toString(),
@@ -295,6 +307,7 @@ fun MainScreen(
                                                 modifier = Modifier
                                                     .paddingFromBaseline(top = 25.dp)
                                                     .fillMaxWidth(),
+                                                color = if (playlist && playListId == item.id) Color.Red else Color.Black,
                                             )
                                             if (item.description?.isNotEmpty() == true) {
                                                 Text(
@@ -304,6 +317,7 @@ fun MainScreen(
                                                     modifier = Modifier
                                                         .paddingFromBaseline(top = 25.dp)
                                                         .fillMaxWidth(),
+                                                    color = if (playlist && playListId == item.id) Color.Red else Color.Black,
                                                 )
                                             }
                                             Text(
@@ -312,6 +326,7 @@ fun MainScreen(
                                                 modifier = Modifier
                                                     .paddingFromBaseline(top = 25.dp)
                                                     .fillMaxWidth(),
+                                                color = if (playlist && playListId == item.id) Color.Red else Color.Black,
                                             )
                                         }
                                     }
