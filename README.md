@@ -14,4 +14,3 @@ So that app is a way for Spotify users who have a premium account to to view the
 
 <img src="https://github.com/user-attachments/assets/0852fa7a-90b7-4983-8067-e31bb1854525" width="400">
 
-https://github.com/user-attachments/assets/ccc14449-122d-4e78-a974-6d7e9a2654a3
