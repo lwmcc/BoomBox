@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
@@ -17,9 +18,11 @@ import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 @Composable
 fun PlaylistScreen(
     title: String?,
+    playlistId: String?,
     model: MainViewModel,
     onViewMoreClick: (Boolean, Int) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
+    onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
 ) {
     val playLists by model.playLists.collectAsStateWithLifecycle()
     val playListItem by model.playlistData.collectAsStateWithLifecycle()
@@ -43,15 +46,20 @@ fun PlaylistScreen(
                     MediaList(
                         title = title,
                         trackUri = trackUri,
+                        playlistId = playlistId,
                         playListItem = playListItem,
                         tracks = tracks,
                         onViewMoreClick = { showBottom, index, tracks ->
                             model.setPlayList(tracks)
                             onViewMoreClick(showBottom, index)
                         },
-                    ) {
-                        onAction(it)
-                    }
+                        onAction = {
+                            onAction(it)
+                        },
+                        onPlaylistSelectAction = {
+                            onPlaylistSelectAction(PlaylistSelectAction.PlaylistSelect(playlistId))
+                        },
+                    )
                 }
             }
         }

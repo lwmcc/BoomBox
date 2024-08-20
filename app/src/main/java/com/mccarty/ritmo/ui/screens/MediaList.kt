@@ -29,6 +29,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.domain.model.TrackDetails
+import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
 import com.mccarty.ritmo.ui.ItemColor
 import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
@@ -44,6 +45,8 @@ fun MediaList(
     tracks: List<TrackDetails>,
     onViewMoreClick: (Boolean, Int, List<TrackDetails>) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
+    onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
+    playlistId: String?,
     ) {
 
     if (tracks.isNotEmpty()) {
@@ -74,8 +77,9 @@ fun MediaList(
                                     duration = tracks[index].track?.duration_ms ?: 0L,
                                     tracks = tracks,
                                     playlistName = PlaylistNames.USER_PLAYLIST,
-                                )
+                                ),
                             )
+                            onPlaylistSelectAction(PlaylistSelectAction.PlaylistSelect(playlistId))
                         }
                     )
                     .padding(5.dp)

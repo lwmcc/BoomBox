@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.mccarty.ritmo.MainActivity
+import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
 import com.mccarty.ritmo.ui.screens.StartScreen
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -32,6 +33,7 @@ fun MainComposeScreen(
     viewMore: String,
     padding: PaddingValues,
     mediaEvents: MainActivity.MediaEvents,
+    onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
 ) {
 
     val sheetState = rememberModalBottomSheetState()
@@ -43,6 +45,9 @@ fun MainComposeScreen(
     val scope = rememberCoroutineScope()
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle()
     val trackUri = mainViewModel.trackUri.collectAsStateWithLifecycle() // TODO: don't pass state all the way down
+    val playListId = mainViewModel.playlistId.collectAsStateWithLifecycle().value
+    val isPlaying =!mainViewModel.isPaused.collectAsStateWithLifecycle().value
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
@@ -57,13 +62,18 @@ fun MainComposeScreen(
             StartScreen(
                 music = music,
                 trackUri = trackUri,
+                playlistId = playListId,
                 navController = navController,
+                isPlaying = isPlaying,
                 onViewMoreClick = { bottomSheet, index ->
                     showBottomSheet = bottomSheet
                     trackIndex = index
                 },
                 onAction = {
                     mediaEvents.trackSelectionAction(it, isPaused) // TODO: send up another level
+                },
+                onPlaylistSelectAction = {
+                    onPlaylistSelectAction(it)
                 },
             )
         }

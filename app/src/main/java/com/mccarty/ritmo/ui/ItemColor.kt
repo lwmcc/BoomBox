@@ -40,6 +40,23 @@ class ItemColor {
         }
     }
 
+    fun textColor(
+        isPlaying: Boolean,
+        primary: Color,
+        onBackground: Color,
+        vararg playlistData: String?,
+    ): Color {
+        if (playlistData.any { it.isNullOrEmpty() }) {
+            return onBackground
+        }
+
+        return if (isPlaying && playlistData[0] == playlistData[1] && playlistData[2] == playlistData[3]) {
+            primary
+        } else {
+            onBackground
+        }
+    }
+
     companion object {
         fun currentItemColor(): ItemColor {
             return ItemColor()

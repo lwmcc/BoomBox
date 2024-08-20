@@ -6,10 +6,13 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.mccarty.ritmo.MainActivity.Companion.INDEX_KEY
 import com.mccarty.ritmo.MainActivity.Companion.MAIN_SCREEN_KEY
+import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_ID_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_NAME_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.SONG_DETAILS_KEY
@@ -25,6 +28,8 @@ fun StartScreen(
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     music: State<MainViewModel.MainItemsState>,
     trackUri: State<String?>,
+    playlistId: String?,
+    isPlaying: Boolean = false,
 ) {
     val mainViewModel: MainViewModel = viewModel()
     val details by mainViewModel.mediaDetails.collectAsStateWithLifecycle()
@@ -36,15 +41,14 @@ fun StartScreen(
                 model = mainViewModel, // TODO: move view model
                 music = music,
                 trackUri = trackUri,
+                playlistId = playlistId,
                 navController = navController,
+                isPlaying = isPlaying,
                 onViewMoreClick = { showBottom, index, _->
                     onViewMoreClick(showBottom, index)
                 },
                 onAction = {
                     onAction(it)
-                },
-                onPlaylistSelectAction = {
-                    onPlaylistSelectAction(it)
                 },
             )
         }
@@ -62,16 +66,24 @@ fun StartScreen(
             )
         }
         composable(
-            "$PLAYLIST_SCREEN_KEY{$PLAYLIST_NAME_KEY}",
+            route = "${PLAYLIST_SCREEN_KEY}/{$PLAYLIST_NAME_KEY}/{$PLAYLIST_ID_KEY}",
+            arguments = listOf(
+                navArgument(PLAYLIST_NAME_KEY) { type = NavType.StringType },
+                navArgument(PLAYLIST_ID_KEY) { type = NavType.StringType },
+            )
         ) { backStackEntry ->
             PlaylistScreen(
                 title = backStackEntry.arguments?.getString(PLAYLIST_NAME_KEY),
+                playlistId = backStackEntry.arguments?.getString(PLAYLIST_ID_KEY),
                 model = mainViewModel,
                 onViewMoreClick = { showBottomSheet, index ->
                     onViewMoreClick(showBottomSheet, index)
                 },
                 onAction = {
                     onAction(it)
+                },
+                onPlaylistSelectAction = {
+                    onPlaylistSelectAction(it)
                 }
             )
         }

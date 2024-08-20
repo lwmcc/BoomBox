@@ -21,7 +21,6 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -29,7 +28,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
@@ -108,7 +106,10 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 trackSelection(trackSelectAction, isPaused)
                             }
-                        }
+                        },
+                        onPlaylistSelectAction = {
+                            mainViewModel.setPlaylistId(it)
+                        },
                     )
                 }
             }
@@ -603,9 +604,10 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val INDEX_KEY = "index"
-        const val PLAYLIST_NAME_KEY = "playlist_name/"
+        const val PLAYLIST_NAME_KEY = "playlist_name"
         const val MAIN_SCREEN_KEY = "main_screen"
-        const val PLAYLIST_SCREEN_KEY = "playlist_screen/"
+        const val PLAYLIST_SCREEN_KEY = "playlist_screen"
+        const val PLAYLIST_ID_KEY = "playlist_id"
         const val SONG_DETAILS_KEY = "song_details/"
 
         const val SPOTIFY_TOKEN = "SPOTIFY_TOKEN"

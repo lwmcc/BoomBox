@@ -21,6 +21,7 @@ import com.mccarty.ritmo.domain.model.payload.ListItem
 import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.domain.model.payload.PlaylistData
 import com.mccarty.ritmo.domain.model.payload.TrackItem
+import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.utils.createTrackDetailsFromItems
@@ -132,6 +133,9 @@ class MainViewModel @Inject constructor(
     private var _trackData = MutableStateFlow<MainActivity.TrackData?>(null)
     val trackData: StateFlow<MainActivity.TrackData?> = _trackData
 
+    private var _playListId = MutableStateFlow<String?>(null)
+    val playlistId: StateFlow<String?> = _playListId
+
     private var _recommendedPlaylist = mutableListOf<MainItem>()
         val recommendedPlaylist: List<MainItem>
         get() = _recommendedPlaylist
@@ -153,19 +157,21 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun fetchPlaylist(playlistId: String) {
+    fun fetchPlaylist(playlistId: String?) {
         viewModelScope.launch {
-            repository.fetchUserPlayList(playlistId).collect {
-                when (it) {
-                    is NetworkRequest.Error -> {
-                        PlaylistState.Error(it.message)
-                    }
+            playlistId?.let { it ->
+                repository.fetchUserPlayList(it).collect { playlist ->
+                    when (playlist) {
+                        is NetworkRequest.Error -> {
+                            PlaylistState.Error(playlist.message)
+                        }
 
-                    is NetworkRequest.Success -> {
-                        val playlistItems = it.data.items.createTrackDetailsFromPlayListItems()
-                        _playLists.value =
-                            PlaylistState.Success(playlistItems)
-                        _currentPlaylist = playlistItems.toMutableList()
+                        is NetworkRequest.Success -> {
+                            val playlistItems = playlist.data.items.createTrackDetailsFromPlayListItems()
+                            _playLists.value =
+                                PlaylistState.Success(playlistItems)
+                            _currentPlaylist = playlistItems.toMutableList()
+                        }
                     }
                 }
             }
@@ -451,6 +457,14 @@ class MainViewModel @Inject constructor(
     }
 
     fun setBackgroundTrackData(trackData: MainActivity.TrackData) = _trackData.update { trackData }
+
+    fun setPlaylistId(action: PlaylistSelectAction) {
+        when (action) {
+            is PlaylistSelectAction.PlaylistSelect -> {
+                _playListId.value = action.playlist
+            }
+        }
+    }
 }
 
 data class ControlTrackData(
