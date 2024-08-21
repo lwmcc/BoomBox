@@ -1,7 +1,6 @@
 package com.mccarty.ritmo.ui.screens
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,8 +25,8 @@ fun StartScreen(
     onViewMoreClick: (Boolean, Int) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
-    music: State<MainViewModel.MainItemsState>,
-    trackUri: State<String?>,
+    mainItems: MainViewModel.MainItemsState,
+    trackUri: String?,
     playlistId: String?,
     isPlaying: Boolean = false,
 ) {
@@ -39,7 +38,7 @@ fun StartScreen(
         composable(MAIN_SCREEN_KEY) {
             MainScreen(
                 model = mainViewModel, // TODO: move view model
-                music = music,
+                mainItems = mainItems,
                 trackUri = trackUri,
                 playlistId = playlistId,
                 navController = navController,

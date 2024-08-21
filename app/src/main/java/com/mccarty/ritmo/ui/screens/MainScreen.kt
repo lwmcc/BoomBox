@@ -22,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -51,6 +50,7 @@ import com.mccarty.ritmo.ui.ItemColor
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import kotlinx.coroutines.delay
+import com.mccarty.ritmo.viewmodel.MainViewModel.MainItemsState as MainItemsState
 
 @OptIn(
     ExperimentalGlideComposeApi::class,
@@ -62,8 +62,8 @@ fun MainScreen(
     onViewMoreClick: (Boolean, Int, List<MainItem>) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
     navController: NavHostController = rememberNavController(),
-    music: State<MainViewModel.MainItemsState>,
-    trackUri: State<String?>,
+    mainItems: MainItemsState,
+    trackUri: String?,
     playlistId: String?,
     isPlaying: Boolean = false,
 ) {
@@ -76,14 +76,14 @@ fun MainScreen(
 
     val timeOut by remember { mutableLongStateOf(10_000L) } // TODO: no magic numbers
 
-    when (music.value) {
-        is MainViewModel.MainItemsState.Pending -> {
+    when (mainItems) {
+        is MainItemsState.Pending -> {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                val noInternet = stringResource(id = R.string.no_internet_connection)
+                val noInternet = stringResource(id = R.string.no_internet_connection) // TODO: redo this
                 CircleSpinner(32.dp)
                 LaunchedEffect(Unit) {
                     delay(timeOut)
@@ -92,8 +92,8 @@ fun MainScreen(
             }
         }
 
-        is MainViewModel.MainItemsState.Success -> {
-            val mainItems = (mainMusic as MainViewModel.MainItemsState.Success).mainItems
+        is MainItemsState.Success -> {
+            val mainItems = (mainMusic as MainItemsState.Success).mainItems
             val tracks = mainItems.map {
                 Group(
                     type = it.key,
@@ -210,7 +210,7 @@ fun MainScreen(
                                                 color = ItemColor.currentItemColor().textColor(
                                                     playlist = playListItem,
                                                     mainItem = item,
-                                                    trackUri = trackUri.value,
+                                                    trackUri = trackUri,
                                                     primary = MaterialTheme.colorScheme.primary,
                                                     onBackground = MaterialTheme.colorScheme.onBackground,
                                                 ),
@@ -224,7 +224,7 @@ fun MainScreen(
                                                 color = ItemColor.currentItemColor().textColor(
                                                     playlist = playListItem,
                                                     mainItem = item,
-                                                    trackUri = trackUri.value,
+                                                    trackUri = trackUri,
                                                     primary = MaterialTheme.colorScheme.primary,
                                                     onBackground = MaterialTheme.colorScheme.onBackground,
                                                 ),
@@ -240,7 +240,7 @@ fun MainScreen(
                                                     color = ItemColor.currentItemColor().textColor(
                                                         playlist = playListItem,
                                                         mainItem = item,
-                                                        trackUri = trackUri.value,
+                                                        trackUri = trackUri,
                                                         primary = MaterialTheme.colorScheme.primary,
                                                         onBackground = MaterialTheme.colorScheme.onBackground,
                                                     ),

@@ -56,7 +56,6 @@ class PlaybackService: LifecycleService() {
             override fun onConnected(appRemote: SpotifyAppRemote) {
                 spotifyAppRemote = appRemote
                 appRemote.playerApi.subscribeToPlayerState().setEventCallback {
-                    println("PlaybackService ***** onCreate() $it")
                     sendBroadCast(it)
                 }
             }
