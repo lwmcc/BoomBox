@@ -315,7 +315,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            is PlayerControlAction.Play -> {
+            is PlayerControlAction.Play -> { // TODO: notification
                 startPlaybackService()
                 playbackService.remote()?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
@@ -335,7 +335,7 @@ class MainActivity : ComponentActivity() {
                 playbackService.remote()?.playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
             }
 
-            is PlayerControlAction.Skip -> {
+            is PlayerControlAction.Skip -> { // TODO: notification
                 startPlaybackService()
                 when(mainViewModel.playlistData.value?.name) {
                     PlaylistNames.RECOMMENDED_PLAYLIST -> {
@@ -369,7 +369,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            is PlayerControlAction.PlayWithUri -> {
+            is PlayerControlAction.PlayWithUri -> { // TODO: notification
                 startPlaybackService()
                 playbackService.remote()?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
@@ -383,7 +383,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            PlayerControlAction.ResetToStart -> {
+            PlayerControlAction.ResetToStart -> { // TODO: notificaiton
                 mainViewModel.fetchCurrentlyPlayingTrack()
             }
         }

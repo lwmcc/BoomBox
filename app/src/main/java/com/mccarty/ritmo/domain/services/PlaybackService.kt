@@ -76,8 +76,6 @@ class PlaybackService: LifecycleService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
 
-        println("PlaybackService ***** onStartCommand()")
-
         spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback { playerState ->
             val channel = NotificationChannel(
                 CHANNEL_ID,
