@@ -118,8 +118,6 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) {
             AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, getAuthenticationRequest())
         }
-
-        fetchData()
     }
 
     override fun onStart() {
@@ -224,13 +222,9 @@ class MainActivity : ComponentActivity() {
 
             mainViewModel.setTrackUri(player.trackUri)
             mainViewModel.isPaused(player.isTrackPaused)
+            mainViewModel.fetchMainMusic()
 
-
-            // TODO: testing with async
-            // mainViewModel.fetchMainMusic()
-            mainViewModel.fetchMusic()
-
-
+            // TODO: handle error
             /*  }?.setErrorCallback {
                   mainViewModel.setMainMusicError(it?.message ?: "Could Not Connect to Spotify")
               }*/
@@ -262,7 +256,7 @@ class MainActivity : ComponentActivity() {
             writeToPreferences(response.accessToken)
             if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
                 try {
-                    mainViewModel.fetchRecentlyPlayedMusic()
+                    fetchData()
                 } catch (ioe: IOException) {
                     Timber.e(ioe.message ?: "Error on return from Spotify auth")
                 }
@@ -273,15 +267,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun fetchData() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.trackUri.collect {
-                    it?.let {
-                        mainViewModel.fetchRecentlyPlayedMusic()
-                    }
-                }
-            }
-        }
+        mainViewModel.fetchRecentlyPlayedMusic()
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

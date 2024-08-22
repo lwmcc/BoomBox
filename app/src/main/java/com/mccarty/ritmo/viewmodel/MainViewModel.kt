@@ -147,22 +147,9 @@ class MainViewModel @Inject constructor(
     val currentPlaylist: List<MainItem>
         get() = _currentPlaylist
 
-    private suspend fun fetchAllPlaylists() {
-        repository.fetchPlayLists().collect {
-            when (it) {
-                is NetworkRequest.Error -> {
-                    AllPlaylistsState.Error(it.message)
-                }
-                is NetworkRequest.Success -> {
-                    _allPlaylists.value = AllPlaylistsState.Success(it.data.items)
-                }
-            }
-        }
-    }
-
     fun fetchPlaylist(playlistId: String?) {
         viewModelScope.launch {
-            playlistId?.let { it ->
+            playlistId?.let {
                 repository.fetchUserPlayList(it).collect { playlist ->
                     when (playlist) {
                         is NetworkRequest.Error -> {
@@ -202,82 +189,16 @@ class MainViewModel @Inject constructor(
                     }
                 }
             }
-            fetchAllPlaylists()
         }
     }
 
     fun fetchMainMusic() {
-        val recentItems = mutableListOf<MainItem>()
-        val playlistItems = mutableListOf<MainItem>()
-
-        // TODO: to async
-        viewModelScope.launch {
-            repository.fetchRecentlyPlayedItem().catch {
-                _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(emptyList())
-            }.collect {
-                when (it) {
-                    is NetworkRequest.Error -> {
-                        _mainItems.value = MainItemsState.Error(it.message)
-                    }
-
-                    is NetworkRequest.Success -> {
-                        val trackItems =
-                            it.data.items.distinctBy { track -> track.track?.id }.map { track ->
-                                TrackItem(
-                                    context = track.context,
-                                    played_at = track.played_at,
-                                    track = track.track,
-                                )
-                            }
-                        recentItems.addAll(trackItems)
-                        _recommendedPlaylist.clear()
-                        _recommendedPlaylist.addAll(trackItems)
-                    }
-                }
-            }
-            repository.fetchPlayLists().collect {
-                when (it) {
-                    is NetworkRequest.Error -> {
-                        MainItemsState.Error(true)
-                    }
-
-                    is NetworkRequest.Success -> {
-                        val listItems = it.data.items.map { item ->
-                            ListItem(
-                                collaborative = item.collaborative,
-                                description = item.description,
-                                external_urls = item.external_urls,
-                                href = item.href,
-                                id = item.id,
-                                images = item.images,
-                                name = item.name,
-                                owner = item.owner,
-                                public = item.public,
-                                snapshot_id = item.snapshot_id,
-                                tracks = item.tracks,
-                                type = item.type,
-                                uri = item.uri,
-                            )
-                        }
-                        playlistItems.addAll(listItems)
-                    }
-                }
-            }
-
-            _mainItems.update {
-                MainItemsState.Success(buildMap(2) {
-                    put("track", recentItems)
-                    put("playlist", playlistItems)
-                })
-            }
-        }
-    }
-
-    fun fetchMusic() {
         viewModelScope.launch {
             val recentTracks: Deferred<List<TrackItem>> = async {
                 when (val items = repository.fetchRecentlyPlayedItem().first()) {
-                    is NetworkRequest.Error -> { emptyList() }
+                    is NetworkRequest.Error -> {
+                        emptyList()
+                    }
                     is NetworkRequest.Success -> {
                        items.data.items.distinctBy { track -> track.track?.id }.map { track ->
                             TrackItem(
@@ -318,12 +239,16 @@ class MainViewModel @Inject constructor(
                 }
             }
 
+            val recent = recentTracks.await()
             _mainItems.update {
                 MainItemsState.Success(buildMap(2) {
-                    put("track", recentTracks.await())
+                    put("track", recent)
                     put("playlist", playlists.await())
                 })
             }
+
+            _recommendedPlaylist.clear()
+            _recommendedPlaylist.addAll(recent)
         }
     }
 
@@ -343,7 +268,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun fetchRecommendedPlaylist(mainItems: List<MainItem>) {
+/*    fun fetchRecommendedPlaylist(mainItems: List<MainItem>) {
         val ids = mutableListOf<String>()
         val artists = mutableListOf<List<String>>()
 
@@ -366,7 +291,7 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
-    }
+    }*/
 
     private var job: Job? = null
     private fun setSliderPosition() {
@@ -426,11 +351,11 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun playbackDurationWithIndex(newIndex: Int) {
+/*    fun playbackDurationWithIndex(newIndex: Int) {
         _playbackDuration.update {
             playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.milliseconds?.inWholeSeconds ?: 0
         }
-    }
+    }*/
 
     private inline fun <reified T : Number> playbackPosition(position: T) {
         _playbackPosition.value = position.toLong()
@@ -452,12 +377,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun setMainMusicError(message: String) { _mainItems.value = MainItemsState.Error(message) }
-
     fun checkIfIndexesEqual(): Boolean =  (playlistData.value?.index ?: 0) == (playlistData.value?.tracks?.lastIndex)
 
-    /** If index less than zero, then this is the first time setting up data */
-    fun firstTimePlayingRecommended(): Boolean = (playlistData.value?.index ?: INITIAL_POSITION) < INITIAL_POSITION
     override fun resumePlayback(
         position: Long,
         playerState: PlayerState,

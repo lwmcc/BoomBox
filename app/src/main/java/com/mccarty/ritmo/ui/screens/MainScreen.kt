@@ -87,7 +87,7 @@ fun MainScreen(
                 CircleSpinner(32.dp)
                 LaunchedEffect(Unit) {
                     delay(timeOut)
-                    model.setMainItemsError(noInternet)
+                    model.setMainItemsError(noInternet) // TODO: this might not be because of the internet connection
                 }
             }
         }
