@@ -224,7 +224,13 @@ class MainActivity : ComponentActivity() {
 
             mainViewModel.setTrackUri(player.trackUri)
             mainViewModel.isPaused(player.isTrackPaused)
-            mainViewModel.fetchMainMusic()
+
+
+            // TODO: testing with async
+            // mainViewModel.fetchMainMusic()
+            mainViewModel.fetchMusic()
+
+
             /*  }?.setErrorCallback {
                   mainViewModel.setMainMusicError(it?.message ?: "Could Not Connect to Spotify")
               }*/

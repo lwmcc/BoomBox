@@ -30,12 +30,15 @@ import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.protocol.types.PlayerState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -207,6 +210,7 @@ class MainViewModel @Inject constructor(
         val recentItems = mutableListOf<MainItem>()
         val playlistItems = mutableListOf<MainItem>()
 
+        // TODO: to async
         viewModelScope.launch {
             repository.fetchRecentlyPlayedItem().catch {
                 _recentlyPlayedMusic.value = RecentlyPlayedMusicState.Success(emptyList())
@@ -264,6 +268,60 @@ class MainViewModel @Inject constructor(
                 MainItemsState.Success(buildMap(2) {
                     put("track", recentItems)
                     put("playlist", playlistItems)
+                })
+            }
+        }
+    }
+
+    fun fetchMusic() {
+        viewModelScope.launch {
+            val recentTracks: Deferred<List<TrackItem>> = async {
+                when (val items = repository.fetchRecentlyPlayedItem().first()) {
+                    is NetworkRequest.Error -> { emptyList() }
+                    is NetworkRequest.Success -> {
+                       items.data.items.distinctBy { track -> track.track?.id }.map { track ->
+                            TrackItem(
+                                context = track.context,
+                                played_at = track.played_at,
+                                track = track.track,
+                            )
+                        }
+                    }
+                }
+            }
+
+            val playlists: Deferred<List<ListItem>> = async {
+                when (val items = repository.fetchPlayLists().first()) {
+                    is NetworkRequest.Error -> {
+                        emptyList()
+                    }
+
+                    is NetworkRequest.Success -> {
+                        items.data.items.map { item ->
+                            ListItem(
+                                collaborative = item.collaborative,
+                                description = item.description,
+                                external_urls = item.external_urls,
+                                href = item.href,
+                                id = item.id,
+                                images = item.images,
+                                name = item.name,
+                                owner = item.owner,
+                                public = item.public,
+                                snapshot_id = item.snapshot_id,
+                                tracks = item.tracks,
+                                type = item.type,
+                                uri = item.uri,
+                            )
+                        }
+                    }
+                }
+            }
+
+            _mainItems.update {
+                MainItemsState.Success(buildMap(2) {
+                    put("track", recentTracks.await())
+                    put("playlist", playlists.await())
                 })
             }
         }
