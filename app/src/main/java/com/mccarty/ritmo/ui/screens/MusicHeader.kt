@@ -25,24 +25,24 @@ fun MainHeader(
     Column(
         modifier = modifier
             .padding(
-                start = 16.dp,
                 bottom = 16.dp,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            )
+            .fillMaxWidth(),
         ) {
         MainImageHeader(
             imageUrl,
             400.dp,
-            50.dp,
-            50.dp,
-            modifier,
-            )
+            24.dp,
+            48.dp,
+            modifier.align(Alignment.CenterHorizontally),
+        )
         Text(
             text = artistName,
             style = MaterialTheme.typography.headlineMedium,
             modifier = modifier
                 .paddingFromBaseline(top = 25.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(start = 16.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -52,7 +52,8 @@ fun MainHeader(
             style = MaterialTheme.typography.headlineSmall,
             modifier = modifier
                 .paddingFromBaseline(top = 25.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(start = 16.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -61,7 +62,8 @@ fun MainHeader(
             style = MaterialTheme.typography.titleMedium,
             modifier = modifier
                 .paddingFromBaseline(top = 25.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(start = 16.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

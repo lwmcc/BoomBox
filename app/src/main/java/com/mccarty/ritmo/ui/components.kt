@@ -294,6 +294,25 @@ fun TrackDetailsTopBar(@StringRes title: Int, onBack: () -> Unit) {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NavTopBar(title: String, onBack: () -> Unit) {
+    TopAppBar(
+        title = { Text(text = title) },
+        navigationIcon = {
+            IconButton(onClick = {
+                onBack()
+            }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = R(R.string.menu_back),
+                )
+            }
+        },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
 fun getPlaylist(playlist: String?, context: Context): String {
     if (playlist.isNullOrEmpty()) {
         return context.getString(R.string.playing_from_recommended)

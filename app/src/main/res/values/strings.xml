@@ -31,4 +31,6 @@
     <!-- Top Bar -->
     <string name="top_bar_track_details">Track Details</string>
 
+    <string name="explicit_content">Explicit content</string>
+
 </resources>

@@ -9,9 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import androidx.ui.res.stringResource
 import com.mccarty.ritmo.MainActivity.Companion.INDEX_KEY
 import com.mccarty.ritmo.MainActivity.Companion.MAIN_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_ID_KEY
@@ -29,6 +27,7 @@ fun StartScreen(
     onViewMoreClick: (Boolean, Int) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
+    onNavigateToPlaylist: (String?, String?) -> Unit,
     mainItems: MainViewModel.MainItemsState,
     trackUri: String?,
     playlistId: String?,
@@ -39,9 +38,6 @@ fun StartScreen(
     val details by mainViewModel.mediaDetails.collectAsStateWithLifecycle()
     val isPaused by mainViewModel.isPaused.collectAsStateWithLifecycle(false)
 
-    val currentNavBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = currentNavBackStackEntry?.destination?.route ?: MAIN_SCREEN_KEY
-
     NavHost(navController = navController, startDestination = MAIN_SCREEN_KEY) {
         composable(MAIN_SCREEN_KEY) {
             MainScreen(
@@ -49,14 +45,16 @@ fun StartScreen(
                 mainItems = mainItems,
                 trackUri = trackUri,
                 playlistId = playlistId,
-                navController = navController,
                 isPlaying = isPlaying,
-                mainTitle = R.string.recently_played,
+                mainTitle = R.string.app_name,
                 onViewMoreClick = { showBottom, index, _->
                     onViewMoreClick(showBottom, index)
                 },
                 onAction = {
                     onAction(it)
+                },
+                onNavigateToPlaylist = { name, id ->
+                    onNavigateToPlaylist(name, id)
                 },
             )
         }
@@ -96,7 +94,10 @@ fun StartScreen(
                 },
                 onPlaylistSelectAction = {
                     onPlaylistSelectAction(it)
-                }
+                },
+                onBack = {
+                    navController.popBackStack()
+                },
             )
         }
     }

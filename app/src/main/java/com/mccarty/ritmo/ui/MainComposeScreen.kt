@@ -81,6 +81,9 @@ fun MainComposeScreen(
                 onPlaylistSelectAction = {
                     onPlaylistSelectAction(it)
                 },
+                onNavigateToPlaylist = { name, id ->
+                    navActions.navigateToPlaylist(name, id)
+                },
             )
         }
     }
