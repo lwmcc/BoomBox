@@ -1,5 +1,6 @@
 package com.mccarty.ritmo.ui.screens
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -8,13 +9,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import androidx.ui.res.stringResource
 import com.mccarty.ritmo.MainActivity.Companion.INDEX_KEY
 import com.mccarty.ritmo.MainActivity.Companion.MAIN_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_ID_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_NAME_KEY
 import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.SONG_DETAILS_KEY
+import com.mccarty.ritmo.R
 import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
@@ -29,10 +33,14 @@ fun StartScreen(
     trackUri: String?,
     playlistId: String?,
     isPlaying: Boolean = false,
+    @StringRes detailsTitle: Int,
 ) {
     val mainViewModel: MainViewModel = viewModel()
     val details by mainViewModel.mediaDetails.collectAsStateWithLifecycle()
     val isPaused by mainViewModel.isPaused.collectAsStateWithLifecycle(false)
+
+    val currentNavBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentNavBackStackEntry?.destination?.route ?: MAIN_SCREEN_KEY
 
     NavHost(navController = navController, startDestination = MAIN_SCREEN_KEY) {
         composable(MAIN_SCREEN_KEY) {
@@ -43,6 +51,7 @@ fun StartScreen(
                 playlistId = playlistId,
                 navController = navController,
                 isPlaying = isPlaying,
+                mainTitle = R.string.recently_played,
                 onViewMoreClick = { showBottom, index, _->
                     onViewMoreClick(showBottom, index)
                 },
@@ -58,10 +67,14 @@ fun StartScreen(
                 isPaused = isPaused,
                 details = details,
                 model = mainViewModel,
+                title = detailsTitle,
                 index = backStackEntry.arguments?.getString(INDEX_KEY)?.toInt() ?: 0,
                 onPlayPauseClicked = {
                     onAction(it)
-                }
+                },
+                onBack = {
+                    navController.popBackStack()
+                },
             )
         }
         composable(

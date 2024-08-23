@@ -597,7 +597,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val INDEX_KEY = "index"
         const val PLAYLIST_NAME_KEY = "playlist_name"
-        const val MAIN_SCREEN_KEY = "main_screen"
+        const val MAIN_SCREEN_KEY = "main_screen" // TODO: use enum
         const val PLAYLIST_SCREEN_KEY = "playlist_screen"
         const val PLAYLIST_ID_KEY = "playlist_id"
         const val SONG_DETAILS_KEY = "song_details/"
