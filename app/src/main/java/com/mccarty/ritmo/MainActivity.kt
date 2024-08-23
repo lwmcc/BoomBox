@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
 
     private var bound: Boolean = false
 
-    lateinit var receiver :  PlaybackServiceReceiver
+    private lateinit var receiver :  PlaybackServiceReceiver
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(component: ComponentName?, service: IBinder?) {

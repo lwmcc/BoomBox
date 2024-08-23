@@ -60,7 +60,7 @@ fun SongDetailsScreen(
         }
     ) { paddingValues ->
         Column(
-            modifier = Modifier.padding(horizontal = 25.dp),
+            modifier = Modifier.padding(start = 24.dp, top = paddingValues.calculateTopPadding(), end = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             val pagerState = rememberPagerState(pageCount = { details.size })
@@ -100,13 +100,13 @@ fun MediaDetails(
                 MainImageHeader(
                     image,
                     400.dp,
-                    50.dp,
+                    24.dp,
                     50.dp,
                     Modifier,
                 )
             }
 
-            Spacer(modifier = Modifier.height(200.dp) )
+            Spacer(modifier = Modifier.height(100.dp) )
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row {
                     Text(
@@ -145,7 +145,14 @@ fun MediaDetails(
                         style = MaterialTheme.typography.titleSmall,
                     )
                 }
-                Text("${tracks[page].explicit}")
+
+                if (tracks[page].explicit) {
+                    androidx.compose.material3.Icon(
+                        painter = painterResource(R.drawable.baseline_explicit_24),
+                        contentDescription = androidx.compose.ui.res.stringResource(R.string.explicit_content),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
 
             LaunchedEffect(key1 = tracks[page].uri) {

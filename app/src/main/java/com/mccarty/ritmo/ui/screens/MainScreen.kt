@@ -36,13 +36,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.mccarty.ritmo.MainActivity
 import com.bumptech.glide.integration.compose.GlideImage as GlideImage
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.viewmodel.MainViewModel
@@ -64,7 +62,7 @@ fun MainScreen(
     model: MainViewModel,
     onViewMoreClick: (Boolean, Int, List<MainItem>) -> Unit,
     onAction: (TrackSelectAction) -> Unit,
-    navController: NavHostController = rememberNavController(),
+    onNavigateToPlaylist: (String?, String?) -> Unit,
     mainItems: MainItemsState,
     trackUri: String?,
     playlistId: String?,
@@ -85,177 +83,149 @@ fun MainScreen(
         modifier = modifier.fillMaxSize(),
         topBar = { MainScreenTopBar(mainTitle) }
     ) { paddingValues ->
-        when (mainItems) {
-            is MainItemsState.Pending -> {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    val noInternet = stringResource(id = R.string.no_internet_connection) // TODO: redo this
-                    CircleSpinner(32.dp)
-                    LaunchedEffect(Unit) {
-                        delay(timeOut)
-                        model.setMainItemsError(noInternet) // TODO: this might not be because of the internet connection
+        Column(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
+            when (mainItems) {
+                is MainItemsState.Pending -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        val noInternet = stringResource(id = R.string.no_internet_connection) // TODO: redo this
+                        CircleSpinner(32.dp)
+                        LaunchedEffect(Unit) {
+                            delay(timeOut)
+                            model.setMainItemsError(noInternet) // TODO: this might not be because of the internet connection
+                        }
                     }
                 }
-            }
 
-            is MainItemsState.Success -> {
-                val mainItems = (mainMusic as MainItemsState.Success).mainItems
-                val tracks = mainItems.map {
-                    Group(
-                        type = it.key,
-                        items = it.value,
-                    )
-                }
+                is MainItemsState.Success -> {
+                    val mainItems = (mainMusic as MainItemsState.Success).mainItems
+                    val tracks = mainItems.map {
+                        Group(
+                            type = it.key,
+                            items = it.value,
+                        )
+                    }
 
-                /**
-                 * Section holding header, recently played, and playlist
-                 */
+                    /**
+                     * Section holding header, recently played, and playlist
+                     */
 
-                /**
-                 * Section holding header, recently played, and playlist
-                 */
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    tracks.forEachIndexed { index, group ->
-                        stickyHeader {
-                            /**
-                             * Section header, ie Recently Played and Playlist
-                             */
-                            /**
-                             * Section header, ie Recently Played and Playlist
-                             */
-                            Column(
-                                modifier = Modifier
-                                    .background(color = MaterialTheme.colorScheme.background),
-                            ) {
+                    /**
+                     * Section holding header, recently played, and playlist
+                     */
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        tracks.forEachIndexed { index, group ->
+                            stickyHeader {
                                 /**
-                                 * Section header text Recently Played and Playlist
+                                 * Section header, ie Recently Played and Playlist
                                  */
                                 /**
-                                 * Section header text Recently Played and Playlist
+                                 * Section header, ie Recently Played and Playlist
                                  */
-                                Text(
-                                    text = stickyHeaderText(group.type, tracksHeader, playlistsHeader),
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontStyle = FontStyle.Normal,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
+                                Column(
                                     modifier = Modifier
-                                        .paddingFromBaseline(top = 40.dp)
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                )
-                            }
-                        }
-
-                        if (index == 0) {
-                            item {
-                                MainHeader(
-                                    imageUrl = musicHeader.imageUrl.toString(),
-                                    artistName = musicHeader.artistName,
-                                    albumName = musicHeader.albumName,
-                                    songName = musicHeader.songName,
-                                    modifier = Modifier,
-                                )
-                            }
-                        }
-
-                        itemsIndexed(group.items) { itemIndex, item ->
-                            when (item.type) {
-                                /**
-                                 * Track shown in Recently Played list
-                                 */
-                                /**
-                                 * Track shown in Recently Played list
-                                 */
-                                CollectionType.TRACK.collectionType -> {
-                                    Card(
+                                        .background(color = MaterialTheme.colorScheme.background),
+                                ) {
+                                    /**
+                                     * Section header text Recently Played and Playlist
+                                     */
+                                    /**
+                                     * Section header text Recently Played and Playlist
+                                     */
+                                    Text(
+                                        text = stickyHeaderText(group.type, tracksHeader, playlistsHeader),
+                                        color = MaterialTheme.colorScheme.onBackground,
+                                        fontStyle = FontStyle.Normal,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
                                         modifier = Modifier
+                                            .paddingFromBaseline(top = 40.dp)
                                             .fillMaxWidth()
-                                            .clickable(
-                                                onClick = {
-                                                    onAction(
-                                                        TrackSelectAction.TrackSelect(
-                                                            index = itemIndex,
-                                                            duration = group.items[itemIndex].track?.duration_ms
-                                                                ?: 0L, // TODO: fix
-                                                            uri = group.items[itemIndex].track?.uri
-                                                                ?: "",
-                                                            tracks = group.items,
-                                                            playlistName = PlaylistNames.RECENTLY_PLAYED,
+                                            .padding(16.dp),
+                                    )
+                                }
+                            }
+
+                            if (index == 0) {
+                                item {
+                                    MainHeader(
+                                        imageUrl = musicHeader.imageUrl.toString(),
+                                        artistName = musicHeader.artistName,
+                                        albumName = musicHeader.albumName,
+                                        songName = musicHeader.songName,
+                                        modifier = Modifier,
+                                    )
+                                }
+                            }
+
+                            itemsIndexed(group.items) { itemIndex, item ->
+                                when (item.type) {
+                                    /**
+                                     * Track shown in Recently Played list
+                                     */
+                                    /**
+                                     * Track shown in Recently Played list
+                                     */
+                                    CollectionType.TRACK.collectionType -> {
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable(
+                                                    onClick = {
+                                                        onAction(
+                                                            TrackSelectAction.TrackSelect(
+                                                                index = itemIndex,
+                                                                duration = group.items[itemIndex].track?.duration_ms
+                                                                    ?: 0L, // TODO: fix
+                                                                uri = group.items[itemIndex].track?.uri
+                                                                    ?: "",
+                                                                tracks = group.items,
+                                                                playlistName = PlaylistNames.RECENTLY_PLAYED,
+                                                            )
                                                         )
-                                                    )
-                                                }
-                                            )
-                                            .padding(5.dp)
-                                            .shadow(
-                                                elevation = 2.dp,
-                                                shape = RectangleShape,
-                                                clip = false,
-                                                ambientColor = DefaultShadowColor,
-                                                spotColor = DefaultShadowColor,
+                                                    }
+                                                )
+                                                .padding(5.dp)
+                                                .shadow(
+                                                    elevation = 2.dp,
+                                                    shape = RectangleShape,
+                                                    clip = false,
+                                                    ambientColor = DefaultShadowColor,
+                                                    spotColor = DefaultShadowColor,
+                                                ),
+                                            shape = MaterialTheme.shapes.extraSmall,
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.background,
                                             ),
-                                        shape = MaterialTheme.shapes.extraSmall,
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.background,
-                                        ),
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            val imageUrl = item.track?.album?.images?.firstOrNull()?.url
-                                            GlideImage(
-                                                model = imageUrl,
-                                                contentDescription = stringResource(R.string.description_for_image),
-                                                modifier = Modifier.size(100.dp)
-                                            )
-
-                                            Column(
-                                                modifier = Modifier
-                                                    .padding(start = 20.dp)
-                                                    .weight(1f),
-
-                                                ) {
-
-                                                Text(
-                                                    text = item.track?.name.toString(),
-                                                    style = MaterialTheme.typography.titleLarge,
-                                                    modifier = Modifier
-                                                        .paddingFromBaseline(top = 25.dp)
-                                                        .fillMaxWidth(),
-                                                    color = ItemColor.currentItemColor().textColor(
-                                                        playlist = playListItem,
-                                                        mainItem = item,
-                                                        trackUri = trackUri,
-                                                        primary = MaterialTheme.colorScheme.primary,
-                                                        onBackground = MaterialTheme.colorScheme.onBackground,
-                                                    ),
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                val imageUrl = item.track?.album?.images?.firstOrNull()?.url
+                                                GlideImage(
+                                                    model = imageUrl,
+                                                    contentDescription = stringResource(R.string.description_for_image),
+                                                    modifier = Modifier.size(100.dp)
                                                 )
-                                                Text(
-                                                    text = item.track?.album?.name ?: "",
-                                                    style = MaterialTheme.typography.bodyLarge,
+
+                                                Column(
                                                     modifier = Modifier
-                                                        .paddingFromBaseline(top = 25.dp)
-                                                        .fillMaxWidth(),
-                                                    color = ItemColor.currentItemColor().textColor(
-                                                        playlist = playListItem,
-                                                        mainItem = item,
-                                                        trackUri = trackUri,
-                                                        primary = MaterialTheme.colorScheme.primary,
-                                                        onBackground = MaterialTheme.colorScheme.onBackground,
-                                                    ),
-                                                )
-                                                if (item.track?.artists?.isNotEmpty() == true) {
+                                                        .padding(start = 20.dp)
+                                                        .weight(1f),
+
+                                                    ) {
+
                                                     Text(
-                                                        text = item.track?.artists?.get(0)?.name
-                                                            ?: androidx.ui.res.stringResource(R.string.track_name),
-                                                        style = MaterialTheme.typography.bodyLarge,
+                                                        text = item.track?.name.toString(),
+                                                        style = MaterialTheme.typography.titleMedium,
                                                         modifier = Modifier
                                                             .paddingFromBaseline(top = 25.dp)
                                                             .fillMaxWidth(),
@@ -266,85 +236,101 @@ fun MainScreen(
                                                             primary = MaterialTheme.colorScheme.primary,
                                                             onBackground = MaterialTheme.colorScheme.onBackground,
                                                         ),
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis,
                                                     )
+                                                    Text(
+                                                        text = item.track?.album?.name ?: "",
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        modifier = Modifier
+                                                            .paddingFromBaseline(top = 25.dp)
+                                                            .fillMaxWidth(),
+                                                        color = ItemColor.currentItemColor().textColor(
+                                                            playlist = playListItem,
+                                                            mainItem = item,
+                                                            trackUri = trackUri,
+                                                            primary = MaterialTheme.colorScheme.primary,
+                                                            onBackground = MaterialTheme.colorScheme.onBackground,
+                                                        ),
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis,
+                                                    )
+                                                    if (item.track?.artists?.isNotEmpty() == true) {
+                                                        Text(
+                                                            text = item.track?.artists?.get(0)?.name
+                                                                ?: androidx.ui.res.stringResource(R.string.track_name),
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            modifier = Modifier
+                                                                .paddingFromBaseline(top = 25.dp)
+                                                                .fillMaxWidth(),
+                                                            color = ItemColor.currentItemColor().textColor(
+                                                                playlist = playListItem,
+                                                                mainItem = item,
+                                                                trackUri = trackUri,
+                                                                primary = MaterialTheme.colorScheme.primary,
+                                                                onBackground = MaterialTheme.colorScheme.onBackground,
+                                                            ),
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis,
+                                                        )
+                                                    }
                                                 }
+                                                Icon(
+                                                    Icons.Default.MoreVert,
+                                                    contentDescription = stringResource(
+                                                        id = R.string.icon_view_more,
+                                                    ),
+                                                    modifier = Modifier.clickable {
+                                                        model.setPlayList(group.items)
+                                                        onViewMoreClick(true, itemIndex, group.items)
+                                                    }
+                                                )
                                             }
-                                            Icon(
-                                                Icons.Default.MoreVert,
-                                                contentDescription = stringResource(
-                                                    id = R.string.icon_view_more,
-                                                ),
-                                                modifier = Modifier.clickable {
-                                                    model.setPlayList(group.items)
-                                                    onViewMoreClick(true, itemIndex, group.items)
-                                                }
-                                            )
                                         }
                                     }
-                                }
 
 
-                                /**
-                                 * Playlist name show in list fo playlists
-                                 */
+                                    /**
+                                     * Playlist name show in list fo playlists
+                                     */
 
-                                /**
-                                 * Playlist name show in list fo playlists
-                                 */
-                                CollectionType.PLAYLIST.collectionType -> {
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(5.dp)
-                                            .clickable(onClick = {
-                                                model.fetchPlaylist(item.id)
-                                                navController.navigate(
-                                                    route = "${MainActivity.PLAYLIST_SCREEN_KEY}/${item.name}/${item.id}"
-                                                )
-                                            })
-                                            .shadow(
-                                                elevation = 2.dp,
-                                                shape = RectangleShape,
-                                                clip = false,
-                                                ambientColor = DefaultShadowColor,
-                                                spotColor = DefaultShadowColor,
+                                    /**
+                                     * Playlist name show in list fo playlists
+                                     */
+                                    CollectionType.PLAYLIST.collectionType -> {
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(5.dp)
+                                                .clickable(onClick = {
+                                                    model.fetchPlaylist(item.id)
+                                                    onNavigateToPlaylist(item.name, item.id)
+                                                })
+                                                .shadow(
+                                                    elevation = 2.dp,
+                                                    shape = RectangleShape,
+                                                    clip = false,
+                                                    ambientColor = DefaultShadowColor,
+                                                    spotColor = DefaultShadowColor,
+                                                ),
+                                            shape = MaterialTheme.shapes.extraSmall,
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = MaterialTheme.colorScheme.surface,
                                             ),
-                                        shape = MaterialTheme.shapes.extraSmall,
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.surface,
-                                        ),
-                                    ) {
-                                        val imageUrl = item.images.firstOrNull()?.url
-                                        Row {
-                                            GlideImage(
-                                                model = imageUrl,
-                                                contentDescription = "",
-                                                modifier = Modifier
-                                                    .size(100.dp),
-                                            )
-
-                                            Column(modifier = Modifier.padding(start = 20.dp)) {
-                                                Text(
-                                                    text = item.name.toString(),
-                                                    style = MaterialTheme.typography.titleMedium,
+                                        ) {
+                                            val imageUrl = item.images.firstOrNull()?.url
+                                            Row {
+                                                GlideImage(
+                                                    model = imageUrl,
+                                                    contentDescription = "",
                                                     modifier = Modifier
-                                                        .paddingFromBaseline(top = 25.dp)
-                                                        .fillMaxWidth(),
-                                                    color = ItemColor.currentItemColor().textColor(
-                                                        isPlaying = isPlaying,
-                                                        primary = MaterialTheme.colorScheme.primary,
-                                                        onBackground = MaterialTheme.colorScheme.onBackground,
-                                                        playListItem?.name?.name,
-                                                        PlaylistNames.USER_PLAYLIST.name,
-                                                        playlistId,
-                                                        item.id,
-                                                    ),
+                                                        .size(100.dp),
                                                 )
-                                                if (item.description?.isNotEmpty() == true) {
+
+                                                Column(modifier = Modifier.padding(start = 20.dp)) {
                                                     Text(
-                                                        text = item.description
-                                                            ?: "", // TODO: use some text
-                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        text = item.name.toString(),
+                                                        style = MaterialTheme.typography.titleMedium,
                                                         modifier = Modifier
                                                             .paddingFromBaseline(top = 25.dp)
                                                             .fillMaxWidth(),
@@ -357,24 +343,49 @@ fun MainScreen(
                                                             playlistId,
                                                             item.id,
                                                         ),
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis,
+                                                    )
+                                                    if (item.description?.isNotEmpty() == true) {
+                                                        Text(
+                                                            text = item.description
+                                                                ?: "", // TODO: use some text
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            modifier = Modifier
+                                                                .paddingFromBaseline(top = 25.dp)
+                                                                .fillMaxWidth(),
+                                                            color = ItemColor.currentItemColor().textColor(
+                                                                isPlaying = isPlaying,
+                                                                primary = MaterialTheme.colorScheme.primary,
+                                                                onBackground = MaterialTheme.colorScheme.onBackground,
+                                                                playListItem?.name?.name,
+                                                                PlaylistNames.USER_PLAYLIST.name,
+                                                                playlistId,
+                                                                item.id,
+                                                            ),
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis,
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = "${stringResource(R.string.total_tracks)} ${item.tracks?.total}",
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        modifier = Modifier
+                                                            .paddingFromBaseline(top = 25.dp)
+                                                            .fillMaxWidth(),
+                                                        color = ItemColor.currentItemColor().textColor(
+                                                            isPlaying = isPlaying,
+                                                            primary = MaterialTheme.colorScheme.primary,
+                                                            onBackground = MaterialTheme.colorScheme.onBackground,
+                                                            playListItem?.name?.name,
+                                                            PlaylistNames.USER_PLAYLIST.name,
+                                                            playlistId,
+                                                            item.id,
+                                                        ),
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis,
                                                     )
                                                 }
-                                                Text(
-                                                    text = "${stringResource(R.string.total_tracks)} ${item.tracks?.total}",
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    modifier = Modifier
-                                                        .paddingFromBaseline(top = 25.dp)
-                                                        .fillMaxWidth(),
-                                                    color = ItemColor.currentItemColor().textColor(
-                                                        isPlaying = isPlaying,
-                                                        primary = MaterialTheme.colorScheme.primary,
-                                                        onBackground = MaterialTheme.colorScheme.onBackground,
-                                                        playListItem?.name?.name,
-                                                        PlaylistNames.USER_PLAYLIST.name,
-                                                        playlistId,
-                                                        item.id,
-                                                    ),
-                                                )
                                             }
                                         }
                                     }
@@ -383,11 +394,11 @@ fun MainScreen(
                         }
                     }
                 }
-            }
 
-            is MainItemsState.Error<*> -> {
-                val error = (mainMusic as MainItemsState.Error<*>).message.toString()
-                ErrorScreen(error)
+                is MainItemsState.Error<*> -> {
+                    val error = (mainMusic as MainItemsState.Error<*>).message.toString()
+                    ErrorScreen(error)
+                }
             }
         }
     }

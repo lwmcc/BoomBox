@@ -21,10 +21,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.DefaultShadowColor
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.R
@@ -39,7 +37,6 @@ import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun MediaList(
-    title: String?,
     trackUri: String?,
     playListItem: Playlist?,
     tracks: List<TrackDetails>,
@@ -48,20 +45,6 @@ fun MediaList(
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     playlistId: String?,
     ) {
-
-    if (tracks.isNotEmpty()) {
-        Text(
-            text = title ?: stringResource(R.string.playlist),
-            color = MaterialTheme.colorScheme.onBackground,
-            fontStyle = FontStyle.Normal,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            modifier = Modifier
-                .paddingFromBaseline(top = 40.dp)
-                .fillMaxWidth()
-                .padding(16.dp),
-        )
-    }
 
     Column {
         tracks.forEachIndexed { index, track ->
@@ -111,7 +94,7 @@ fun MediaList(
                         ) {
                         Text(
                             text = track.trackName,
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier
                                 .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth(),
@@ -122,10 +105,12 @@ fun MediaList(
                                 primary = MaterialTheme.colorScheme.primary,
                                 onBackground = MaterialTheme.colorScheme.onBackground,
                             ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         Text(
                             text = track.albumName,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier
                                 .paddingFromBaseline(top = 25.dp)
                                 .fillMaxWidth(),
@@ -136,12 +121,14 @@ fun MediaList(
                                 primary = MaterialTheme.colorScheme.primary,
                                 onBackground = MaterialTheme.colorScheme.onBackground,
                             ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
 
                         if (track.artists.isNotEmpty()) {
                             Text(
                                 text = track.artists[0].name ?: stringResource(id = R.string.track_name),
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier
                                     .paddingFromBaseline(top = 25.dp)
                                     .fillMaxWidth(),
@@ -152,6 +139,8 @@ fun MediaList(
                                     primary = MaterialTheme.colorScheme.primary,
                                     onBackground = MaterialTheme.colorScheme.onBackground,
                                 ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
