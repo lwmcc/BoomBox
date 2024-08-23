@@ -3,6 +3,7 @@ package com.mccarty.ritmo.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,6 +30,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -39,10 +43,13 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.res.stringResource as R
+import androidx.compose.material3.IconButton as IconButton
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.viewmodel.MainViewModel
@@ -61,7 +68,7 @@ fun MainImageHeader(
 ) {
     GlideImage(
         model = imageUrl,
-        contentDescription = androidx.compose.ui.res.stringResource(R.string.description_for_image),
+        contentDescription = R(R.string.description_for_image),
         modifier = modifier
             .size(imageSize)
             .padding(
@@ -248,6 +255,42 @@ fun CircleSpinner(width: Dp = 64.dp) {
         modifier = Modifier.width(width),
         color = MaterialTheme.colorScheme.primary,
         trackColor = MaterialTheme.colorScheme.secondary,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreenTopBar(@StringRes title: Int) {
+    TopAppBar(
+        title = { Text(text = R(id = title)) },
+        navigationIcon = {
+            IconButton(onClick = {  }) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_bb_home),
+                    contentDescription = "Localized description"
+                )
+            }
+        },
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TrackDetailsTopBar(@StringRes title: Int, onBack: () -> Unit) {
+    TopAppBar(
+        title = { Text(text = R(id = title)) },
+        navigationIcon = {
+            IconButton(onClick = {
+                onBack()
+            }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = R(R.string.menu_back),
+                )
+            }
+        },
+        modifier = Modifier.fillMaxWidth()
     )
 }
 

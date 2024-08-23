@@ -18,9 +18,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.mccarty.ritmo.MainActivity
+import com.mccarty.ritmo.R
 import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
+import com.mccarty.ritmo.ui.navigation.AppNavigationActions
 import com.mccarty.ritmo.ui.screens.StartScreen
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -30,15 +33,18 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainComposeScreen(
     mainViewModel: MainViewModel,
+    navController: NavHostController = rememberNavController(),
     viewMore: String,
     padding: PaddingValues,
     mediaEvents: MainActivity.MediaEvents,
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
+    navActions: AppNavigationActions = remember(navController) {
+        AppNavigationActions(navController)
+    }
 ) {
 
     val sheetState = rememberModalBottomSheetState()
     val mainItems = mainViewModel.mainItems.collectAsStateWithLifecycle().value
-    val navController = rememberNavController()
     var showBottomSheet by remember { mutableStateOf(false) }
     var trackIndex by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
@@ -64,6 +70,7 @@ fun MainComposeScreen(
                 playlistId = playListId,
                 navController = navController,
                 isPlaying = isPlaying,
+                detailsTitle =  R.string.top_bar_track_details,
                 onViewMoreClick = { bottomSheet, index ->
                     showBottomSheet = bottomSheet
                     trackIndex = index
@@ -97,7 +104,7 @@ fun MainComposeScreen(
             ) {
                 showBottomSheet = it
             }
-            navController.navigate("${MainActivity.SONG_DETAILS_KEY}${trackIndex}")
+            navActions.navigateToTrackDetails(trackIndex)
         },
     )
 }

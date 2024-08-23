@@ -1,5 +1,6 @@
 package com.mccarty.ritmo.ui.screens
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +37,7 @@ import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.ui.MainImageHeader
 import com.mccarty.ritmo.ui.PlayPauseIcon
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
+import com.mccarty.ritmo.ui.TrackDetailsTopBar
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -43,22 +47,34 @@ fun SongDetailsScreen(
     model: MainViewModel,
     details: List<Details>,
     onPlayPauseClicked: (TrackSelectAction) -> Unit,
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit,
+    @StringRes title: Int,
 ) {
-    Column(
-        modifier = Modifier.padding(horizontal = 25.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        val pagerState = rememberPagerState(pageCount = { details.size })
-        MediaDetails(
-            isPaused = isPaused,
-            pagerState,
-            details,
-            index,
-            model,
-            onPlayPauseClicked = {
-                onPlayPauseClicked(it)
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            TrackDetailsTopBar(title) {
+                onBack()
             }
-        )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier.padding(horizontal = 25.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            val pagerState = rememberPagerState(pageCount = { details.size })
+            MediaDetails(
+                isPaused = isPaused,
+                pagerState,
+                details,
+                index,
+                model,
+                onPlayPauseClicked = {
+                    onPlayPauseClicked(it)
+                }
+            )
+        }
     }
 }
 

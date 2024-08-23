@@ -24,4 +24,11 @@
 
     <string name="track_playback_channel_name">Track Playback Channel</string>
     <string name="track_playback_channel_description">Notification to allow control while app is in the background</string>
+
+    <!-- Menu -->
+    <string name="menu_back">Back</string>
+
+    <!-- Top Bar -->
+    <string name="top_bar_track_details">Track Details</string>
+
 </resources>
