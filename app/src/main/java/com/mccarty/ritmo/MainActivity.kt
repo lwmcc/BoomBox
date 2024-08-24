@@ -30,6 +30,10 @@ import androidx.core.content.IntentCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
 import com.mccarty.ritmo.domain.model.MusicHeader
 import com.mccarty.ritmo.domain.model.payload.MainItem
@@ -56,6 +60,8 @@ import kotlin.time.DurationUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
+
     private val mainViewModel: MainViewModel by viewModels()
     private val playerViewModel: PlayerViewModel by viewModels()
     private var accessCode: String? = null
@@ -80,6 +86,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
+        firebaseAnalytics = Firebase.analytics
+
         receiver = PlaybackServiceReceiver()
         ContextCompat.registerReceiver(this, receiver, IntentFilter(INTENT_ACTION), ContextCompat.RECEIVER_EXPORTED)
         setContent {
@@ -283,7 +292,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 playerViewModel.playerState.collect { player ->
-                    setupTrackInformation(player, bound)
+                    player?.let { setupTrackInformation(it, bound) }
                 }
             }
         }

@@ -138,9 +138,9 @@ fun PlayerControls(
                 )
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.back),
+                    painter = painterResource(R.drawable.baseline_skip_previous_24),
                     contentDescription = "Back",
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(60.dp)
                 )
             }
 
@@ -155,9 +155,9 @@ fun PlayerControls(
                 )
             ) {
                 if (isPaused) {
-                    PlayPauseIcon(playPause = R.drawable.play)
+                    PlayPauseIcon(playPause = R.drawable.play_bk)
                 } else {
-                    PlayPauseIcon(playPause = R.drawable.pause)
+                    PlayPauseIcon(playPause = R.drawable.baseline_pause_24)
                 }
             }
 
@@ -172,9 +172,9 @@ fun PlayerControls(
                 )
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.next),
+                    painter = painterResource(R.drawable.baseline_skip_next_w_24),
                     contentDescription = "Skip Track",
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(60.dp),
                 )
             }
         }
@@ -191,7 +191,7 @@ fun PlayPauseIcon(@DrawableRes playPause: Int) {
 }
 
 @Composable
-fun PlayPauseIcon(playPause: Painter) {
+fun PlayPauseIcon(playPause: Painter) { // TODO: move string to resources
     Icon(
         painter = playPause,
         contentDescription = "play or pause",

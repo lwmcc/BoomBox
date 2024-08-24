@@ -91,14 +91,7 @@ fun MainScreen(
                             .fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        val noInternet = stringResource(id = R.string.no_internet_connection) // TODO: redo this
-                        CircleSpinner(32.dp)
-                        LaunchedEffect(Unit) {
-                            delay(timeOut)
-                            model.setMainItemsError(noInternet) // TODO: this might not be because of the internet connection
-                        }
-                    }
+                    ) { CircleSpinner(32.dp) }
                 }
 
                 is MainItemsState.Success -> {

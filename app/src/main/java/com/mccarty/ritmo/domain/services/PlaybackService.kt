@@ -42,8 +42,13 @@ class PlaybackService: LifecycleService() {
     private lateinit var backgroundPlayJob: Job
     private lateinit var scope: CoroutineScope
 
+    private var isActive = false
+
     override fun onBind(intent: Intent): IBinder {
         super.onBind(intent)
+
+        isActive = true
+
         return binder
     }
 
@@ -68,6 +73,7 @@ class PlaybackService: LifecycleService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        isActive = false
         spotifyAppRemote?.let {
             SpotifyAppRemote.disconnect(it)
         }
@@ -75,14 +81,12 @@ class PlaybackService: LifecycleService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-
         spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback { playerState ->
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 getString(R.string.track_playback_channel_name),
                 NotificationManager.IMPORTANCE_DEFAULT,
             ).also { it.description = getString(R.string.track_playback_channel_description) }
-
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
 
@@ -96,9 +100,10 @@ class PlaybackService: LifecycleService() {
                 )
                 .build()
 
-            ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
-
-            notificationManager.notify(NOTIFICATION_ID, notification)
+            if (!isActive) {
+                ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                notificationManager.notify(NOTIFICATION_ID, notification)
+            }
         }
 
         return START_STICKY

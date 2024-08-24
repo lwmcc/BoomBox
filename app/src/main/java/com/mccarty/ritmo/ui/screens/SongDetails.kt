@@ -118,7 +118,7 @@ fun MediaDetails(
                     Box(modifier = Modifier
                         .size(60.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .background(MaterialTheme.colorScheme.primary)
                         .clickable {
                             onPlayPauseClicked(TrackSelectAction.PlayTrackWithUri(tracks[page].uri))
                         },
@@ -126,7 +126,7 @@ fun MediaDetails(
                     ) {
                         if (!isPaused) {
                             if (uri.value == tracks[page].uri) {
-                                PlayPauseIcon(painterResource(R.drawable.pause))
+                                PlayPauseIcon(painterResource(R.drawable.baseline_pause_24))
                             } else {
                                 PlayPauseIcon(Icons.Default.PlayArrow)
                             }

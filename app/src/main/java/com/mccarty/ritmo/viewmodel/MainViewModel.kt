@@ -39,8 +39,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import com.spotify.protocol.types.Track as Track
@@ -195,7 +197,9 @@ class MainViewModel @Inject constructor(
     fun fetchMainMusic() {
         viewModelScope.launch {
             val recentTracks: Deferred<List<TrackItem>> = async {
-                when (val items = repository.fetchRecentlyPlayedItem().first()) {
+                when (val items = repository.fetchRecentlyPlayedItem().retry(2).catch {
+                    Timber.e(it.message ?: "An error occurred trying fetchRecentlyPlayedItem()")
+                }.first()) {
                     is NetworkRequest.Error -> {
                         emptyList()
                     }
