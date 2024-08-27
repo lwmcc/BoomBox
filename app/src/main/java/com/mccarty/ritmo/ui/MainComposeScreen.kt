@@ -89,6 +89,9 @@ fun MainComposeScreen(
                 onPlayerControlAction = {
                     onPlayerControlAction(it)
                 },
+                onNavigateToDetails = {
+                    navActions.navigateToTrackDetails(it)
+                },
             )
         }
     }

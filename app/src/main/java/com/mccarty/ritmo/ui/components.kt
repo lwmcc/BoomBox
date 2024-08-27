@@ -108,25 +108,11 @@ fun PlayerControls(
     }
 
     Column {
-        Row(modifier = Modifier.fillMaxWidth()) {
-/*            Button(
-                onClick = {
-                    onAction(PlayerControlAction.Back)
-                },
-                contentPadding = PaddingValues(1.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color.Black
-                )
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.baseline_skip_previous_24),
-                    contentDescription = "Back",
-                    modifier = Modifier.size(60.dp)
-                )
-            }*/
-
-
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                onShowDetailsAction()
+            }) {
             GlideImage(
                 model = musicHeader.imageUrl,
                 contentDescription = stringResource(id = R.string.description_for_image),

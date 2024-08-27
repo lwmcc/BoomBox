@@ -30,6 +30,7 @@ fun StartScreen(
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     onNavigateToPlaylist: (String?, String?) -> Unit,
     onPlayerControlAction: (PlayerControlAction) -> Unit,
+    onNavigateToDetails: (Int) -> Unit,
     mainItems: MainViewModel.MainItemsState,
     trackUri: String?,
     playlistId: String?,
@@ -60,6 +61,9 @@ fun StartScreen(
                 },
                 onPlayerControlAction = {
                     onPlayerControlAction(it)
+                },
+                onNavigateToDetails = {
+                    onNavigateToDetails(it)
                 }
             )
         }
@@ -107,7 +111,10 @@ fun StartScreen(
                     navController.popBackStack()
                 },
                 onPLayerControlAction = {
-                    // TODO: to implement
+                    onPlayerControlAction(it)
+                },
+                onNavigateToDetails = {
+                    onNavigateToDetails(it)
                 }
             )
         }

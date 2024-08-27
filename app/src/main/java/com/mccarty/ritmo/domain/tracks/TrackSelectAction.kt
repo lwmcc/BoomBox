@@ -6,8 +6,8 @@ import com.mccarty.ritmo.viewmodel.PlaylistNames
 sealed class TrackSelectAction {
     data class TrackSelect(
         val index: Int,
-        val uri: String,
-        val duration: Long,
+        val uri: String? = null,
+        val duration: Long? = 0L,
         val tracks: List<MainItem>,
         val playlistName: PlaylistNames,
     ) : TrackSelectAction()

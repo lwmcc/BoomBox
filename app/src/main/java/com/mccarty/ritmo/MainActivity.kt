@@ -16,13 +16,8 @@ import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.State
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -39,7 +34,6 @@ import com.mccarty.ritmo.domain.model.MusicHeader
 import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.domain.services.PlaybackService
 import com.mccarty.ritmo.ui.MainComposeScreen
-import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.utils.positionProduct
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
@@ -161,6 +155,15 @@ class MainActivity : ComponentActivity() {
                                 mainViewModel.playlistData.value?.copy(
                                     uri = currentUri,
                                     index = index,
+                                )
+                            )
+                        } else {
+                            mainViewModel.setPlaylistData(
+                                Playlist(
+                                    uri = currentUri,
+                                    index = 0,
+                                    name = PlaylistNames.RECENTLY_PLAYED,
+                                    tracks = mainViewModel.recommendedPlaylist,
                                 )
                             )
                         }
@@ -336,21 +339,6 @@ class MainActivity : ComponentActivity() {
             is PlayerControlAction.Skip -> { // TODO: notification
                 startPlaybackService()
                 when(mainViewModel.playlistData.value?.name) {
-                    PlaylistNames.RECOMMENDED_PLAYLIST -> {
-                        mainViewModel.setPlaylistData(
-                            Playlist(
-                                uri = mainViewModel.recommendedPlaylist[INITIAL_POSITION].track?.uri,
-                                index = INITIAL_POSITION,
-                                name = PlaylistNames.RECENTLY_PLAYED,
-                                tracks = mainViewModel.recommendedPlaylist,
-                            )
-                        )
-                        if (!trackEnded) {
-                            mainViewModel.cancelJob()
-                        }
-                        setupSliderPosition()
-                    }
-
                     PlaylistNames.RECENTLY_PLAYED -> {
                         if (!trackEnded) {
                             mainViewModel.cancelJob()
@@ -363,14 +351,31 @@ class MainActivity : ComponentActivity() {
                         }
                         setupSliderPosition(INCREMENT_INDEX)
                     }
+
                     else -> {
-                        println("MainActivity ***** ${action.index}")
-                        setupSliderPosition(INCREMENT_INDEX)
-                    } // TODO: details next comes here
+                        val track = mainViewModel.recentlyPlayedMusic().firstOrNull()?.track
+                        playbackService.handlePlayerActions(
+                            TrackSelectAction.TrackSelect(
+                                index = INITIAL_INDEX,
+                                duration = track?.duration_ms,
+                                uri = track?.uri,
+                                tracks = mainViewModel.recentlyPlayedMusic(),
+                                playlistName = PlaylistNames.RECENTLY_PLAYED,
+                            )
+                        )
+                        mainViewModel.setPlaylistData(
+                            Playlist(
+                                uri = track?.uri,
+                                index = INITIAL_INDEX,
+                                name = PlaylistNames.RECENTLY_PLAYED,
+                                tracks = mainViewModel.recentlyPlayedMusic(),
+                            )
+                        )
+                    }
                 }
             }
 
-            is PlayerControlAction.PlayWithUri -> { // TODO: notification
+            is PlayerControlAction.PlayWithUri -> {
                 startPlaybackService()
                 playbackService.remote()?.let {
                     it.playerApi.playerState.setResultCallback { playerState ->
@@ -384,7 +389,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            PlayerControlAction.ResetToStart -> { // TODO: notificaiton
+            PlayerControlAction.ResetToStart -> {
                 mainViewModel.fetchCurrentlyPlayingTrack()
             }
         }
@@ -602,6 +607,7 @@ class MainActivity : ComponentActivity() {
         const val API_SEED_TRACKS = 2
         const val API_SEED_ARTISTS = 3
         const val  INITIAL_POSITION = 0
+        const val  INITIAL_INDEX = 0
 
         const val INTENT_ACTION = "com.mccarty.ritmo.PlayerState-Broadcast"
 
