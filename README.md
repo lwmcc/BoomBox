@@ -4,14 +4,10 @@ So that app is a way for Spotify users who have a premium account to to view the
 
 https://github.com/user-attachments/assets/e0517fc4-76e5-4448-b630-5db9479e4bc2
 
-<img src="https://github.com/user-attachments/assets/6cd8e05b-b5f7-4b55-a0d4-0073f1b80b92" width="300">
+<img src="https://github.com/user-attachments/assets/f1ac4340-d3b5-499f-b249-f5038fac9431" width="150">
 
-<img src="https://github.com/user-attachments/assets/5997bf13-976c-4b82-aba7-a6b1089f27db" width="300">
+<img src="https://github.com/user-attachments/assets/119431e5-ccdc-4ac0-bd26-c61d1f20490c" width="150">
 
-<img src="https://github.com/user-attachments/assets/c25f7d38-48af-4cb5-822e-1efadb695597" width="300">
+<img src="https://github.com/user-attachments/assets/06560464-3dad-47bd-a73c-64406523f978" width="150">
 
-<img src="https://github.com/user-attachments/assets/64186a99-242c-4ba7-a179-e921027cfd28" width="300">
-
-<img src="https://github.com/user-attachments/assets/c5197227-a2e9-4189-8d0d-07e826608ff2" width="300">
-
-<img src="https://github.com/user-attachments/assets/0852fa7a-90b7-4983-8067-e31bb1854525" width="300">
+<img src="https://github.com/user-attachments/assets/c104c49b-8d48-4882-8121-df61fb9a89d5" width="150">
