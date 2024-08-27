@@ -65,6 +65,7 @@ fun MainScreen(
     onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onNavigateToPlaylist: (String?, String?) -> Unit,
     onPlayerControlAction: (PlayerControlAction) -> Unit,
+    onNavigateToDetails: (Int?) -> Unit,
     mainItems: MainItemsState,
     trackUri: String?,
     playlistId: String?,
@@ -88,13 +89,13 @@ fun MainScreen(
             BottomAppBar(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 contentColor = MaterialTheme.colorScheme.onBackground,
-                //modifier = Modifier.height(100.dp),
             ) {
                 PlayerControls(
                     mainViewModel = model,
                     onPlayerControlAction = { onPlayerControlAction(it) },
                     onShowDetailsAction = {
-
+                        playListItem?.tracks?.let { model.setPlayList(it) }
+                        onNavigateToDetails(playListItem?.index)
                     },
                 )
             }
@@ -172,7 +173,9 @@ fun MainScreen(
                                                 .fillMaxWidth()
                                                 .clickable(
                                                     onClick = {
-                                                        onDetailsPlayPauseClicked(
+                                                        onDetailsPlayPauseClicked(// TODO: this name is used in details
+                                                                                  // rename it to something that can be used
+                                                                                  // in details in in the list if items
                                                             TrackSelectAction.TrackSelect(
                                                                 index = itemIndex,
                                                                 duration = group.items[itemIndex].track?.duration_ms

@@ -34,6 +34,7 @@ fun PlaylistScreen(
     onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     onPLayerControlAction: (PlayerControlAction) -> Unit,
+    onNavigateToDetails: (Int?) -> Unit,
     onBack:() -> Unit,
 ) {
     val playLists by model.playLists.collectAsStateWithLifecycle()
@@ -51,15 +52,13 @@ fun PlaylistScreen(
             BottomAppBar(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 contentColor = MaterialTheme.colorScheme.onBackground,
-                //modifier = Modifier.height(100.dp),
             ) {
                 PlayerControls(
                     mainViewModel = model,
-                    onPlayerControlAction = {
-                        onPLayerControlAction(it)
-                    },
+                    onPlayerControlAction = { onPLayerControlAction(it) },
                     onShowDetailsAction = {
-                        // TODO: to implement
+                        playListItem?.tracks?.let { model.setPlayList(it) }
+                        onNavigateToDetails(playListItem?.index)
                     },
                 )
             }
