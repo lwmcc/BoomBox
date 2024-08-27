@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -23,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +50,8 @@ import com.mccarty.ritmo.ui.ItemColor
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.ui.MainScreenTopBar
-import kotlinx.coroutines.delay
+import com.mccarty.ritmo.ui.PlayerControls
+import com.mccarty.ritmo.viewmodel.PlayerControlAction
 import com.mccarty.ritmo.viewmodel.MainViewModel.MainItemsState as MainItemsState
 
 @OptIn(
@@ -61,8 +62,9 @@ import com.mccarty.ritmo.viewmodel.MainViewModel.MainItemsState as MainItemsStat
 fun MainScreen(
     model: MainViewModel,
     onViewMoreClick: (Boolean, Int, List<MainItem>) -> Unit,
-    onAction: (TrackSelectAction) -> Unit,
+    onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onNavigateToPlaylist: (String?, String?) -> Unit,
+    onPlayerControlAction: (PlayerControlAction) -> Unit,
     mainItems: MainItemsState,
     trackUri: String?,
     playlistId: String?,
@@ -81,7 +83,22 @@ fun MainScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { MainScreenTopBar(mainTitle) }
+        topBar = { MainScreenTopBar(mainTitle) },
+        bottomBar = {
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onBackground,
+                //modifier = Modifier.height(100.dp),
+            ) {
+                PlayerControls(
+                    mainViewModel = model,
+                    onPlayerControlAction = { onPlayerControlAction(it) },
+                    onShowDetailsAction = {
+
+                    },
+                )
+            }
+        }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
             when (mainItems) {
@@ -102,14 +119,6 @@ fun MainScreen(
                             items = it.value,
                         )
                     }
-
-                    /**
-                     * Section holding header, recently played, and playlist
-                     */
-
-                    /**
-                     * Section holding header, recently played, and playlist
-                     */
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -122,19 +131,10 @@ fun MainScreen(
                                 /**
                                  * Section header, ie Recently Played and Playlist
                                  */
-                                /**
-                                 * Section header, ie Recently Played and Playlist
-                                 */
                                 Column(
                                     modifier = Modifier
                                         .background(color = MaterialTheme.colorScheme.background),
                                 ) {
-                                    /**
-                                     * Section header text Recently Played and Playlist
-                                     */
-                                    /**
-                                     * Section header text Recently Played and Playlist
-                                     */
                                     Text(
                                         text = stickyHeaderText(group.type, tracksHeader, playlistsHeader),
                                         color = MaterialTheme.colorScheme.onBackground,
@@ -166,16 +166,13 @@ fun MainScreen(
                                     /**
                                      * Track shown in Recently Played list
                                      */
-                                    /**
-                                     * Track shown in Recently Played list
-                                     */
                                     CollectionType.TRACK.collectionType -> {
                                         Card(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clickable(
                                                     onClick = {
-                                                        onAction(
+                                                        onDetailsPlayPauseClicked(
                                                             TrackSelectAction.TrackSelect(
                                                                 index = itemIndex,
                                                                 duration = group.items[itemIndex].track?.duration_ms
@@ -270,7 +267,7 @@ fun MainScreen(
                                                 }
                                                 Icon(
                                                     Icons.Default.MoreVert,
-                                                    contentDescription = stringResource(
+                                                    contentDescription = stringResource( // TODO: on more clicked
                                                         id = R.string.icon_view_more,
                                                     ),
                                                     modifier = Modifier.clickable {
@@ -281,11 +278,6 @@ fun MainScreen(
                                             }
                                         }
                                     }
-
-
-                                    /**
-                                     * Playlist name show in list fo playlists
-                                     */
 
                                     /**
                                      * Playlist name show in list fo playlists

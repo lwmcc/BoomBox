@@ -26,6 +26,7 @@ import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
 import com.mccarty.ritmo.ui.navigation.AppNavigationActions
 import com.mccarty.ritmo.ui.screens.StartScreen
 import com.mccarty.ritmo.viewmodel.MainViewModel
+import com.mccarty.ritmo.viewmodel.PlayerControlAction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -38,6 +39,7 @@ fun MainComposeScreen(
     padding: PaddingValues,
     mediaEvents: MainActivity.MediaEvents,
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
+    onPlayerControlAction: (PlayerControlAction) -> Unit,
     navActions: AppNavigationActions = remember(navController) {
         AppNavigationActions(navController)
     }
@@ -75,7 +77,7 @@ fun MainComposeScreen(
                     showBottomSheet = bottomSheet
                     trackIndex = index
                 },
-                onAction = {
+                onDetailsPlayPauseClicked = {
                     mediaEvents.trackSelectionAction(it, isPaused) // TODO: send up another level
                 },
                 onPlaylistSelectAction = {
@@ -83,6 +85,9 @@ fun MainComposeScreen(
                 },
                 onNavigateToPlaylist = { name, id ->
                     navActions.navigateToPlaylist(name, id)
+                },
+                onPlayerControlAction = {
+                    onPlayerControlAction(it)
                 },
             )
         }

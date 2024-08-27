@@ -41,7 +41,7 @@ fun MediaList(
     playListItem: Playlist?,
     tracks: List<TrackDetails>,
     onViewMoreClick: (Boolean, Int, List<TrackDetails>) -> Unit,
-    onAction: (TrackSelectAction) -> Unit,
+    onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     playlistId: String?,
     ) {
@@ -53,7 +53,7 @@ fun MediaList(
                     .fillMaxWidth()
                     .clickable(
                         onClick = {
-                            onAction(
+                            onDetailsPlayPauseClicked(
                                 TrackSelectAction.TrackSelect(
                                     index = index,
                                     uri = tracks[index].uri,

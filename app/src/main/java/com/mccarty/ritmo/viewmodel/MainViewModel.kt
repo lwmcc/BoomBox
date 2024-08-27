@@ -355,12 +355,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-/*    fun playbackDurationWithIndex(newIndex: Int) {
-        _playbackDuration.update {
-            playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.milliseconds?.inWholeSeconds ?: 0
-        }
-    }*/
-
     private inline fun <reified T : Number> playbackPosition(position: T) {
         _playbackPosition.value = position.toLong()
     }

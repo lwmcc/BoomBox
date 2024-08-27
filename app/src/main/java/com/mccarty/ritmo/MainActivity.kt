@@ -93,21 +93,12 @@ class MainActivity : ComponentActivity() {
         ContextCompat.registerReceiver(this, receiver, IntentFilter(INTENT_ACTION), ContextCompat.RECEIVER_EXPORTED)
         setContent {
             BoomBoxTheme {
-                Scaffold(
-                    bottomBar = {
-                        BottomAppBar(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.height(100.dp),
-                        ) {
-                            PlayerControls(onAction = this@MainActivity::playerControlAction)
-                        }
-                    }) { padding ->
-
+                Scaffold { padding ->
                     MainComposeScreen(
                         mainViewModel = mainViewModel,
                         padding = padding,
                         viewMore = getString(R.string.sheets_view_more),
+                        // Track select in playlist
                         mediaEvents = object : MediaEvents {
                             override fun trackSelectionAction(
                                 trackSelectAction: TrackSelectAction,
@@ -118,6 +109,9 @@ class MainActivity : ComponentActivity() {
                         },
                         onPlaylistSelectAction = {
                             mainViewModel.setPlaylistId(it)
+                        },
+                        onPlayerControlAction = {
+                            playerControlAction(it)
                         },
                     )
                 }
@@ -180,9 +174,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
             playbackService.cancelBackgroundPlayJob()
-            playbackService.currentUri { currentUri ->
+/*            playbackService.currentUri { currentUri ->
                playerViewModel.setCurrentUri(currentUri)
-            }
+            }*/
+
+            // TODO: testing only
+            //getCurrentPosition()
         }
     }
 
@@ -222,7 +219,7 @@ class MainActivity : ComponentActivity() {
             mainViewModel.setMusicHeader(MusicHeader().apply {
                 imageUrl = StringBuilder().apply {
                     append(IMAGE_URL)
-                    append(player.imageUri?.drop(22)?.dropLast(2)) // TODO: revisit
+                    append(player.imageUri?.drop(22)?.dropLast(2)) // TODO: revisit, move
                 }.toString()
                 artistName = player.trackArtist ?: getString(R.string.artist_name)
                 albumName = player.albumName ?: getString(R.string.album_name)
@@ -366,7 +363,10 @@ class MainActivity : ComponentActivity() {
                         }
                         setupSliderPosition(INCREMENT_INDEX)
                     }
-                    else -> { setupSliderPosition(INCREMENT_INDEX) }
+                    else -> {
+                        println("MainActivity ***** ${action.index}")
+                        setupSliderPosition(INCREMENT_INDEX)
+                    } // TODO: details next comes here
                 }
             }
 
@@ -396,54 +396,26 @@ class MainActivity : ComponentActivity() {
     ) {
         startPlaybackService()
         when(action) {
+            /**
+             * Track has been selected from a playlist
+             */
             is TrackSelectAction.TrackSelect -> {
-                mainViewModel.setMusicHeaderUrl(
-                    action.tracks[action.index].track?.album?.images?.get(0)?.url,
-                    action.tracks[action.index].track?.artists?.get(0)?.name ?: getString(R.string.artist_name),
-                    action.tracks[action.index].track?.album?.name ?: getString(R.string.album_name),
-                    action.tracks[action.index].track?.name ?: getString(R.string.track_name),
+                mainViewModel.isPaused(isPaused.value) // TODO: might not be needed
+                playbackService.handlePlayerActions(action)
+                mainViewModel.setPlaylistData(
+                    Playlist(
+                        uri = action.uri,
+                        index = action.index,
+                        name = action.playlistName, // TODO: playlist track paused
+                        tracks = action.tracks,
+                    )
                 )
-                if (isPaused.value) {
-                    playbackService.remote()?.let { remote ->
-                        mainViewModel.isPaused(false)
-                        mainViewModel.playbackDuration(action.tracks[action.index].track
-                            ?.duration_ms?.milliseconds?.inWholeSeconds)
-                        mainViewModel.handlePlayerActions(remote, action)
-                    }
-                    mainViewModel.setPlaybackPosition(INITIAL_POSITION)
-                    mainViewModel.setPlaylistData(
-                        Playlist(
-                            uri = action.uri,
-                            index = action.index,
-                            name = action.playlistName,
-                            tracks = action.tracks,
-                        )
-                    )
-                } else {
-                    mainViewModel.isPaused(false)
-                    mainViewModel.playbackDuration(action.tracks[action.index].track?.duration_ms?.milliseconds?.inWholeSeconds)
-                    playbackService.remote()?.let { remote ->
-                        mainViewModel.handlePlayerActions(remote, action)
-                    }
-                    mainViewModel.cancelJob()
-                    mainViewModel.setPlaybackPosition(INITIAL_POSITION)
-                    mainViewModel.setPlaylistData(
-                        Playlist(
-                            uri = action.uri,
-                            index = action.index,
-                            name = action.playlistName,
-                            tracks = action.tracks,
-                        )
-                    )
-                }
             }
             is TrackSelectAction.PlayTrackWithUri -> {
                 if (isPaused.value) {
                     playbackService.remote()?.playerApi?.play(action.playTrackWithUri)
-                    mainViewModel.isPaused(false)
                 } else {
                     playbackService.remote()?.playerApi?.pause()
-                    mainViewModel.isPaused(true)
                 }
             }
         }
@@ -456,6 +428,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // TODO: might not be needed as slider was moved to details
     private fun setupSliderPosition(index: Int = INITIAL_POSITION) {
         playbackService.remote()?.let { remote ->
             when(mainViewModel.playlistData.value?.name) {
@@ -521,7 +494,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 else -> {
-                    setupSliderPosition()
+                   // setupSliderPosition() // TODO: not using slider here
                 }
             }
         }
@@ -597,6 +570,14 @@ class MainActivity : ComponentActivity() {
             println("MainActivity ***** KEY ${it.key} MINE ${this.packageName}")
         }
 
+    }
+
+    fun getCurrentPosition() {
+        playbackService.isCurrentlyPlaying {
+            if (it) {
+                playbackService.getCurrentPosition()
+            }
+        }
     }
 
     data class PlaylistData(val playlist: List<MainItem> = emptyList())

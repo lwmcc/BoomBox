@@ -20,14 +20,16 @@ import com.mccarty.ritmo.R
 import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
+import com.mccarty.ritmo.viewmodel.PlayerControlAction
 
 @Composable
 fun StartScreen(
     navController: NavHostController,
     onViewMoreClick: (Boolean, Int) -> Unit,
-    onAction: (TrackSelectAction) -> Unit,
+    onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     onNavigateToPlaylist: (String?, String?) -> Unit,
+    onPlayerControlAction: (PlayerControlAction) -> Unit,
     mainItems: MainViewModel.MainItemsState,
     trackUri: String?,
     playlistId: String?,
@@ -50,12 +52,15 @@ fun StartScreen(
                 onViewMoreClick = { showBottom, index, _->
                     onViewMoreClick(showBottom, index)
                 },
-                onAction = {
-                    onAction(it)
+                onDetailsPlayPauseClicked = {
+                    onDetailsPlayPauseClicked(it)
                 },
                 onNavigateToPlaylist = { name, id ->
                     onNavigateToPlaylist(name, id)
                 },
+                onPlayerControlAction = {
+                    onPlayerControlAction(it)
+                }
             )
         }
         composable(
@@ -67,8 +72,11 @@ fun StartScreen(
                 model = mainViewModel,
                 title = detailsTitle,
                 index = backStackEntry.arguments?.getString(INDEX_KEY)?.toInt() ?: 0,
-                onPlayPauseClicked = {
-                    onAction(it)
+                onDetailsPlayPauseClicked = {
+                    onDetailsPlayPauseClicked(it)
+                },
+                onPlayerControlAction = {
+                    onPlayerControlAction(it)
                 },
                 onBack = {
                     navController.popBackStack()
@@ -89,8 +97,8 @@ fun StartScreen(
                 onViewMoreClick = { showBottomSheet, index ->
                     onViewMoreClick(showBottomSheet, index)
                 },
-                onAction = {
-                    onAction(it)
+                onDetailsPlayPauseClicked = {
+                    onDetailsPlayPauseClicked(it)
                 },
                 onPlaylistSelectAction = {
                     onPlaylistSelectAction(it)
@@ -98,6 +106,9 @@ fun StartScreen(
                 onBack = {
                     navController.popBackStack()
                 },
+                onPLayerControlAction = {
+                    // TODO: to implement
+                }
             )
         }
     }

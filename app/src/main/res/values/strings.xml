@@ -33,4 +33,6 @@
 
     <string name="explicit_content">Explicit content</string>
 
+    <string name="play_pause">Play or pause track</string>
+
 </resources>

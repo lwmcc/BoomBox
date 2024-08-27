@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -28,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -41,13 +39,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.res.stringResource as R
 import androidx.compose.material3.IconButton as IconButton
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -78,16 +76,20 @@ fun MainImageHeader(
     )
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun PlayerControls(
-    mainViewModel: MainViewModel = viewModel(),
-    onAction: (PlayerControlAction) -> Unit,
+    mainViewModel: MainViewModel,
+    onPlayerControlAction: (PlayerControlAction) -> Unit,
+    onShowDetailsAction: () -> Unit,
 ) {
     val isPaused = mainViewModel.isPaused.collectAsStateWithLifecycle(false).value
     val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle(0).value.toFloat()
     val duration = mainViewModel.playbackDuration.collectAsStateWithLifecycle().value.toFloat()
     val playlist = mainViewModel.playlistData.collectAsStateWithLifecycle().value?.name?.name
+    val musicHeader = mainViewModel.musicHeader.collectAsStateWithLifecycle().value
+
 
     var sliderPosition by remember { mutableFloatStateOf(position) }
 
@@ -106,28 +108,8 @@ fun PlayerControls(
     }
 
     Column {
-        Slider(
-            value = value,
-            onValueChange = {
-                sliderPosition = it
-            },
-            valueRange = 0f..duration,
-            steps = 1_000,
-
-            onValueChangeFinished = {
-                onAction(PlayerControlAction.Seek(value))
-            },
-            interactionSource = interactionSource,
-        )
-
-        Text(getPlaylist(playlist, LocalContext.current))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-
-            ) {
-            Button(
+        Row(modifier = Modifier.fillMaxWidth()) {
+/*            Button(
                 onClick = {
                     onAction(PlayerControlAction.Back)
                 },
@@ -142,39 +124,64 @@ fun PlayerControls(
                     contentDescription = "Back",
                     modifier = Modifier.size(60.dp)
                 )
+            }*/
+
+
+            GlideImage(
+                model = musicHeader.imageUrl,
+                contentDescription = stringResource(id = R.string.description_for_image),
+                modifier = Modifier.size(60.dp).padding(end = 16.dp),
+            )
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = musicHeader.songName,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium,
+
+                )
+                Text(
+                    text = musicHeader.artistName,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             }
 
             Button(
                 onClick = {
-                    onAction(PlayerControlAction.Play(pausedPosition = position.toLong()))
+                    onPlayerControlAction(PlayerControlAction.Play(pausedPosition = position.toLong()))
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
                     contentColor = Color.Black
-                )
+                ),
+                modifier = Modifier.width(40.dp),
             ) {
                 if (isPaused) {
                     PlayPauseIcon(playPause = R.drawable.play_bk)
                 } else {
-                    PlayPauseIcon(playPause = R.drawable.baseline_pause_24)
+                   PlayPauseIcon(playPause = R.drawable.baseline_pause_24)
                 }
             }
 
             Button(
                 onClick = {
-                    onAction(PlayerControlAction.Skip(index?.index ?: 0))
+                    onPlayerControlAction(PlayerControlAction.Skip(index?.index ?: 0))
                 },
                 contentPadding = PaddingValues(1.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
                     contentColor = Color.Black
-                )
+                ),
+                modifier = Modifier.width(40.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.baseline_skip_next_w_24),
                     contentDescription = "Skip Track",
-                    modifier = Modifier.size(60.dp),
+                    modifier = Modifier.size(40.dp),
                 )
             }
         }
@@ -185,16 +192,16 @@ fun PlayerControls(
 fun PlayPauseIcon(@DrawableRes playPause: Int) {
     Icon(
         painter = painterResource(playPause),
-        contentDescription = "play or pause",
-        modifier = Modifier.size(60.dp)
+        contentDescription = stringResource(R.string.play_pause),
+        modifier = Modifier.size(24.dp)
     )
 }
 
 @Composable
-fun PlayPauseIcon(playPause: Painter) { // TODO: move string to resources
+fun PlayPauseIcon(playPause: Painter) {
     Icon(
         painter = playPause,
-        contentDescription = "play or pause",
+        contentDescription = stringResource(R.string.play_pause),
         modifier = Modifier.size(60.dp)
     )
 }
@@ -203,7 +210,7 @@ fun PlayPauseIcon(playPause: Painter) { // TODO: move string to resources
 fun PlayPauseIcon(playPause: ImageVector) {
     Icon(
         imageVector = playPause,
-        contentDescription = "play or pause",
+        contentDescription = stringResource(R.string.play_pause),
         modifier = Modifier.size(60.dp)
     )
 }

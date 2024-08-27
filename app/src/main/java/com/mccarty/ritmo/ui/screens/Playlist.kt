@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,6 +21,8 @@ import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.ui.NavTopBar
+import com.mccarty.ritmo.ui.PlayerControls
+import com.mccarty.ritmo.viewmodel.PlayerControlAction
 
 @Composable
 fun PlaylistScreen(
@@ -27,8 +31,9 @@ fun PlaylistScreen(
     model: MainViewModel,
     modifier: Modifier = Modifier,
     onViewMoreClick: (Boolean, Int) -> Unit,
-    onAction: (TrackSelectAction) -> Unit,
+    onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
+    onPLayerControlAction: (PlayerControlAction) -> Unit,
     onBack:() -> Unit,
 ) {
     val playLists by model.playLists.collectAsStateWithLifecycle()
@@ -40,6 +45,23 @@ fun PlaylistScreen(
         topBar = {
             NavTopBar(title ?: stringResource(R.string.playlist)) {
                 onBack()
+            }
+        },
+        bottomBar = {
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onBackground,
+                //modifier = Modifier.height(100.dp),
+            ) {
+                PlayerControls(
+                    mainViewModel = model,
+                    onPlayerControlAction = {
+                        onPLayerControlAction(it)
+                    },
+                    onShowDetailsAction = {
+                        // TODO: to implement
+                    },
+                )
             }
         }
     ) { paddingValues ->
@@ -68,8 +90,8 @@ fun PlaylistScreen(
                                     model.setPlayList(tracks)
                                     onViewMoreClick(showBottom, index)
                                 },
-                                onAction = {
-                                    onAction(it)
+                                onDetailsPlayPauseClicked = {
+                                    onDetailsPlayPauseClicked(it)
                                 },
                                 onPlaylistSelectAction = {
                                     onPlaylistSelectAction(PlaylistSelectAction.PlaylistSelect(playlistId))
