@@ -65,7 +65,7 @@ fun MainScreen(
     onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onNavigateToPlaylist: (String?, String?) -> Unit,
     onPlayerControlAction: (PlayerControlAction) -> Unit,
-    onNavigateToDetails: (Int?) -> Unit,
+    onNavigateToDetails: (Int) -> Unit,
     mainItems: MainItemsState,
     trackUri: String?,
     playlistId: String?,
@@ -95,7 +95,7 @@ fun MainScreen(
                     onPlayerControlAction = { onPlayerControlAction(it) },
                     onShowDetailsAction = {
                         playListItem?.tracks?.let { model.setPlayList(it) }
-                        onNavigateToDetails(playListItem?.index)
+                        onNavigateToDetails(playListItem?.index ?: 0)
                     },
                 )
             }

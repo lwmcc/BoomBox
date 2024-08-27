@@ -13,7 +13,7 @@ class AppNavigationActions(private val navController: NavHostController) {
         }
     }
 
-    fun navigateToTrackDetails(trackIndex: Int? = 0) {
+    fun navigateToTrackDetails(trackIndex: Int) {
         navController.navigate(
             "${MainActivity.SONG_DETAILS_KEY}${trackIndex}"
         )

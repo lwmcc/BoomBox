@@ -30,7 +30,7 @@ fun StartScreen(
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     onNavigateToPlaylist: (String?, String?) -> Unit,
     onPlayerControlAction: (PlayerControlAction) -> Unit,
-    onNavigateToDetails: (Int?) -> Unit,
+    onNavigateToDetails: (Int) -> Unit,
     mainItems: MainViewModel.MainItemsState,
     trackUri: String?,
     playlistId: String?,

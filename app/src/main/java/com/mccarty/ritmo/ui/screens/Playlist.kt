@@ -34,7 +34,7 @@ fun PlaylistScreen(
     onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     onPLayerControlAction: (PlayerControlAction) -> Unit,
-    onNavigateToDetails: (Int?) -> Unit,
+    onNavigateToDetails: (Int) -> Unit,
     onBack:() -> Unit,
 ) {
     val playLists by model.playLists.collectAsStateWithLifecycle()
@@ -58,7 +58,7 @@ fun PlaylistScreen(
                     onPlayerControlAction = { onPLayerControlAction(it) },
                     onShowDetailsAction = {
                         playListItem?.tracks?.let { model.setPlayList(it) }
-                        onNavigateToDetails(playListItem?.index)
+                        onNavigateToDetails(playListItem?.index ?: 0)
                     },
                 )
             }
