@@ -207,8 +207,7 @@ class MainActivity : ComponentActivity() {
         unregisterReceiver(receiver)
     }
 
-    private fun setupTrackInformation(player: PlaybackService.Player, bound: Boolean) {
-        if (bound) {
+    private fun setupTrackInformation(player: PlaybackService.Player) {
             mainViewModel.setMusicHeader(MusicHeader().apply {
                 imageUrl = StringBuilder().apply {
                     append(IMAGE_URL)
@@ -227,7 +226,6 @@ class MainActivity : ComponentActivity() {
             /*  }?.setErrorCallback {
                   mainViewModel.setMainMusicError(it?.message ?: "Could Not Connect to Spotify")
               }*/
-        }
     }
 
     private fun getAuthenticationRequest(): AuthorizationRequest? {
@@ -282,7 +280,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 playerViewModel.playerState.collect { player ->
-                    player?.let { setupTrackInformation(it, bound) }
+                    player?.let { setupTrackInformation(it) }
                 }
             }
         }

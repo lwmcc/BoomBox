@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +53,7 @@ import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.ui.MainScreenTopBar
 import com.mccarty.ritmo.ui.PlayerControls
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
+import kotlinx.coroutines.delay
 import com.mccarty.ritmo.viewmodel.MainViewModel.MainItemsState as MainItemsState
 
 @OptIn(
@@ -60,27 +62,27 @@ import com.mccarty.ritmo.viewmodel.MainViewModel.MainItemsState as MainItemsStat
 )
 @Composable
 fun MainScreen(
-    model: MainViewModel,
+    modifier: Modifier = Modifier,
+    mainViewModel: MainViewModel,
     onViewMoreClick: (Boolean, Int, List<MainItem>) -> Unit,
     onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onNavigateToPlaylist: (String?, String?) -> Unit,
     onPlayerControlAction: (PlayerControlAction) -> Unit,
     onNavigateToDetails: (Int) -> Unit,
-    mainItems: MainItemsState,
+    mainItemsState: MainItemsState,
     trackUri: String?,
     playlistId: String?,
     isPlaying: Boolean = false,
-    modifier: Modifier = Modifier,
     @StringRes mainTitle: Int,
 ) {
-    val musicHeader by model.musicHeader.collectAsStateWithLifecycle()
-    val mainMusic by model.mainItems.collectAsStateWithLifecycle()
+    val musicHeader by mainViewModel.musicHeader.collectAsStateWithLifecycle()
+    val mainMusic by mainViewModel.mainItems.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val tracksHeader = context.getString(R.string.recently_played)
     val playlistsHeader = context.getString(R.string.playlists)
-    val playListItem by model.playlistData.collectAsStateWithLifecycle()
+    val playListItem by mainViewModel.playlistData.collectAsStateWithLifecycle()
 
-    val timeOut by remember { mutableLongStateOf(10_000L) } // TODO: no magic numbers
+    val timeOut by remember { mutableLongStateOf(5_000) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -91,10 +93,10 @@ fun MainScreen(
                 contentColor = MaterialTheme.colorScheme.onBackground,
             ) {
                 PlayerControls(
-                    mainViewModel = model,
+                    mainViewModel = mainViewModel,
                     onPlayerControlAction = { onPlayerControlAction(it) },
                     onShowDetailsAction = {
-                        playListItem?.tracks?.let { model.setPlayList(it) }
+                        playListItem?.tracks?.let { mainViewModel.setPlayList(it) }
                         onNavigateToDetails(playListItem?.index ?: 0)
                     },
                 )
@@ -102,19 +104,26 @@ fun MainScreen(
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
-            when (mainItems) {
+            when (mainItemsState) {
                 is MainItemsState.Pending -> {
                     Column(
                         modifier = Modifier
                             .fillMaxSize(),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
-                    ) { CircleSpinner(32.dp) }
+                    ) {
+                        CircleSpinner(32.dp)
+                        LaunchedEffect(Unit) {
+                            delay(timeOut)
+                            // Sometimes there is a lag when fetching from the API
+                            // Fetch again here if this timeout is reached
+                            mainViewModel.fetchMainMusic()
+                        }
+                    }
                 }
 
                 is MainItemsState.Success -> {
-                    val mainItems = (mainMusic as MainItemsState.Success).mainItems
-                    val tracks = mainItems.map {
+                    val tracks = (mainMusic as MainItemsState.Success).mainItems.map {
                         Group(
                             type = it.key,
                             items = it.value,
@@ -179,7 +188,7 @@ fun MainScreen(
                                                             TrackSelectAction.TrackSelect(
                                                                 index = itemIndex,
                                                                 duration = group.items[itemIndex].track?.duration_ms
-                                                                    ?: 0L, // TODO: fix
+                                                                    ?: 0L,
                                                                 uri = group.items[itemIndex].track?.uri
                                                                     ?: "",
                                                                 tracks = group.items,
@@ -270,11 +279,11 @@ fun MainScreen(
                                                 }
                                                 Icon(
                                                     Icons.Default.MoreVert,
-                                                    contentDescription = stringResource( // TODO: on more clicked
+                                                    contentDescription = stringResource(
                                                         id = R.string.icon_view_more,
                                                     ),
                                                     modifier = Modifier.clickable {
-                                                        model.setPlayList(group.items)
+                                                        mainViewModel.setPlayList(group.items)
                                                         onViewMoreClick(true, itemIndex, group.items)
                                                     }
                                                 )
@@ -291,7 +300,7 @@ fun MainScreen(
                                                 .fillMaxWidth()
                                                 .padding(5.dp)
                                                 .clickable(onClick = {
-                                                    model.fetchPlaylist(item.id)
+                                                    mainViewModel.fetchPlaylist(item.id)
                                                     onNavigateToPlaylist(item.name, item.id)
                                                 })
                                                 .shadow(
