@@ -56,15 +56,22 @@ import com.mccarty.ritmo.ui.MainImageHeader
 import com.mccarty.ritmo.ui.PlayPauseIcon
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.ui.TrackDetailsTopBar
+import com.mccarty.ritmo.utils.createListFromDetails
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
 
+/**
+ * Composable for the Track Details Screen
+ * Takes an array [trackDetails] and sets the first viewed details screen
+ * according to [initialPagerIndex] which is the selected index from the list
+ * of Tracks
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongDetailsScreen(
     isPaused: Boolean,
-    index: Int,
-    model: MainViewModel,
-    details: List<Details>,
+    initialPagerIndex: Int,
+    mainViewModel: MainViewModel,
+    trackDetails: List<Details>,
     onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onPlayerControlAction: (PlayerControlAction) -> Unit,
     modifier: Modifier = Modifier,
@@ -79,17 +86,19 @@ fun SongDetailsScreen(
             }
         }
     ) { paddingValues ->
+        val recentTrackDetails = trackDetails.createListFromDetails(mainViewModel.recentlyPlayedMusic())
+
         Column(
             modifier = Modifier.padding(start = 24.dp, top = paddingValues.calculateTopPadding(), end = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val pagerState = rememberPagerState(pageCount = { details.size })
+            val pagerState = rememberPagerState(pageCount = { recentTrackDetails.size })
             MediaDetails(
                 isPaused = isPaused,
-                pagerState,
-                details,
-                index,
-                model,
+                pagerState = pagerState,
+                trackDetails = recentTrackDetails,
+                initialPagerIndex = initialPagerIndex,
+                mainViewModel = mainViewModel,
                 onDetailsPlayPauseClicked = {
                     onDetailsPlayPauseClicked(it)
                 },
@@ -106,28 +115,28 @@ fun SongDetailsScreen(
 fun MediaDetails(
     isPaused: Boolean,
     pagerState: PagerState,
-    tracks: List<Details>,
-    pagerIndex: Int,
-    model: MainViewModel,
+    trackDetails: List<Details>,
+    initialPagerIndex: Int,
+    mainViewModel: MainViewModel,
     onDetailsPlayPauseClicked: (TrackSelectAction) -> Unit,
     onPlayerControlAction: (PlayerControlAction) -> Unit,
     ) {
 
-    val position = model.playbackPosition.collectAsStateWithLifecycle(0).value.toFloat()
-    val duration = model.playbackDuration.collectAsStateWithLifecycle().value.toFloat()
+    val position = mainViewModel.playbackPosition.collectAsStateWithLifecycle(0).value.toFloat()
+    val duration = mainViewModel.playbackDuration.collectAsStateWithLifecycle().value.toFloat()
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isDragged by interactionSource.collectIsDraggedAsState()
-    val index by model.playlistData.collectAsStateWithLifecycle()
+    val index by mainViewModel.playlistData.collectAsStateWithLifecycle()
 
-    val uri = model.trackUri.collectAsStateWithLifecycle()
+    val uri = mainViewModel.trackUri.collectAsStateWithLifecycle()
 
     var sliderPosition by remember { mutableFloatStateOf(position) }
     val isInteracting = isPressed || isDragged
 
-    var pagerIndex by rememberSaveable { mutableIntStateOf(pagerIndex) }
+    var rememberIndex by rememberSaveable { mutableIntStateOf(initialPagerIndex) }
 
-    val value by remember { // TODO: recheck if remember
+    val sliderValue by remember { // TODO: recheck if remember or rememberSaveable is better
         derivedStateOf {
             if (isInteracting) {
                 sliderPosition
@@ -142,7 +151,7 @@ fun MediaDetails(
         beyondBoundsPageCount = 2,
     ) { page ->
         Column(modifier = Modifier.fillMaxWidth()) {
-            val image = tracks[page].images?.get(0)?.url
+            val image = trackDetails[page].images?.get(0)?.url
             if (image?.isNotEmpty() == true) {
                 MainImageHeader(
                     image,
@@ -153,27 +162,27 @@ fun MediaDetails(
                 )
             }
 
-            Spacer(modifier = Modifier.height(100.dp) )
+            Spacer(modifier = Modifier.height(100.dp))
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row {
                     Text(
-                        text = tracks[page].trackName.toString(),
+                        text = trackDetails[page].trackName.toString(),
                         style = MaterialTheme.typography.headlineMedium,
                         modifier = Modifier.weight(1f)
                     )
                 }
                 Text(
-                    text = "${tracks[page].albumName}",
+                    text = "${trackDetails[page].albumName}",
                     style = MaterialTheme.typography.titleLarge
                 )
-                tracks[page].artists?.forEach { artist ->
+                trackDetails[page].artists?.forEach { artist ->
                     Text(
                         text = artist.name ?: stringResource(R.string.track_name),
                         style = MaterialTheme.typography.titleSmall,
                     )
                 }
 
-                if (tracks[page].explicit) {
+                if (trackDetails[page].explicit) {
                     Icon(
                         painter = painterResource(R.drawable.baseline_explicit_24),
                         contentDescription = androidx.compose.ui.res.stringResource(R.string.explicit_content),
@@ -182,7 +191,7 @@ fun MediaDetails(
                 }
 
                 Slider(
-                    value = value,
+                    value = sliderValue,
                     onValueChange = {
                         sliderPosition = it
                     },
@@ -190,7 +199,7 @@ fun MediaDetails(
                     steps = 1_000,
 
                     onValueChangeFinished = {
-                        onPlayerControlAction(PlayerControlAction.Seek(value))
+                        onPlayerControlAction(PlayerControlAction.Seek(sliderValue))
                     },
                     interactionSource = interactionSource,
                 )
@@ -219,17 +228,22 @@ fun MediaDetails(
                         )
                     }
 
-                    Box(modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                        .clickable {
-                            onDetailsPlayPauseClicked(TrackSelectAction.PlayTrackWithUri(tracks[page].uri))
-                        },
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable {
+                                onDetailsPlayPauseClicked(
+                                    TrackSelectAction.PlayTrackWithUri(
+                                        trackDetails[page].uri
+                                    )
+                                )
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
                         if (!isPaused) {
-                            if (uri.value == tracks[page].uri) {
+                            if (uri.value == trackDetails[page].uri) {
                                 PlayPauseIcon(painterResource(R.drawable.baseline_pause_24))
                             } else {
                                 PlayPauseIcon(Icons.Default.PlayArrow)
@@ -258,10 +272,10 @@ fun MediaDetails(
                 }
             }
 
-            LaunchedEffect(key1 = tracks[page].uri) {
-                pagerState.scrollToPage(pagerIndex)
+            LaunchedEffect(key1 = trackDetails[page].uri) {
+                pagerState.scrollToPage(rememberIndex)
                 snapshotFlow { pagerState.currentPage }.collect { page ->
-                    pagerIndex = page
+                    rememberIndex = page
                 }
             }
         }

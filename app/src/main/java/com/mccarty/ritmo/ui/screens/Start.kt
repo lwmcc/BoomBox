@@ -38,7 +38,7 @@ fun StartScreen(
     @StringRes detailsTitle: Int,
 ) {
     val mainViewModel: MainViewModel = viewModel()
-    val details by mainViewModel.mediaDetails.collectAsStateWithLifecycle()
+    val trackDetails by mainViewModel.mediaDetails.collectAsStateWithLifecycle()
     val isPaused by mainViewModel.isPaused.collectAsStateWithLifecycle(false)
 
     NavHost(navController = navController, startDestination = MAIN_SCREEN_KEY) {
@@ -67,15 +67,13 @@ fun StartScreen(
                 }
             )
         }
-        composable(
-            "$SONG_DETAILS_KEY{$INDEX_KEY}",
-        ) { backStackEntry ->
+        composable("$SONG_DETAILS_KEY{$INDEX_KEY}") { backStackEntry ->
             SongDetailsScreen(
                 isPaused = isPaused,
-                details = details,
-                model = mainViewModel,
+                trackDetails = trackDetails,
+                mainViewModel = mainViewModel,
                 title = detailsTitle,
-                index = backStackEntry.arguments?.getString(INDEX_KEY)?.toInt() ?: 0,
+                initialPagerIndex = backStackEntry.arguments?.getString(INDEX_KEY)?.toInt() ?: 0,
                 onDetailsPlayPauseClicked = {
                     onDetailsPlayPauseClicked(it)
                 },

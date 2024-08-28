@@ -133,39 +133,29 @@ class MainActivity : ComponentActivity() {
                 val playlistName = mainViewModel.playlistData.value?.name
 
                 playbackService.isCurrentlyPlaying { isPlaying ->
-                    // TODO: move duplicate code
-                    val index = mainViewModel.playlistData.value?.tracks?.indexOfFirst {
-                        it.track?.uri == currentUri
-                    } ?: 0
+                    val trackIndex = mainViewModel.getTrackIndex(currentUri)
 
                     if (isPlaying) {
-                        if (playlistName == PlaylistNames.RECENTLY_PLAYED) {
-                            mainViewModel.setPlaylistData(
-                                mainViewModel.playlistData.value?.copy(
-                                    uri = currentUri,
-                                    index = index,
+                        when(playlistName) {
+                            PlaylistNames.RECENTLY_PLAYED, PlaylistNames.USER_PLAYLIST -> {
+                                mainViewModel.setPlaylistData(
+                                    mainViewModel.playlistData.value?.copy(
+                                        uri = currentUri,
+                                        index = trackIndex,
+                                    )
                                 )
-                            )
-                        } else if (playlistName == PlaylistNames.USER_PLAYLIST) {
-                            val index = mainViewModel.playlistData.value?.tracks?.indexOfFirst {
-                                it.track?.uri == currentUri
-                            } ?: 0
+                            }
 
-                            mainViewModel.setPlaylistData(
-                                mainViewModel.playlistData.value?.copy(
-                                    uri = currentUri,
-                                    index = index,
+                            else -> {
+                                mainViewModel.setPlaylistData(
+                                    Playlist(
+                                        uri = currentUri,
+                                        index = 0,
+                                        name = PlaylistNames.RECENTLY_PLAYED,
+                                        tracks = mainViewModel.recommendedPlaylist,
+                                    )
                                 )
-                            )
-                        } else {
-                            mainViewModel.setPlaylistData(
-                                Playlist(
-                                    uri = currentUri,
-                                    index = 0,
-                                    name = PlaylistNames.RECENTLY_PLAYED,
-                                    tracks = mainViewModel.recommendedPlaylist,
-                                )
-                            )
+                            }
                         }
                     }
                 }
