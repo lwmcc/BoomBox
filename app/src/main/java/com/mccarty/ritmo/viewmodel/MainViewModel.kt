@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mccarty.networkrequest.network.NetworkRequest
 import com.mccarty.ritmo.MainActivity
-import com.mccarty.ritmo.MainActivity.Companion.API_SEED_ARTISTS
-import com.mccarty.ritmo.MainActivity.Companion.API_SEED_TRACKS
 import com.mccarty.ritmo.MainActivity.Companion.INITIAL_POSITION
 import com.mccarty.ritmo.MainActivity.Companion.TICKER_DELAY
 import com.mccarty.ritmo.domain.Details
@@ -25,7 +23,6 @@ import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.repository.remote.Repository
 import com.mccarty.ritmo.utils.createTrackDetailsFromItems
-import com.mccarty.ritmo.utils.createTrackDetailsFromItemsRecommended
 import com.mccarty.ritmo.utils.createTrackDetailsFromPlayListItems
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.protocol.types.PlayerState
@@ -442,6 +439,10 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+
+    fun getTrackIndex(currentUri: String) = playlistData.value?.tracks?.indexOfFirst {
+        it.track?.uri == currentUri
+    } ?: 0
 }
 
 data class ControlTrackData(
