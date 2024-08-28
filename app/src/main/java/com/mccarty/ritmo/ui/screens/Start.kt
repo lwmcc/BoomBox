@@ -31,7 +31,7 @@ fun StartScreen(
     onNavigateToPlaylist: (String?, String?) -> Unit,
     onPlayerControlAction: (PlayerControlAction) -> Unit,
     onNavigateToDetails: (Int) -> Unit,
-    mainItems: MainViewModel.MainItemsState,
+    mainItemsState: MainViewModel.MainItemsState,
     trackUri: String?,
     playlistId: String?,
     isPlaying: Boolean = false,
@@ -44,8 +44,8 @@ fun StartScreen(
     NavHost(navController = navController, startDestination = MAIN_SCREEN_KEY) {
         composable(MAIN_SCREEN_KEY) {
             MainScreen(
-                model = mainViewModel, // TODO: move view model
-                mainItems = mainItems,
+                mainViewModel = mainViewModel, // TODO: move view model up if possible
+                mainItemsState = mainItemsState,
                 trackUri = trackUri,
                 playlistId = playlistId,
                 isPlaying = isPlaying,
@@ -64,7 +64,7 @@ fun StartScreen(
                 },
                 onNavigateToDetails = {
                     onNavigateToDetails(it)
-                }
+                },
             )
         }
         composable("$SONG_DETAILS_KEY{$INDEX_KEY}") { backStackEntry ->

@@ -71,8 +71,13 @@ class PlaybackService: LifecycleService() {
         }.build(), object : Connector.ConnectionListener {
             override fun onConnected(appRemote: SpotifyAppRemote) {
                 spotifyAppRemote = appRemote
-                appRemote.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
-                    sendBroadCast(playerState)
+
+                appRemote.connectApi
+
+                if (appRemote.isConnected) {
+                    appRemote.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
+                        sendBroadCast(playerState)
+                    }
                 }
             }
 

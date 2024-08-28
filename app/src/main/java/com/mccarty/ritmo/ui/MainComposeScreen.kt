@@ -46,7 +46,7 @@ fun MainComposeScreen(
 ) {
 
     val sheetState = rememberModalBottomSheetState()
-    val mainItems = mainViewModel.mainItems.collectAsStateWithLifecycle().value
+    val mainItemsState = mainViewModel.mainItems.collectAsStateWithLifecycle().value
     var showBottomSheet by remember { mutableStateOf(false) }
     var trackIndex by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
@@ -67,7 +67,7 @@ fun MainComposeScreen(
                 )
         ) {
             StartScreen (
-                mainItems = mainItems,
+                mainItemsState = mainItemsState,
                 trackUri = trackUri,
                 playlistId = playListId,
                 navController = navController,

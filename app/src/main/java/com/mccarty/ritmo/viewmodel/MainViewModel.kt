@@ -75,7 +75,7 @@ class MainViewModel @Inject constructor(
         data class Error<T>(val message: T) : CurrentlyPayingTrackState()
     }
 
-    /** Recently played items top of main screen */
+    /** Recently played tracks, and playlists on home screen */
     sealed class  MainItemsState {
         data object Pending : MainItemsState()
         data class Success(val mainItems: Map<String, List<MainItem>>) : MainItemsState()
@@ -416,10 +416,6 @@ class MainViewModel @Inject constructor(
     override fun setPlaybackPosition(position: Int) {
         playbackPosition(position)
         setSliderPosition()
-    }
-
-    fun setMainItemsError(message: String) {
-        _mainItems.value = MainItemsState.Error(message)
     }
 
     fun recentlyPlayedMusic(): List<MainItem> {
