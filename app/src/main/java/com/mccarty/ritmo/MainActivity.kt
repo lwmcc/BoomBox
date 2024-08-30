@@ -1,16 +1,12 @@
 package com.mccarty.ritmo
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.activity.ComponentActivity
@@ -18,8 +14,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.State
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.Lifecycle
@@ -30,6 +24,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
 import com.mccarty.ritmo.KeyConstants.CLIENT_ID
+import com.mccarty.ritmo.domain.SpotifyRemoteWrapper
 import com.mccarty.ritmo.domain.model.MusicHeader
 import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.domain.services.PlaybackService
@@ -42,6 +37,9 @@ import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.ui.theme.BoomBoxTheme
 import com.mccarty.ritmo.viewmodel.PlayerViewModel
+import com.spotify.android.appremote.api.ConnectionParams
+import com.spotify.android.appremote.api.Connector
+import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
@@ -49,8 +47,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.IOException
+import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.DurationUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -61,6 +62,11 @@ class MainActivity : ComponentActivity() {
     private var accessCode: String? = null
 
     private lateinit var playbackService: PlaybackService
+
+    //lateinit var spotifyAppRemote: SpotifyAppRemote
+
+    @Inject
+    lateinit var spotifyAppRemote: SpotifyRemoteWrapper
 
     private var bound: Boolean = false
 
@@ -80,6 +86,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        lifecycleScope.launch {
+            connect(spotifyAppRemote.spotifyConnection())
+        }
+
         FirebaseApp.initializeApp(this)
         firebaseAnalytics = Firebase.analytics
 
@@ -119,9 +130,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        Intent(this, PlaybackService::class.java).also { intent ->
+       /* Intent(this, PlaybackService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
-        }
+        }*/
     }
 
     override fun onResume() {
@@ -161,11 +172,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            playbackService.getTrackData { trackData ->
-                trackData?.let {
-                    mainViewModel.setBackgroundTrackData(TrackData(it.uri))
+            lifecycleScope.launch {
+                spotifyAppRemote.spotifyConnection().playerApi.playerState.setResultCallback { playerState ->
+                    playerState.track.let {
+                        mainViewModel.setBackgroundTrackData(TrackData(it.uri))
+                    }
                 }
             }
+
             playbackService.cancelBackgroundPlayJob()
 /*            playbackService.currentUri { currentUri ->
                playerViewModel.setCurrentUri(currentUri)
@@ -205,6 +219,28 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(receiver)
+        lifecycleScope.launch {
+            spotifyAppRemote.let {
+                SpotifyAppRemote.disconnect(it.spotifyConnection())
+            }
+        }
+    }
+
+    fun connect(appRemote: SpotifyAppRemote?) {
+        appRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback { playerState ->
+            playerViewModel.setPlayerState(
+                PlaybackService.Player(
+                    imageUri = playerState.track?.imageUri.toString(),
+                    trackArtist = playerState.track?.artist?.name,
+                    albumName = playerState.track?.album?.name,
+                    trackName = playerState.track?.name,
+                    trackUri = playerState.track.uri,
+                    isTrackPaused = playerState.isPaused,
+                    position = playerState.playbackPosition,
+                    duration = playerState.track.duration,
+                )
+            )
+        }
     }
 
     private fun setupTrackInformation(player: PlaybackService.Player) {
@@ -216,6 +252,7 @@ class MainActivity : ComponentActivity() {
                 artistName = player.trackArtist ?: getString(R.string.artist_name)
                 albumName = player.albumName ?: getString(R.string.album_name)
                 songName = player.trackName ?: getString(R.string.track_name)
+                dataSet = true
             })
 
             mainViewModel.setTrackUri(player.trackUri)
@@ -293,7 +330,21 @@ class MainActivity : ComponentActivity() {
     private fun playerControlAction(action: PlayerControlAction, trackEnded: Boolean = false) {
         when(action) {
             PlayerControlAction.Back -> {
-                playbackService.remote()?.let { remote ->
+
+                lifecycleScope.launch {
+                    spotifyAppRemote.spotifyConnection().let { remote ->
+                        remote.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
+                            mainViewModel.setLastPlayedTrackData(playerState.track)
+                        }
+
+                        mainViewModel.isPaused(false)
+                        mainViewModel.setPlaybackPosition(0)
+                        remote.playerApi.skipPrevious()
+                    }
+                }
+
+
+/*                spotifyAppRemote?.let { remote ->
                     remote.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
                         mainViewModel.setLastPlayedTrackData(playerState.track)
                     }
@@ -301,19 +352,20 @@ class MainActivity : ComponentActivity() {
                     mainViewModel.isPaused(false)
                     mainViewModel.setPlaybackPosition(0)
                     remote.playerApi.skipPrevious()
-                }
+                }*/
             }
 
-            is PlayerControlAction.Play -> { // TODO: notification
+            is PlayerControlAction.Play -> {
                 startPlaybackService()
-                playbackService.remote()?.let {
-                    it.playerApi.playerState.setResultCallback { playerState ->
-                        val test = playerState.playbackPosition.milliseconds.toLong(DurationUnit.SECONDS)
-                        mainViewModel.resumePlayback(
-                            position = playerState.playbackPosition.milliseconds.inWholeSeconds,
-                            playerState = playerState,
-                            remote = it,
-                        )
+                lifecycleScope.launch {
+                    spotifyAppRemote.spotifyConnection().let {
+                        it.playerApi.playerState.setResultCallback { playerState ->
+                            mainViewModel.resumePlayback(
+                                position = playerState.playbackPosition.milliseconds.inWholeSeconds,
+                                playerState = playerState,
+                                remote = it,
+                            )
+                        }
                     }
                 }
             }
@@ -321,10 +373,12 @@ class MainActivity : ComponentActivity() {
             is PlayerControlAction.Seek -> {
                 mainViewModel.cancelJob()
                 mainViewModel.setPlaybackPosition(action.position.toInt())
-                playbackService.remote()?.playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
+                lifecycleScope.launch {
+                    spotifyAppRemote.spotifyConnection().playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
+                }
             }
 
-            is PlayerControlAction.Skip -> { // TODO: notification
+            is PlayerControlAction.Skip -> {
                 startPlaybackService()
                 when(mainViewModel.playlistData.value?.name) {
                     PlaylistNames.RECENTLY_PLAYED -> {
@@ -342,15 +396,21 @@ class MainActivity : ComponentActivity() {
 
                     else -> {
                         val track = mainViewModel.recentlyPlayedMusic().firstOrNull()?.track
-                        playbackService.handlePlayerActions(
-                            TrackSelectAction.TrackSelect(
-                                index = INITIAL_INDEX,
-                                duration = track?.duration_ms,
-                                uri = track?.uri,
-                                tracks = mainViewModel.recentlyPlayedMusic(),
-                                playlistName = PlaylistNames.RECENTLY_PLAYED,
-                            )
-                        )
+
+                        lifecycleScope.launch {
+                            spotifyAppRemote.spotifyConnection().let {
+                                playerViewModel.handlePlayerActions(
+                                    it,
+                                    TrackSelectAction.TrackSelect(
+                                        index = INITIAL_INDEX,
+                                        duration = track?.duration_ms,
+                                        uri = track?.uri,
+                                        tracks = mainViewModel.recentlyPlayedMusic(),
+                                        playlistName = PlaylistNames.RECENTLY_PLAYED,
+                                    ),
+                                )
+                            }
+                        }
                         mainViewModel.setPlaylistData(
                             Playlist(
                                 uri = track?.uri,
@@ -364,14 +424,17 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.PlayWithUri -> {
-                startPlaybackService()
-                playbackService.remote()?.let {
-                    it.playerApi.playerState.setResultCallback { playerState ->
-                        mainViewModel.isPaused(playerState.isPaused)
-                        if (playerState.isPaused) {
-                            playbackService.remote()?.playerApi?.play(action.uri)
-                        } else {
-                            playbackService.remote()?.playerApi?.pause()
+                //startPlaybackService()
+                lifecycleScope.launch {
+                    spotifyAppRemote.spotifyConnection().let {
+                        it.playerApi.playerState.setResultCallback { playerState ->
+                            mainViewModel.isPaused(playerState.isPaused)
+                            //if (playbackService.spotifyAppRemote.isPaused) {
+                            if (playerState.isPaused) {
+                                it.playerApi.play(action.uri)
+                            } else {
+                                it.playerApi.pause()
+                            }
                         }
                     }
                 }
@@ -387,28 +450,34 @@ class MainActivity : ComponentActivity() {
         action: TrackSelectAction,
         isPaused: State<Boolean>,
     ) {
-        startPlaybackService()
+        //startPlaybackService()
         when(action) {
             /**
              * Track has been selected from a playlist
              */
             is TrackSelectAction.TrackSelect -> {
                 mainViewModel.isPaused(isPaused.value) // TODO: might not be needed
-                playbackService.handlePlayerActions(action)
-                mainViewModel.setPlaylistData(
-                    Playlist(
-                        uri = action.uri,
-                        index = action.index,
-                        name = action.playlistName, // TODO: playlist track paused
-                        tracks = action.tracks,
-                    )
-                )
+                lifecycleScope.launch {
+                    spotifyAppRemote.spotifyConnection().let {
+                        playerViewModel.handlePlayerActions(it, action)
+                        mainViewModel.setPlaylistData(
+                            Playlist(
+                                uri = action.uri,
+                                index = action.index,
+                                name = action.playlistName, // TODO: playlist track paused
+                                tracks = action.tracks,
+                            )
+                        )
+                    }
+                }
             }
             is TrackSelectAction.PlayTrackWithUri -> {
-                if (isPaused.value) {
-                    playbackService.remote()?.playerApi?.play(action.playTrackWithUri)
-                } else {
-                    playbackService.remote()?.playerApi?.pause()
+                lifecycleScope.launch {
+                    if (isPaused.value) {
+                        spotifyAppRemote.spotifyConnection().playerApi.play(action.playTrackWithUri)
+                    } else {
+                        spotifyAppRemote.spotifyConnection().playerApi.pause()
+                    }
                 }
             }
         }
@@ -423,71 +492,73 @@ class MainActivity : ComponentActivity() {
 
     // TODO: might not be needed as slider was moved to details
     private fun setupSliderPosition(index: Int = INITIAL_POSITION) {
-        playbackService.remote()?.let { remote ->
-            when(mainViewModel.playlistData.value?.name) {
-                PlaylistNames.RECENTLY_PLAYED -> {
-                    if (mainViewModel.checkIfIndexesEqual()) {
-                        remote.playerApi.play(null)
-                        mainViewModel.setPlaylistData(null)
-                    } else {
-                        val newIndex =  mainViewModel.newIndex(index)
-                        val theUri = mainViewModel.getUri(newIndex)
+        lifecycleScope.launch {
+            spotifyAppRemote.spotifyConnection().let { remote ->
+                when(mainViewModel.playlistData.value?.name) {
+                    PlaylistNames.RECENTLY_PLAYED -> {
+                        if (mainViewModel.checkIfIndexesEqual()) {
+                            remote.playerApi.play(null)
+                            mainViewModel.setPlaylistData(null)
+                        } else {
+                            val newIndex =  mainViewModel.newIndex(index)
+                            val theUri = mainViewModel.getUri(newIndex)
+                            mainViewModel.setPlaylistData(
+                                mainViewModel.playlistData.value?.copy(
+                                    uri = theUri,
+                                    index =  newIndex,
+                                )
+                            )
+                            mainViewModel.setPlaybackPosition(INITIAL_POSITION)
+                            mainViewModel.playbackDuration(mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.milliseconds?.inWholeSeconds)
+                            remote.playerApi.play(theUri)
+
+                            mainViewModel.setMusicHeaderUrl(
+                                mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.images?.get(0)?.url,
+                                mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.artists?.get(0)?.name ?: getString(R.string.artist_name), // TODO: move duplicate code to own function
+                                mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.name ?: getString(R.string.album_name),
+                                mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.name ?: getString(R.string.track_name),
+                            )
+                        }
+                    }
+                    PlaylistNames.USER_PLAYLIST -> {
+                        if (mainViewModel.checkIfIndexesEqual()) {
+                            remote.playerApi.play(null)
+                            mainViewModel.setPlaylistData(null)
+                        } else {
+                            val newIndex =  mainViewModel.newIndex(index)
+                            val theUri = mainViewModel.getUri(newIndex)
+
+                            mainViewModel.setPlaylistData(
+                                mainViewModel.playlistData.value?.copy(
+                                    uri = theUri,
+                                    index =  newIndex,
+                                )
+                            )
+                            mainViewModel.setPlaybackPosition(INITIAL_POSITION)
+                            mainViewModel.playbackDuration(mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.milliseconds?.inWholeSeconds)
+                            remote.playerApi.play(theUri)
+
+                            mainViewModel.setMusicHeaderUrl(
+                                mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.images?.get(0)?.url,
+                                mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.artists?.get(0)?.name ?: getString(R.string.artist_name), // TODO: move duplicate code to own function
+                                mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.name ?: getString(R.string.album_name),
+                                mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.name ?: getString(R.string.track_name),
+                            )
+                        }
+                    }
+                    PlaylistNames.RECOMMENDED_PLAYLIST -> {
                         mainViewModel.setPlaylistData(
-                            mainViewModel.playlistData.value?.copy(
-                                uri = theUri,
-                                index =  newIndex,
+                            Playlist(
+                                uri = mainViewModel.recommendedPlaylist[INITIAL_POSITION].track?.uri,
+                                index = INITIAL_POSITION,
+                                name = PlaylistNames.RECENTLY_PLAYED,
+                                tracks = mainViewModel.recommendedPlaylist,
                             )
                         )
-                        mainViewModel.setPlaybackPosition(INITIAL_POSITION)
-                        mainViewModel.playbackDuration(mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.milliseconds?.inWholeSeconds)
-                        remote.playerApi.play(theUri)
-
-                        mainViewModel.setMusicHeaderUrl(
-                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.images?.get(0)?.url,
-                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.artists?.get(0)?.name ?: getString(R.string.artist_name), // TODO: move duplicate code to own function
-                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.name ?: getString(R.string.album_name),
-                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.name ?: getString(R.string.track_name),
-                        )
                     }
-                }
-                PlaylistNames.USER_PLAYLIST -> {
-                    if (mainViewModel.checkIfIndexesEqual()) {
-                        remote.playerApi.play(null)
-                        mainViewModel.setPlaylistData(null)
-                    } else {
-                        val newIndex =  mainViewModel.newIndex(index)
-                        val theUri = mainViewModel.getUri(newIndex)
-
-                        mainViewModel.setPlaylistData(
-                            mainViewModel.playlistData.value?.copy(
-                                uri = theUri,
-                                index =  newIndex,
-                            )
-                        )
-                        mainViewModel.setPlaybackPosition(INITIAL_POSITION)
-                        mainViewModel.playbackDuration(mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.duration_ms?.milliseconds?.inWholeSeconds)
-                        remote.playerApi.play(theUri)
-
-                        mainViewModel.setMusicHeaderUrl(
-                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.images?.get(0)?.url,
-                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.artists?.get(0)?.name ?: getString(R.string.artist_name), // TODO: move duplicate code to own function
-                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.album?.name ?: getString(R.string.album_name),
-                            mainViewModel.playlistData.value?.tracks?.get(newIndex)?.track?.name ?: getString(R.string.track_name),
-                        )
+                    else -> {
+                        // setupSliderPosition() // TODO: not using slider here
                     }
-                }
-                PlaylistNames.RECOMMENDED_PLAYLIST -> {
-                    mainViewModel.setPlaylistData(
-                        Playlist(
-                            uri = mainViewModel.recommendedPlaylist[INITIAL_POSITION].track?.uri,
-                            index = INITIAL_POSITION,
-                            name = PlaylistNames.RECENTLY_PLAYED,
-                            tracks = mainViewModel.recommendedPlaylist,
-                        )
-                    )
-                }
-                else -> {
-                   // setupSliderPosition() // TODO: not using slider here
                 }
             }
         }
@@ -497,72 +568,6 @@ class MainActivity : ComponentActivity() {
         this.startForegroundService(Intent(this, PlaybackService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         })
-    }
-
-    private fun notificationChannel() {
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.POST_NOTIFICATIONS,
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // User allowed
-            }
-
-            ActivityCompat.shouldShowRequestPermissionRationale(
-                this, android.Manifest.permission.POST_NOTIFICATIONS
-            ) -> {
-                println("MainActivity ***** shouldShowRequestPermissionRationale")
-                // User granted then removed
-            }
-
-            else -> {
-                println("MainActivity ***** not granted")
-                // First load
-                // on start
-            }
-
-        }
-
-        val notificationManager: NotificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        if(notificationManager.areNotificationsEnabled()) {
-
-            println("MainActivity ***** ENABLED")
-        } else {
-            println("MainActivity ***** NOT ENABLED")
-        }
-
-        val notification = NotificationCompat.Builder(this, PlaybackService.CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_baseline_music_note_24)
-            .setContentTitle("mccarty title")
-            .setContentText("larry text will be here")
-            .build()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name ="larry mccarty"
-            val desc = "what a description"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(PlaybackService.CHANNEL_ID, name, importance).apply {
-                description = desc
-            }
-
-            notificationManager.createNotificationChannel(channel)
-            notificationManager.notify(PlaybackService.NOTIFICATION_ID, notification)
-        }
-    }
-
-    fun notificationManager() = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-    fun launchPlayerNotificaiton(manager: NotificationManager) {
-        val not = manager.areNotificationsEnabled()
-        val mine = manager.activeNotifications
-        this.packageName
-        // NOTIFICATION_ID
-        mine.forEach {
-            println("MainActivity ***** KEY ${it.key} MINE ${this.packageName}")
-        }
-
     }
 
     fun getCurrentPosition() {

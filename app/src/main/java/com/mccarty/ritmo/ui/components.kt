@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -50,6 +51,7 @@ import androidx.compose.ui.res.stringResource as R
 import androidx.compose.material3.IconButton as IconButton
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.integration.compose.placeholder
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
@@ -107,68 +109,79 @@ fun PlayerControls(
         }
     }
 
-    Column {
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                onShowDetailsAction()
-            }) {
-            GlideImage(
-                model = musicHeader.imageUrl,
-                contentDescription = stringResource(id = R.string.description_for_image),
-                modifier = Modifier.size(60.dp).padding(end = 16.dp),
-            )
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = musicHeader.songName,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium,
-
+    Column(modifier = Modifier.fillMaxWidth(),) {
+        if (musicHeader.dataSet) {
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onShowDetailsAction() }) {
+                GlideImage(
+                    model = musicHeader.imageUrl,
+                    contentDescription = stringResource(id = R.string.description_for_image),
+                    modifier = Modifier
+                        .size(60.dp)
+                        .padding(end = 16.dp),
+                    loading = placeholder(R.drawable.default_music),
+                    failure = placeholder(R.drawable.default_music),
                 )
-                Text(
-                    text = musicHeader.artistName,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
 
-            Button(
-                onClick = {
-                    onPlayerControlAction(PlayerControlAction.Play(pausedPosition = position.toLong()))
-                },
-                contentPadding = PaddingValues(1.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color.Black
-                ),
-                modifier = Modifier.width(40.dp),
-            ) {
-                if (isPaused) {
-                    PlayPauseIcon(playPause = R.drawable.play_bk)
-                } else {
-                   PlayPauseIcon(playPause = R.drawable.baseline_pause_24)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = musicHeader.songName,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.titleMedium,
+
+                        )
+                    Text(
+                        text = musicHeader.artistName,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        onPlayerControlAction(PlayerControlAction.Play(pausedPosition = position.toLong()))
+                    },
+                    contentPadding = PaddingValues(1.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier.width(40.dp),
+                ) {
+                    if (isPaused) {
+                        PlayPauseIcon(playPause = R.drawable.play_bk)
+                    } else {
+                        PlayPauseIcon(playPause = R.drawable.baseline_pause_24)
+                    }
+                }
+
+                Button(
+                    onClick = {
+                        onPlayerControlAction(PlayerControlAction.Skip(index?.index ?: 0))
+                    },
+                    contentPadding = PaddingValues(1.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier.width(40.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_skip_next_w_24),
+                        contentDescription = "Skip Track",
+                        modifier = Modifier.size(40.dp),
+                    )
                 }
             }
-
-            Button(
-                onClick = {
-                    onPlayerControlAction(PlayerControlAction.Skip(index?.index ?: 0))
-                },
-                contentPadding = PaddingValues(1.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color.Black
-                ),
-                modifier = Modifier.width(40.dp)
+        } else {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.baseline_skip_next_w_24),
-                    contentDescription = "Skip Track",
-                    modifier = Modifier.size(40.dp),
-                )
+                CircleSpinner(32.dp)
             }
         }
     }
