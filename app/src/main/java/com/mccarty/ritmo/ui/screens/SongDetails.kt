@@ -92,7 +92,11 @@ fun SongDetailsScreen(
             modifier = Modifier.padding(start = 24.dp, top = paddingValues.calculateTopPadding(), end = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val pagerState = rememberPagerState(pageCount = { recentTrackDetails.size })
+            val pagerState = rememberPagerState(
+                pageCount = { recentTrackDetails.size },
+                initialPage = initialPagerIndex,
+            )
+
             MediaDetails(
                 isPaused = isPaused,
                 pagerState = pagerState,
@@ -273,8 +277,10 @@ fun MediaDetails(
             }
 
             LaunchedEffect(key1 = trackDetails[page].uri) {
-                pagerState.scrollToPage(rememberIndex)
                 snapshotFlow { pagerState.currentPage }.collect { page ->
+                    if (rememberIndex != page) {
+                        onDetailsPlayPauseClicked(TrackSelectAction.PlayTrackScrolledToWithUri(trackDetails[page].uri))
+                    }
                     rememberIndex = page
                 }
             }

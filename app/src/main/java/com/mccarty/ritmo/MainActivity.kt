@@ -104,12 +104,12 @@ class MainActivity : ComponentActivity() {
                         padding = padding,
                         viewMore = getString(R.string.sheets_view_more),
                         // Track select in playlist
-                        mediaEvents = object : MediaEvents {
+                        mediaEvents = object : MediaEvents { // TODO: refactor this get rid of that object
                             override fun trackSelectionAction(
                                 trackSelectAction: TrackSelectAction,
                                 isPaused: State<Boolean>,
                             ) {
-                                trackSelection(trackSelectAction, isPaused)
+                                trackSelection(trackSelectAction, isPaused.value)
                             }
                         },
                         onPlaylistSelectAction = {
@@ -212,17 +212,17 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         mainViewModel.cancelJob()
-        unbindService(connection)
-        bound = false
+        if (this::playbackService.isInitialized) {
+            unbindService(connection)
+            bound = false
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(receiver)
         lifecycleScope.launch {
-            spotifyAppRemote.let {
-                SpotifyAppRemote.disconnect(it.spotifyConnection())
-            }
+            SpotifyAppRemote.disconnect(spotifyAppRemote.spotifyConnection())
         }
     }
 
@@ -342,17 +342,6 @@ class MainActivity : ComponentActivity() {
                         remote.playerApi.skipPrevious()
                     }
                 }
-
-
-/*                spotifyAppRemote?.let { remote ->
-                    remote.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
-                        mainViewModel.setLastPlayedTrackData(playerState.track)
-                    }
-
-                    mainViewModel.isPaused(false)
-                    mainViewModel.setPlaybackPosition(0)
-                    remote.playerApi.skipPrevious()
-                }*/
             }
 
             is PlayerControlAction.Play -> {
@@ -424,12 +413,10 @@ class MainActivity : ComponentActivity() {
             }
 
             is PlayerControlAction.PlayWithUri -> {
-                //startPlaybackService()
                 lifecycleScope.launch {
                     spotifyAppRemote.spotifyConnection().let {
                         it.playerApi.playerState.setResultCallback { playerState ->
                             mainViewModel.isPaused(playerState.isPaused)
-                            //if (playbackService.spotifyAppRemote.isPaused) {
                             if (playerState.isPaused) {
                                 it.playerApi.play(action.uri)
                             } else {
@@ -448,7 +435,7 @@ class MainActivity : ComponentActivity() {
 
     private fun trackSelection(
         action: TrackSelectAction,
-        isPaused: State<Boolean>,
+        isPaused: Boolean = true,
     ) {
         //startPlaybackService()
         when(action) {
@@ -456,7 +443,7 @@ class MainActivity : ComponentActivity() {
              * Track has been selected from a playlist
              */
             is TrackSelectAction.TrackSelect -> {
-                mainViewModel.isPaused(isPaused.value) // TODO: might not be needed
+                mainViewModel.isPaused(isPaused) // TODO: might not be needed
                 lifecycleScope.launch {
                     spotifyAppRemote.spotifyConnection().let {
                         playerViewModel.handlePlayerActions(it, action)
@@ -473,11 +460,17 @@ class MainActivity : ComponentActivity() {
             }
             is TrackSelectAction.PlayTrackWithUri -> {
                 lifecycleScope.launch {
-                    if (isPaused.value) {
+                    if (isPaused) {
                         spotifyAppRemote.spotifyConnection().playerApi.play(action.playTrackWithUri)
                     } else {
                         spotifyAppRemote.spotifyConnection().playerApi.pause()
                     }
+                }
+            }
+
+            is TrackSelectAction.PlayTrackScrolledToWithUri -> {
+                lifecycleScope.launch {
+                    spotifyAppRemote.spotifyConnection().playerApi.play(action.playTrackWithUri)
                 }
             }
         }
