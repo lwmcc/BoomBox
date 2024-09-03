@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.mccarty.ritmo.ui.MainImageHeader
 
 @Composable
@@ -31,7 +30,7 @@ fun MainHeader(
         ) {
         MainImageHeader(
             imageUrl,
-            400.dp,
+            450.dp,
             24.dp,
             48.dp,
             modifier.align(Alignment.CenterHorizontally),

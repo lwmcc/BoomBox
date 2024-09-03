@@ -164,9 +164,9 @@ fun MediaDetails(
             if (image?.isNotEmpty() == true) {
                 MainImageHeader(
                     image,
-                    400.dp,
+                    450.dp,
                     24.dp,
-                    50.dp,
+                    48.dp,
                     Modifier,
                 )
             }
