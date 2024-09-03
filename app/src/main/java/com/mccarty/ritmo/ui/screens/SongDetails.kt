@@ -1,6 +1,7 @@
 package com.mccarty.ritmo.ui.screens
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -58,6 +60,7 @@ import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.ui.TrackDetailsTopBar
 import com.mccarty.ritmo.utils.createListFromDetails
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
+import kotlinx.coroutines.launch
 
 /**
  * Composable for the Track Details Screen
@@ -140,6 +143,8 @@ fun MediaDetails(
 
     var rememberIndex by rememberSaveable { mutableIntStateOf(initialPagerIndex) }
 
+    val scope = rememberCoroutineScope()
+
     val sliderValue by remember { // TODO: recheck if remember or rememberSaveable is better
         derivedStateOf {
             if (isInteracting) {
@@ -190,8 +195,10 @@ fun MediaDetails(
                     Icon(
                         painter = painterResource(R.drawable.baseline_explicit_24),
                         contentDescription = androidx.compose.ui.res.stringResource(R.string.explicit_content),
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
                     )
+                } else {
+                    Spacer(modifier = Modifier.size(24.dp))
                 }
 
                 Slider(
@@ -259,7 +266,16 @@ fun MediaDetails(
 
                     Button(
                         onClick = {
-                            onPlayerControlAction(PlayerControlAction.Skip(index?.index ?: 0))
+                            val newIndex = (index?.index ?: 0) + 1
+                            scope.launch {
+                                pagerState.animateScrollToPage(
+                                    newIndex,
+                                    animationSpec = tween(
+                                        durationMillis = 1_000
+                                    ),
+                                )
+                            }
+                            onPlayerControlAction(PlayerControlAction.Skip(newIndex))
                         },
                         contentPadding = PaddingValues(1.dp),
                         colors = ButtonDefaults.buttonColors(
