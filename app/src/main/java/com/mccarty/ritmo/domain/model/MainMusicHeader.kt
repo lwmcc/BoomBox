@@ -6,4 +6,5 @@ data class MusicHeader(
     var artistName: String = "",
     var albumName: String = "",
     var songName: String = "",
+    var dataSet: Boolean = false,
 )

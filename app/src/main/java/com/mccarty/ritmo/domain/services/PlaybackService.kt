@@ -13,12 +13,14 @@ import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.mccarty.ritmo.KeyConstants
 import com.mccarty.ritmo.MainActivity
 import com.mccarty.ritmo.MainActivity.Companion.INTENT_ACTION
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.domain.RemoteServiceControls
+import com.mccarty.ritmo.domain.SpotifyRemoteWrapper
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.MainActivity.Companion.TICKER_DELAY as TICKER_DELAY
 import com.spotify.android.appremote.api.ConnectionParams
@@ -49,7 +51,9 @@ class PlaybackService: LifecycleService() {
     lateinit var remoteServiceControls: RemoteServiceControls
 
     private val binder = PlaybackBinder()
-    private var spotifyAppRemote: SpotifyAppRemote? = null
+
+    @Inject
+    lateinit var spotifyAppRemote: SpotifyRemoteWrapper
 
     private lateinit var backgroundPlayJob: Job
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -65,33 +69,16 @@ class PlaybackService: LifecycleService() {
 
     override fun onCreate() {
         super.onCreate()
-        SpotifyAppRemote.connect(this, ConnectionParams.Builder(KeyConstants.CLIENT_ID).apply {
-            setRedirectUri(MainActivity.REDIRECT_URI)
-            showAuthView(true)
-        }.build(), object : Connector.ConnectionListener {
-            override fun onConnected(appRemote: SpotifyAppRemote) {
-                spotifyAppRemote = appRemote
 
-                appRemote.connectApi
-
-                if (appRemote.isConnected) {
-                    appRemote.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
-                        sendBroadCast(playerState)
-                    }
-                }
-            }
-
-            override fun onFailure(throwable: Throwable) {
-                Timber.e(throwable.message)
-            }
-        })
     }
 
     override fun onDestroy() {
         super.onDestroy()
         isActive = false
-        spotifyAppRemote?.let {
-            SpotifyAppRemote.disconnect(it)
+        lifecycleScope.launch {
+            spotifyAppRemote.let {
+                SpotifyAppRemote.disconnect(it.spotifyConnection())
+            }
         }
     }
 
@@ -104,34 +91,37 @@ class PlaybackService: LifecycleService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
 
-        spotifyAppRemote?.playerApi?.subscribeToPlayerState()?.setEventCallback { playerState ->
-            val notification = createNotification(playerState)
+        if (this::spotifyAppRemote.isInitialized) {
+            lifecycleScope.launch {
+                spotifyAppRemote.spotifyConnection().playerApi?.subscribeToPlayerState()?.setEventCallback { playerState ->
+                    val notification = createNotification(playerState)
+                    ServiceCompat.startForeground(
+                        this@PlaybackService,
+                        NOTIFICATION_ID,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
+                    )
 
-            ServiceCompat.startForeground(
-                this,
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
-            )
-
-            if (!startIds.contains(startId)) {
-                startIds.add(startId)
-                val notificationManager = getSystemService(NotificationManager::class.java)
-                notificationManager.createNotificationChannel(createNotificationChannel())
-                notificationManager.notify(NOTIFICATION_ID, notification)
+                    if (!startIds.contains(startId)) {
+                        startIds.add(startId)
+                        val notificationManager = getSystemService(NotificationManager::class.java)
+                        notificationManager.createNotificationChannel(createNotificationChannel())
+                        notificationManager.notify(NOTIFICATION_ID, notification)
+                    }
+                }
             }
         }
 
         return START_STICKY
     }
 
-
-    fun remote() = spotifyAppRemote
-
+    // TODO: can get from activity
     fun currentUri(currentUri: (String) -> Unit) {
-        spotifyAppRemote?.let { remote ->
-            remote.playerApi.playerState.setResultCallback { playerState ->
-                currentUri(playerState.track?.uri.toString())
+        lifecycleScope.launch {
+            spotifyAppRemote.spotifyConnection().let { remote ->
+                remote.playerApi.playerState.setResultCallback { playerState ->
+                    currentUri(playerState.track?.uri.toString())
+                }
             }
         }
     }
@@ -149,16 +139,22 @@ class PlaybackService: LifecycleService() {
         scope.launch {
             while (isActive) {
                 delay(TICKER_DELAY)
-                spotifyAppRemote?.let { remote ->
-                    remote.playerApi.playerState?.setResultCallback { playerState ->
-                        if (playerState.playbackPosition.milliseconds.inWholeSeconds == (playerState.track?.duration?.milliseconds?.inWholeSeconds?.minus(1L))) {
-                            val index = playlistData.playlist.indexOfFirst { it.uri == playerState.track?.uri } + 1
-                            if (playlistData.playlist.size == 1) {
-                                remote.playerApi.play(null)
-                            } else if (playerState.track?.uri ==  playlistData.playlist[playlistData.playlist.size - 1].track?.uri.toString()) {
-                                remote.playerApi.play(playlistData.playlist[0].track?.uri)
-                            } else {
-                                remote.playerApi.play(playlistData.playlist[index].track?.uri)
+                lifecycleScope.launch {
+                    spotifyAppRemote.spotifyConnection().let { remote ->
+                        remote.playerApi.playerState?.setResultCallback { playerState ->
+                            if (playerState.playbackPosition.milliseconds.inWholeSeconds == (playerState.track?.duration?.milliseconds?.inWholeSeconds?.minus(
+                                    1L
+                                ))
+                            ) {
+                                val index =
+                                    playlistData.playlist.indexOfFirst { it.uri == playerState.track?.uri } + 1
+                                if (playlistData.playlist.size == 1) {
+                                    remote.playerApi.play(null)
+                                } else if (playerState.track?.uri == playlistData.playlist[playlistData.playlist.size - 1].track?.uri.toString()) {
+                                    remote.playerApi.play(playlistData.playlist[0].track?.uri)
+                                } else {
+                                    remote.playerApi.play(playlistData.playlist[index].track?.uri)
+                                }
                             }
                         }
                     }
@@ -168,9 +164,11 @@ class PlaybackService: LifecycleService() {
     }
 
     fun isCurrentlyPlaying(isPlaying: (Boolean) -> Unit) {
-        spotifyAppRemote?.let { remote ->
-            remote.playerApi.playerState.setResultCallback { playerState ->
-                isPlaying(!playerState.isPaused)
+        lifecycleScope.launch {
+            spotifyAppRemote.spotifyConnection().let { remote ->
+                remote.playerApi.playerState.setResultCallback { playerState ->
+                    isPlaying(!playerState.isPaused)
+                }
             }
         }
     }
@@ -203,30 +201,31 @@ class PlaybackService: LifecycleService() {
      * Information about the track that was playing while
      * app was in background. Call this before the job is cancelled
      */
-    fun getTrackData(trackData: (track: Track?) -> Unit) {
+/*    fun getTrackData(trackData: (track: Track?) -> Unit) {
         spotifyAppRemote?.playerApi?.playerState?.setResultCallback { playerState ->
             trackData(playerState.track)
         }?.setErrorCallback { throwable ->
             Timber.e(throwable.message)
         }
-    }
 
+    }*/
+/*
     fun handlePlayerActions(action: TrackSelectAction.TrackSelect) {
         remoteServiceControls.onTrackSelected(spotifyAppRemote, action)
-    }
+    }*/
 
     fun getCurrentPosition(): Flow<Long> {
         return flow {
-            spotifyAppRemote?.playerApi?.playerState?.setResultCallback { playerState ->
-                scope.launch {
-                    while (isActive) {
-                        emit(playerState.playbackPosition)
-                        println("PlaybackService ***** POS ${playerState.playbackPosition}")
-                        delay(1_000)
+            lifecycleScope.launch {
+                spotifyAppRemote.spotifyConnection().playerApi.playerState?.setResultCallback { playerState ->
+                    scope.launch {
+                        while (isActive) {
+                            emit(playerState.playbackPosition)
+                            delay(1_000)
+                        }
                     }
                 }
             }
-
         }.flowOn(Dispatchers.IO) // TODO: inject dispatcher
     }
 

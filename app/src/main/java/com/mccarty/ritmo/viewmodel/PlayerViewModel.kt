@@ -1,14 +1,20 @@
 package com.mccarty.ritmo.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.mccarty.ritmo.domain.RemoteServiceControls
 import com.mccarty.ritmo.domain.services.PlaybackService
+import com.mccarty.ritmo.domain.tracks.TrackSelectAction
+import com.spotify.android.appremote.api.SpotifyAppRemote
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-class PlayerViewModel: ViewModel() {
+@HiltViewModel
+class PlayerViewModel @Inject constructor(private val remoteServiceControls: RemoteServiceControls): ViewModel() {
     private var _playerState = MutableStateFlow<PlaybackService.Player?>(null)
     val playerState = _playerState.asStateFlow()
 
@@ -80,5 +86,9 @@ class PlayerViewModel: ViewModel() {
         _playbackDuration.update {
             duration ?: 0
         }
+    }
+
+    fun handlePlayerActions(spotifyAppRemote: SpotifyAppRemote, action: TrackSelectAction.TrackSelect) {
+        remoteServiceControls.onTrackSelected(spotifyAppRemote, action)
     }
 }

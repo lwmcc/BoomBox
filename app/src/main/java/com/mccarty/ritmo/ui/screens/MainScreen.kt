@@ -113,12 +113,6 @@ fun MainScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         CircleSpinner(32.dp)
-                        LaunchedEffect(Unit) {
-                            delay(timeOut)
-                            // Sometimes there is a lag when fetching from the API
-                            // Fetch again here if this timeout is reached
-                            mainViewModel.fetchMainMusic()
-                        }
                     }
                 }
 

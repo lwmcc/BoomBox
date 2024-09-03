@@ -328,6 +328,7 @@ class MainViewModel @Inject constructor(
                 artistName = names[0]
                 albumName = names[1]
                 songName = names[2]
+                dataSet = true
             }
         }
     }
