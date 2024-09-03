@@ -51,6 +51,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.ui.res.stringResource
+import com.mccarty.ritmo.MainActivity.Companion.PAGER_SCROLL_DELAY
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.domain.Details
@@ -223,7 +224,12 @@ fun MediaDetails(
                 ) {
                     Button(
                         onClick = {
-                            onPlayerControlAction(PlayerControlAction.Back)
+                            scope.launch {
+                                pagerState.animateScrollToPage(
+                                    page = rememberIndex - 1,
+                                    animationSpec = tween(durationMillis = PAGER_SCROLL_DELAY),
+                                )
+                            }
                         },
                         contentPadding = PaddingValues(1.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -267,10 +273,8 @@ fun MediaDetails(
                         onClick = {
                             scope.launch {
                                 pagerState.animateScrollToPage(
-                                    rememberIndex + 1,
-                                    animationSpec = tween(
-                                        durationMillis = 1_000
-                                    ),
+                                    page = rememberIndex + 1,
+                                    animationSpec = tween(durationMillis = PAGER_SCROLL_DELAY),
                                 )
                             }
                         },

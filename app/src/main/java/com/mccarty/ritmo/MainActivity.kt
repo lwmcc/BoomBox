@@ -590,10 +590,11 @@ class MainActivity : ComponentActivity() {
         const val IMAGE_URL = "https://i.scdn.co/image/"
         const val TICKER_DELAY = 1_000L
         const val INCREMENT_INDEX = 1
-        const val API_SEED_TRACKS = 2
+        const val API_SEED_TRACKS = 2 // TODO: remove if not going to use
         const val API_SEED_ARTISTS = 3
         const val  INITIAL_POSITION = 0
         const val  INITIAL_INDEX = 0
+        const val PAGER_SCROLL_DELAY = 1_000
 
         const val INTENT_ACTION = "com.mccarty.ritmo.PlayerState-Broadcast"
 

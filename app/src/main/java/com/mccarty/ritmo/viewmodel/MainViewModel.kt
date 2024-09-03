@@ -226,7 +226,7 @@ class MainViewModel @Inject constructor(
                                 external_urls = item.external_urls,
                                 href = item.href,
                                 id = item.id,
-                                images = item.images,
+                                images = item.images, // TODO: npe
                                 name = item.name,
                                 owner = item.owner,
                                 public = item.public,
