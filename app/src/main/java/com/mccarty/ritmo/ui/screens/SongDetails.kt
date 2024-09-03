@@ -48,9 +48,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.ui.res.stringResource
+import androidx.compose.ui.res.stringResource as CR
 import com.mccarty.ritmo.MainActivity.Companion.PAGER_SCROLL_DELAY
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.R
@@ -60,6 +62,7 @@ import com.mccarty.ritmo.ui.PlayPauseIcon
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.ui.TrackDetailsTopBar
 import com.mccarty.ritmo.utils.createListFromDetails
+import com.mccarty.ritmo.utils.createStringFromCollection
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
 import kotlinx.coroutines.launch
 
@@ -184,17 +187,21 @@ fun MediaDetails(
                     text = "${trackDetails[page].albumName}",
                     style = MaterialTheme.typography.titleLarge
                 )
-                trackDetails[page].artists?.forEach { artist ->
-                    Text(
-                        text = artist.name ?: stringResource(R.string.track_name),
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                }
+
+                trackDetails[page].artists?.createStringFromCollection(CR(R.string.track_name))
+                    ?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
 
                 if (trackDetails[page].explicit) {
                     Icon(
                         painter = painterResource(R.drawable.baseline_explicit_24),
-                        contentDescription = androidx.compose.ui.res.stringResource(R.string.explicit_content),
+                        contentDescription = CR(R.string.explicit_content),
                         modifier = Modifier.size(24.dp),
                     )
                 } else {

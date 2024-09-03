@@ -2,6 +2,7 @@ package com.mccarty.ritmo.utils
 
 import com.mccarty.ritmo.domain.Details
 import com.mccarty.ritmo.domain.model.TrackDetails
+import com.mccarty.ritmo.domain.model.payload.ArtistX
 import com.mccarty.ritmo.domain.model.payload.Item
 import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.domain.model.payload.PlaylistItem as PItem
@@ -66,3 +67,6 @@ fun List<Details>.createListFromDetails(recent: List<MainItem>): List<Details> {
         }
     }
 }
+
+fun List<ArtistX>.createStringFromCollection(name: String): String =
+    joinToString(separator = ", ") { it.name ?: name }
