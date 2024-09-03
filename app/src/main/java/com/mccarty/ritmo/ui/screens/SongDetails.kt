@@ -134,7 +134,6 @@ fun MediaDetails(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isDragged by interactionSource.collectIsDraggedAsState()
-    val index by mainViewModel.playlistData.collectAsStateWithLifecycle()
 
     val uri = mainViewModel.trackUri.collectAsStateWithLifecycle()
 
@@ -266,16 +265,14 @@ fun MediaDetails(
 
                     Button(
                         onClick = {
-                            val newIndex = (index?.index ?: 0) + 1
                             scope.launch {
                                 pagerState.animateScrollToPage(
-                                    newIndex,
+                                    rememberIndex + 1,
                                     animationSpec = tween(
                                         durationMillis = 1_000
                                     ),
                                 )
                             }
-                            onPlayerControlAction(PlayerControlAction.Skip(newIndex))
                         },
                         contentPadding = PaddingValues(1.dp),
                         colors = ButtonDefaults.buttonColors(
