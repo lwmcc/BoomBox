@@ -2,23 +2,18 @@
 # Stacks detected: deps:java:.,tool:gradle:
 version: 2.1
 
+
 executors:
   android-executor:
     docker:
-      - image: cimg/android:30.0.3  # Includes OpenJDK 11 and Android API 30
+      - image: circleci/android:api-30
 
 jobs:
-  test-java:
-    docker:
-      - image: circleci/openjdk:17  # Ensure consistency with your Java version
     steps:
       - checkout
       - run:
-          name: Set Gradle Wrapper Executable
-          command: chmod +x ./gradlew
-      - run:
           name: Calculate cache key
-          command: |
+          command: |-
             find . -name 'pom.xml' -o -name 'gradlew*' -o -name '*.gradle*' | \
                     sort | xargs cat > /tmp/CIRCLECI_CACHE_KEY
       - restore_cache:
@@ -34,4 +29,20 @@ jobs:
           paths:
             - ~/.gradle/caches
       - store_artifacts:
-          path: bui
+          path: build/reports
+  deploy:
+    # This is an example deploy job, not actually used by the workflow
+    docker:
+      - image: cimg/base:stable
+    steps:
+      # Replace this with steps to deploy to users
+      - run:
+          name: deploy
+          command: '#e.g. ./deploy.sh'
+workflows:
+  build-and-test:
+    jobs:
+      - test-java
+    # - deploy:
+    #     requires:
+    #       - test-java
