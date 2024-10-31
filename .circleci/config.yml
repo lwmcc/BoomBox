@@ -1,11 +1,17 @@
 # This config was automatically generated from your source code
 # Stacks detected: deps:java:.,tool:gradle:
 version: 2.1
+
+
+executors:
+  android-executor:
+    docker:
+      - image: circleci/android:api-30
+
 jobs:
   test-java:
     docker:
       - image: circleci/android:api-30
-      - image: circleci/openjdk:17
     steps:
       - checkout
       - run:
