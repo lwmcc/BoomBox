@@ -73,6 +73,13 @@ android {
         }
     }
     namespace 'com.mccarty.ritmo'
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE.md'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE.md'
+        exclude 'META-INF/NOTICE'
+    }
 }
 
 dependencies {
