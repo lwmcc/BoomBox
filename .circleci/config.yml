@@ -9,9 +9,26 @@ executors:
       - image: circleci/android:api-30
 
 jobs:
+  build:
+    executor: android-executor
+    steps:
+      - checkout
+      - run:
+          name: Set up Java 17
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y openjdk-17-jdk
+            echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> $BASH_ENV
+      - run:
+          name: Install Dependencies
+          command: ./gradlew dependencies
+      - run:
+          name: Build
+          command: ./gradlew assembleDebug
+      - run:
+          name: Run Tests
+          command: ./gradlew test
   test-java:
-    docker:
-      - image: circleci/openjdk:17
     steps:
       - checkout
       - run:
