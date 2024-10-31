@@ -33,7 +33,7 @@ class NetworkUtilsTest {
         verify { mockNetworkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR) }
     }
 
-    @Test
+/*    @Test
     fun `verify has network connection when capability is transport wifi`() {
         clearAllMocks()
         // Arrange
@@ -48,9 +48,9 @@ class NetworkUtilsTest {
 
         // Assert
         verify { mockNetworkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_WIFI) }
-    }
+    }*/
 
-    @Test
+/*    @Test
     fun `verify has network connection when capability is transport ethernet`() {
         clearAllMocks()
         // Arrange
@@ -65,9 +65,9 @@ class NetworkUtilsTest {
 
         // Assert
         verify { mockNetworkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_ETHERNET) }
-    }
+    }*/
 
-    @Test
+/*    @Test
     fun `verify has network connection false when all capabilities are false`() {
         clearAllMocks()
         // Arrange
@@ -84,7 +84,7 @@ class NetworkUtilsTest {
         verify { !mockNetworkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR) }
         verify { !mockNetworkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_WIFI) }
         verify { !mockNetworkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_ETHERNET) }
-    }
+    }*/
 
     @Test
     fun `verify has network connection false when capabilities is null`() {

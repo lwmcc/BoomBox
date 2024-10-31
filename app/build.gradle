@@ -75,10 +75,8 @@ android {
     namespace 'com.mccarty.ritmo'
 
     packagingOptions {
-        exclude 'META-INF/LICENSE.md'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/NOTICE.md'
-        exclude 'META-INF/NOTICE'
+        merges += "META-INF/LICENSE.md"
+        merges += "META-INF/LICENSE-notice.md"
     }
 }
 

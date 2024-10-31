@@ -15,9 +15,9 @@ fun hasNetworkConnection(context: Context): Boolean {
             manager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
         return capabilities?.let {
-            it.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+            it.hasCapability(NetworkCapabilities.NET_CAPABILITY_MMS) ||
                     it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
-                    it.hasCapability(NetworkCapabilities.TRANSPORT_ETHERNET)
+                    it.hasCapability(NetworkCapabilities.NET_CAPABILITY_FOTA)
         } ?: false
     }
 }

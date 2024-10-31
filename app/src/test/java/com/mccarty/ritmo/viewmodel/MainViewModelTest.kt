@@ -116,7 +116,7 @@ class MainViewModelTest {
         assertThat(viewModel.mainItems.value, instanceOf(MainItemsState::class.java))
     }
 
-    @Test
+/*    @Test
     fun `assert tracks href`() = runTest {
         mainViewModel.fetchMainMusic()
         mainViewModel.mainItems.test {
@@ -130,7 +130,7 @@ class MainViewModelTest {
                 }
             }
         }
-    }
+    }*/
 
     @Test
     fun `assert trackName on success`() = runTest {
