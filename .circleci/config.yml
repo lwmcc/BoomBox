@@ -4,7 +4,8 @@ version: 2.1
 jobs:
   test-java:
     docker:
-      - image: circleci/android:api-29
+      - image: circleci/android:api-30
+      - image: circleci/openjdk:17
     steps:
       - checkout
       - run:
