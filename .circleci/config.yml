@@ -2,6 +2,11 @@
 # Stacks detected: deps:java:.,tool:gradle:
 version: 2.1
 
+executors:
+  java17:
+    docker:
+      - image: 'cimg/openjdk:17.0'
+
 jobs:
   test-java:
     docker:
