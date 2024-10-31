@@ -4,7 +4,7 @@ version: 2.1
 jobs:
   test-java:
     docker:
-      - image: cimg/openjdk:17.0
+      - image: circleci/android:api-29
     steps:
       - checkout
       - run:
@@ -16,6 +16,8 @@ jobs:
           key: cache-{{ checksum "/tmp/CIRCLECI_CACHE_KEY" }}
       - run:
           command: ./gradlew check
+      - run:
+          command: ./gradlew androidDependencies
       - store_test_results:
           path: build/test-results
       - save_cache:
