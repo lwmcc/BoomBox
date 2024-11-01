@@ -26,6 +26,9 @@ jobs:
           name: Decode google-services.json
           command: |
             echo $GOOGLE_SERVICES_JSON_BASE64 | base64 --decode > app/google-services.json
+            
+            mkdir -p app/src/debug
+            cp app/google-services.json app/src/debug/google-services.json
       - store_test_results:
           path: build/test-results
       - save_cache:
