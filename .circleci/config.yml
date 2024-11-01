@@ -2,17 +2,15 @@
 # Stacks detected: deps:java:.,tool:gradle:
 version: 2.1
 
-executors:
-  java17:
-    docker:
-      - image: 'cimg/openjdk:17.0'
-
 jobs:
   test-java:
     docker:
-      - image: circleci/android:api-30
+      - image: cimg/android:30.0.3-jdk17
     steps:
       - checkout
+      - - run:
+            name: Set Gradle Wrapper Executable
+            command: chmod +x ./gradlew
       - run:
           name: Calculate cache key
           command: |-
