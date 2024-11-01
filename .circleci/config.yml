@@ -22,8 +22,6 @@ jobs:
       - run:
           command: ./gradlew check
       - run:
-          command: ./gradlew androidDependencies
-      - run:
           name: Decode google-services.json
           command: |
             echo $GOOGLE_SERVICES_JSON_BASE64 | base64 --decode > app/google-services.json
