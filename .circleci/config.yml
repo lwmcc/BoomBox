@@ -59,6 +59,9 @@ jobs:
       - run:
           name: Run Gradle Check
           command: ./gradlew check
+      - run:
+          name: Run Gradle Build
+          command: ./gradlew build --stacktrace --info
 
       # Store test results
       - store_test_results:
