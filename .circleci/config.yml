@@ -29,6 +29,16 @@ jobs:
             
             mkdir -p app/src/debug
             cp app/google-services.json app/src/debug/google-services.json
+            
+            mkdir -p app/src/debug app/src/flavor/debug app/src/release
+                  cp app/google-services.json app/src/debug/google-services.json
+                  cp app/google-services.json app/src/release/google-services.json
+                  cp app/google-services.json app/src/flavor/debug/google-services.json
+      - run:
+          name: Verify google-services.json File
+          command: |
+            ls -la app/google-services.json
+            ls -la app/src/debug/google-services.json
       - store_test_results:
           path: build/test-results
       - save_cache:
