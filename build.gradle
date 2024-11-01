@@ -3,7 +3,7 @@ buildscript {
         google()
         mavenCentral()
         flatDir {
-            dirs '../app-remote-lib'
+            dirs 'libs'
         }
     }
     ext {
