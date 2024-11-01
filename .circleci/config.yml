@@ -8,7 +8,7 @@ jobs:
       - image: cimg/android:30.0.3-jdk17
     steps:
       - checkout
-      - - run:
+      - run:
             name: Set Gradle Wrapper Executable
             command: chmod +x ./gradlew
       - run:
