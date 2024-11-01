@@ -35,6 +35,9 @@ jobs:
                   cp app/google-services.json app/src/release/google-services.json
                   cp app/google-services.json app/src/flavor/debug/google-services.json
       - run:
+          name: Check Directory Structure
+          command: find . -name "google-services.json"
+      - run:
           name: Verify google-services.json File
           command: |
             ls -la app/google-services.json
