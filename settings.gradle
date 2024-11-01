@@ -16,5 +16,6 @@ rootProject.name = "BoomBox"
 include ':app'
 include ':NetworkRequest'
 include ':spotify-app-remote'
+include ':spotify-auth'
 include ':retrofitservice'
 include ':RetrofitApi'
