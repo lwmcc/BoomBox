@@ -20,17 +20,20 @@ jobs:
       - run:
           name: Decode google-services.json
           command: |
-              echo $GOOGLE_SERVICES_JSON_BASE64 | base64 -d > app/google-services.json
+              echo $GOOGLE_SERVICES_JSON_BASE64 | base64 -d > ./app/google-services.json
       - run:
-          name: Copy google-services.json to debug directory
+          name: Copy google-services.json to src debug and main directories
           command: |
             mkdir -p /home/circleci/project/app/src/debug
+            mkdir -p /home/circleci/project/app/src/main
             cp ./app/google-services.json /home/circleci/project/app/src/debug/google-services.json
+            cp ./app/google-services.json /home/circleci/project/app/src/main/google-services.json
       - run:
-          name: Verify google-services.json exists in both locations
+          name: Verify google-services.json exists in all required locations
           command: |
             ls -la app/
             ls -la /home/circleci/project/app/src/debug/
+            ls -la /home/circleci/project/app/src/main/
       - run:
           name: Verify google-services.json exists
           command: ls -la app/
