@@ -8,10 +8,6 @@ jobs:
       - image: cimg/android:2024.10
     steps:
       - checkout
-      - run: rm -rf ~/.gradle/caches/
-      - run:
-            name: Set Gradle Wrapper Executable
-            command: chmod +x ./gradlew
       - run:
           name: Calculate cache key
           command: |-
@@ -22,18 +18,12 @@ jobs:
       - run:
           command: ./gradlew check
       - run:
-          name: "echo env var for google-services.json"
+          name: Decode google-services.json
           command: |
-            echo $GOOGLE_SERVICES_JSON_BASE64 | base64 --decode > google-services.json
-
+              echo $GOOGLE_SERVICES_JSON_BASE64 | base64 -d > app/google-services.json
       - run:
-          name: Check Directory Structure
-          command: find . -name "google-services.json"
-      - run:
-          name: Verify google-services.json File
-          command: |
-            ls -la app/google-services.json
-            ls -la app/src/debug/google-services.json
+          name: Run Gradle Build
+          command: ./gradlew build
       - store_test_results:
           path: build/test-results
       - save_cache:
