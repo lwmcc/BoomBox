@@ -8,6 +8,7 @@ jobs:
       - image: cimg/android:2024.10
     steps:
       - checkout
+      - run: rm -rf ~/.gradle/caches/
       - run:
             name: Set Gradle Wrapper Executable
             command: chmod +x ./gradlew
