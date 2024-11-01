@@ -62,6 +62,12 @@ jobs:
       - run:
           name: Run Gradle Build
           command: ./gradlew build --stacktrace --info
+      - run:
+          name: Install Android SDK Components
+          command: sdkmanager "platforms;android-34" "build-tools;33.0.2"
+      - run:
+          name: Set Android SDK Environment Variable
+          command: export ANDROID_HOME=$ANDROID_SDK_ROOT
 
       # Store test results
       - store_test_results:
