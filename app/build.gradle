@@ -212,6 +212,7 @@ dependencies {
    // implementation project(":app-remote-lib", configuration = "default")
     implementation project(":app-remote-lib")
     //implementation project(":app-remote-lib", configuration = "default")
+    implementation(name: 'spotify-app-remote-release-0.7.2', ext: 'aar')
 
 
 }
