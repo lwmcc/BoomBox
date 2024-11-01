@@ -6,8 +6,15 @@ jobs:
   test-java:
     docker:
       - image: cimg/android:2024.10
+    working_directory: /home/circleci/project
     steps:
       - checkout
+      - - run:
+            name: Clean Gradle Cache
+            command: ./gradlew clean
+      - run:
+          name: Set permissions for google-services.json
+          command: chmod 644 app/google-services.json app/src/debug/google-services.json app/src/main/google-services.json
       - run:
           name: Calculate cache key
           command: |-
