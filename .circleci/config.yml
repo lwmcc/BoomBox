@@ -28,7 +28,9 @@ jobs:
             echo $GOOGLE_SERVICES_JSON_BASE64 | base64 --decode > app/google-services.json
             
             mkdir -p app/src/debug
-            cp app/google-services.json app/src/debug/google-services.json
+            cp app/google-services.json 
+            cp app/src/debug/google-services.json
+            cp home/circleci/project/app/src/
             
             mkdir -p app/src/debug app/src/flavor/debug app/src/release
                   cp app/google-services.json app/src/debug/google-services.json
