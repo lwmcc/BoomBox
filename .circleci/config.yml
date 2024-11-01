@@ -22,24 +22,10 @@ jobs:
       - run:
           command: ./gradlew check
       - run:
-          name: Decode google-services.json
+          name: "echo env var for google-services.json"
           command: |
-            echo $GOOGLE_SERVICES_JSON_BASE64 | base64 --decode > app/google-services.json
-            
-            mkdir -p app/src/debug
-            cp app/google-services.json 
-            cp app/src/debug/google-services.json
-            
-            mkdir -p home/circleci/project/app/src/
-            cp home/circleci/project/app/src/google-services.json
-            
-            mkdir -p app/src/debug app/src/flavor/debug app/src/release
-                  cp app/google-services.json 
-                  cp app/src/debug/google-services.json
-                  cp app/google-services.json 
-                  cp app/src/release/google-services.json
-                  cp app/google-services.json 
-                  cp app/src/flavor/debug/google-services.json
+            echo $GOOGLE_SERVICES_JSON_BASE64 | base64 --decode > google-services.json
+
       - run:
           name: Check Directory Structure
           command: find . -name "google-services.json"
