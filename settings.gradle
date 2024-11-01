@@ -19,3 +19,4 @@ include ':spotify-app-remote'
 include ':spotify-auth'
 include ':retrofitservice'
 include ':RetrofitApi'
+include(":app-remote-lib")

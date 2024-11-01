@@ -209,7 +209,9 @@ dependencies {
 
     implementation 'com.spotify.android:spotify-app-remote:0.7.2'
 
-    implementation project(':spotify-app-remote')
+   // implementation project(":app-remote-lib", configuration = "default")
+    implementation 'com.spotify.android:spotify-app-remote:0.7.2'
+
 }
 
 kapt {
