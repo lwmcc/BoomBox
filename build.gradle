@@ -2,6 +2,9 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        flatDir {
+            dirs 'libs'
+        }
     }
     ext {
         compose_version = '1.5.12'
