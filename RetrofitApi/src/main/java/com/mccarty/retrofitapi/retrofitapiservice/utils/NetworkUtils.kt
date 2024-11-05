@@ -12,9 +12,9 @@ fun hasNetworkConnection(context: Context): Boolean {
             connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
         return capabilities?.let {
-            capabilities.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_MMS) ||
                     capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
-                    capabilities.hasCapability(NetworkCapabilities.TRANSPORT_ETHERNET)
+                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_FOTA)
         } ?: false
     }
     return false
