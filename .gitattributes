@@ -1,5 +1,1 @@
-*.kt linguist-vendored=true
-*.html linguist-vendored=false
-*.xml linguist-vendored=false
-*.css linguist-vendored=false
-*.js linguist-vendored=false
+*.kt linguist-language=Kotlin
