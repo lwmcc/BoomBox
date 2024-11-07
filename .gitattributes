@@ -1,2 +1,3 @@
 *.kt linguist-language=Kotlin
 *.dart linguist-vendored=true
+*.html linguist-documentation=true
