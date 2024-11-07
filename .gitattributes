@@ -1,3 +1,5 @@
 *.kt linguist-vendored=true
 *.html linguist-detectable=false
 *.xml linguist-detectable=false
+*.css linguist-detectable=false
+*.js linguist-detectable=false
