@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "506312950825",
+    "project_id": "boombox-e0d7b",
+    "storage_bucket": "boombox-e0d7b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:506312950825:android:8ca7743a01558acd620838",
+        "android_client_info": {
+          "package_name": "com.mccarty.ritmo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCyhUI1ZDrcI84ONSHtzWKX4mobi9TAmHg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
