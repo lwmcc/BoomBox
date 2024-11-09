@@ -28,15 +28,15 @@ import com.mccarty.ritmo.domain.SpotifyRemoteWrapper
 import com.mccarty.ritmo.domain.model.MusicHeader
 import com.mccarty.ritmo.domain.model.payload.MainItem
 import com.mccarty.ritmo.domain.services.PlaybackService
+import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.ui.MainComposeScreen
+import com.mccarty.ritmo.ui.theme.BoomBoxTheme
 import com.mccarty.ritmo.utils.positionProduct
 import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
+import com.mccarty.ritmo.viewmodel.PlayerViewModel
 import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
-import com.mccarty.ritmo.domain.tracks.TrackSelectAction
-import com.mccarty.ritmo.ui.theme.BoomBoxTheme
-import com.mccarty.ritmo.viewmodel.PlayerViewModel
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
@@ -66,6 +66,10 @@ class MainActivity : ComponentActivity() {
     private var bound: Boolean = false
 
     private lateinit var receiver :  PlaybackServiceReceiver
+
+    val CHANNEL = "com.mccarty.app/channel"
+   // private lateinit var methodChannel: MethodChannel
+   // private lateinit var flutterEngine: FlutterEngine
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(component: ComponentName?, service: IBinder?) {
