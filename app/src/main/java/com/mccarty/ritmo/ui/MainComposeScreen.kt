@@ -40,6 +40,7 @@ fun MainComposeScreen(
     mediaEvents: MainActivity.MediaEvents,
     onPlaylistSelectAction: (PlaylistSelectAction) -> Unit,
     onPlayerControlAction: (PlayerControlAction) -> Unit,
+    onViewArtistClick: () -> Unit,
     navActions: AppNavigationActions = remember(navController) {
         AppNavigationActions(navController)
     }
@@ -117,6 +118,9 @@ fun MainComposeScreen(
             }
             navActions.navigateToTrackDetails(trackIndex)
         },
+        onViewArtistClick = {
+            onViewArtistClick()
+        }
     )
 }
 

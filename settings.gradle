@@ -5,13 +5,16 @@ pluginManagement {
         mavenCentral()
     }
 }
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://storage.googleapis.com/download.flutter.io' }
     }
 }
+
 rootProject.name = "BoomBox"
 include ':app'
 include ':NetworkRequest'
@@ -20,3 +23,12 @@ include ':retrofitservice'
 include ':RetrofitApi'
 include ':app'
 include ':lib'
+
+/*setBinding(new Binding([gradle: this]))
+evaluate(new File(
+        'Flutter_Mobile_Web/.android/include_flutter.groovy'
+))*/
+setBinding(new Binding([gradle: this]))
+evaluate(new File(
+        rootDir, 'Flutter_Mobile_Web/.android/include_flutter.groovy'
+))

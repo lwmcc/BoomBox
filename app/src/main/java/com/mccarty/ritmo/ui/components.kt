@@ -24,6 +24,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -47,15 +48,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.res.stringResource as R
-import androidx.compose.material3.IconButton as IconButton
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
-import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.R
+import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
 import com.mccarty.ritmo.viewmodel.PlaylistNames
+import androidx.compose.ui.res.stringResource as R
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
@@ -222,6 +222,7 @@ fun BottomSheet(
     text: String,
     onDismiss: () -> Unit,
     onClick: () -> Unit,
+    onViewArtistClick: () -> Unit,
 ) {
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -246,6 +247,16 @@ fun BottomSheet(
                         modifier = Modifier
                             .clickable {
                                 onClick()
+                            }
+                            .fillMaxWidth()
+                    )
+                }
+                item {
+                    Text(
+                        text = "View Artist",
+                        modifier = Modifier
+                            .clickable {
+                                onViewArtistClick()
                             }
                             .fillMaxWidth()
                     )

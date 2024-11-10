@@ -42,6 +42,8 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.IOException
@@ -68,8 +70,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var receiver :  PlaybackServiceReceiver
 
     val CHANNEL = "com.mccarty.app/channel"
-   // private lateinit var methodChannel: MethodChannel
-   // private lateinit var flutterEngine: FlutterEngine
+    private lateinit var methodChannel: MethodChannel
+    private lateinit var flutterEngine: FlutterEngine
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(component: ComponentName?, service: IBinder?) {
@@ -117,6 +119,9 @@ class MainActivity : ComponentActivity() {
                         onPlayerControlAction = {
                             playerControlAction(it)
                         },
+                        onViewArtistClick = {
+                            println("***** ARTIST CLICK")
+                        }
                     )
                 }
             }

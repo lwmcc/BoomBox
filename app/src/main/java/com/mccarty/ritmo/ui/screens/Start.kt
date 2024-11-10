@@ -18,8 +18,8 @@ import com.mccarty.ritmo.MainActivity.Companion.PLAYLIST_SCREEN_KEY
 import com.mccarty.ritmo.MainActivity.Companion.SONG_DETAILS_KEY
 import com.mccarty.ritmo.R
 import com.mccarty.ritmo.domain.playlists.PlaylistSelectAction
-import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.domain.tracks.TrackSelectAction
+import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
 
 @Composable

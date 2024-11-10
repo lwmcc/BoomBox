@@ -9,6 +9,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/Flutter_Mobile_Web/.android/Flutter" />
             <option value="$PROJECT_DIR$/NetworkRequest" />
             <option value="$PROJECT_DIR$/RetrofitApi" />
             <option value="$PROJECT_DIR$/app" />

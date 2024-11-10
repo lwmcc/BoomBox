@@ -24,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -42,19 +41,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
-import com.bumptech.glide.integration.compose.GlideImage as GlideImage
+import com.bumptech.glide.integration.compose.GlideImage
 import com.mccarty.ritmo.R
-import com.mccarty.ritmo.viewmodel.MainViewModel
 import com.mccarty.ritmo.domain.model.payload.MainItem
+import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.ui.CircleSpinner
 import com.mccarty.ritmo.ui.ItemColor
-import com.mccarty.ritmo.viewmodel.PlaylistNames
-import com.mccarty.ritmo.domain.tracks.TrackSelectAction
 import com.mccarty.ritmo.ui.MainScreenTopBar
 import com.mccarty.ritmo.ui.PlayerControls
+import com.mccarty.ritmo.viewmodel.MainViewModel
+import com.mccarty.ritmo.viewmodel.MainViewModel.MainItemsState
 import com.mccarty.ritmo.viewmodel.PlayerControlAction
-import kotlinx.coroutines.delay
-import com.mccarty.ritmo.viewmodel.MainViewModel.MainItemsState as MainItemsState
+import com.mccarty.ritmo.viewmodel.PlaylistNames
 
 @OptIn(
     ExperimentalGlideComposeApi::class,
