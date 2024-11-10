@@ -42,7 +42,10 @@ import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
+import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngineCache
+import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -120,7 +123,12 @@ class MainActivity : ComponentActivity() {
                             playerControlAction(it)
                         },
                         onViewArtistClick = {
-                            println("***** ARTIST CLICK")
+                            startActivity(
+                                FlutterActivity
+                                    //.withCachedEngine("boombox_engine_id")
+                                    .withNewEngine()
+                                    .build(this)
+                            )
                         }
                     )
                 }
@@ -130,6 +138,14 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) {
             AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, getAuthenticationRequest())
         }
+
+        flutterEngine = FlutterEngine(this)
+        flutterEngine.dartExecutor.executeDartEntrypoint(
+            DartExecutor.DartEntrypoint.createDefault()
+        )
+        FlutterEngineCache
+            .getInstance()
+            .put("boombox_engine_id", flutterEngine)
     }
 
     override fun onStart() {

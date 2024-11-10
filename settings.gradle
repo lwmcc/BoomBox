@@ -24,10 +24,6 @@ include ':RetrofitApi'
 include ':app'
 include ':lib'
 
-/*setBinding(new Binding([gradle: this]))
-evaluate(new File(
-        'Flutter_Mobile_Web/.android/include_flutter.groovy'
-))*/
 setBinding(new Binding([gradle: this]))
 evaluate(new File(
         rootDir, 'Flutter_Mobile_Web/.android/include_flutter.groovy'
