@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import com.mccarty.networkrequest.network.NetworkRequestAdapterFactory
 import com.mccarty.ritmo.KeyConstants
 import com.mccarty.ritmo.MainActivity
@@ -59,14 +58,7 @@ object AppModule {
     ): OkHttpClient {
         return OkHttpClient()
             .newBuilder()
-            .addInterceptor(
-                MusicInterceptor(
-                    sharedPreferences,
-                    connectivityManager.getNetworkCapabilities(
-                        connectivityManager.activeNetwork
-                    )?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false,
-                )
-            )
+            .addInterceptor(MusicInterceptor(sharedPreferences))
             .build()
     }
 

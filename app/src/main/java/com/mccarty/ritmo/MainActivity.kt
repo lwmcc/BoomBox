@@ -38,13 +38,18 @@ import com.mccarty.ritmo.viewmodel.PlayerViewModel
 import com.mccarty.ritmo.viewmodel.Playlist
 import com.mccarty.ritmo.viewmodel.PlaylistNames
 import com.spotify.android.appremote.api.SpotifyAppRemote
-import com.spotify.sdk.android.auth.AuthorizationClient
-import com.spotify.sdk.android.auth.AuthorizationRequest
-import com.spotify.sdk.android.auth.AuthorizationResponse
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
+import org.json.JSONObject
 import timber.log.Timber
-import java.io.IOException
+import java.security.MessageDigest
+import java.security.SecureRandom
+import android.util.Base64
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -55,6 +60,7 @@ class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
     private val playerViewModel: PlayerViewModel by viewModels()
     private var accessCode: String? = null
+    private var codeVerifier: String = ""
 
     private lateinit var playbackService: PlaybackService
 
@@ -87,7 +93,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         lifecycleScope.launch {
-            connect(spotifyAppRemote.spotifyConnection())
+            try {
+                connect(spotifyAppRemote.spotifyConnection())
+            } catch (e: Exception) {
+                Timber.e(e, "Spotify remote connection failed")
+            }
         }
 
         FirebaseApp.initializeApp(this)
@@ -123,7 +133,51 @@ class MainActivity : ComponentActivity() {
         }
 
         if (savedInstanceState == null) {
-            AuthorizationClient.openLoginActivity(this, AUTH_TOKEN_REQUEST_CODE, getAuthenticationRequest())
+            launchSpotifyAuth()
+        }
+    }
+
+    private fun launchSpotifyAuth() {
+        codeVerifier = generateCodeVerifier()
+        getSharedPreferences("auth_prefs", MODE_PRIVATE).edit()
+            .putString("code_verifier", codeVerifier).apply()
+        val challenge = generateCodeChallenge(codeVerifier)
+        val authUrl = Uri.Builder()
+            .scheme("https").authority("accounts.spotify.com").path("/authorize")
+            .appendQueryParameter("client_id", CLIENT_ID)
+            .appendQueryParameter("response_type", "code")
+            .appendQueryParameter("redirect_uri", REDIRECT_URI)
+            .appendQueryParameter("scope", "user-read-email user-read-recently-played user-read-playback-state")
+            .appendQueryParameter("code_challenge_method", "S256")
+            .appendQueryParameter("code_challenge", challenge)
+            .build().toString()
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(authUrl)))
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val uri = intent.data ?: return
+        if (uri.scheme != "com.mccarty.ritmo" || uri.host != "auth") return
+        val code = uri.getQueryParameter("code")
+        val error = uri.getQueryParameter("error")
+        if (error != null) {
+            Timber.e("Spotify auth error: $error")
+            return
+        }
+        if (code == null) return
+        val verifier = getSharedPreferences("auth_prefs", MODE_PRIVATE)
+            .getString("code_verifier", "") ?: ""
+        lifecycleScope.launch {
+            val token = exchangeCodeForToken(code, verifier)
+            if (token != null) {
+                writeToPreferences(token)
+                fetchData()
+                try {
+                    connect(spotifyAppRemote.spotifyConnection())
+                } catch (e: Exception) {
+                    Timber.e(e, "Spotify remote connection failed after auth")
+                }
+            }
         }
     }
 
@@ -172,10 +226,14 @@ class MainActivity : ComponentActivity() {
             }
 
             lifecycleScope.launch {
-                spotifyAppRemote.spotifyConnection().playerApi.playerState.setResultCallback { playerState ->
-                    playerState.track.let {
-                        mainViewModel.setBackgroundTrackData(TrackData(it.uri))
+                try {
+                    spotifyAppRemote.spotifyConnection().playerApi.playerState.setResultCallback { playerState ->
+                        playerState.track.let {
+                            mainViewModel.setBackgroundTrackData(TrackData(it.uri))
+                        }
                     }
+                } catch (e: Exception) {
+                    Timber.e(e, "Spotify remote connection failed in onResume")
                 }
             }
 
@@ -221,7 +279,11 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         unregisterReceiver(receiver)
         lifecycleScope.launch {
-            SpotifyAppRemote.disconnect(spotifyAppRemote.spotifyConnection())
+            try {
+                SpotifyAppRemote.disconnect(spotifyAppRemote.spotifyConnection())
+            } catch (e: Exception) {
+                Timber.e(e, "Spotify remote disconnect failed")
+            }
         }
     }
 
@@ -264,43 +326,48 @@ class MainActivity : ComponentActivity() {
               }*/
     }
 
-    private fun getAuthenticationRequest(): AuthorizationRequest? {
-        return AuthorizationRequest.Builder(
-            CLIENT_ID,
-            AuthorizationResponse.Type.TOKEN,
-            getRedirectUri().toString()
-        )
-            .setShowDialog(false)
-            .setScopes(
-                arrayOf(
-                    "user-read-email",
-                    "user-read-recently-played",
-                    "user-read-playback-state"
-                )
-            )
-            .setCampaign("your-campaign-token") // TODO: set this
-            .build()
+    private fun generateCodeVerifier(): String {
+        val bytes = ByteArray(32)
+        SecureRandom().nextBytes(bytes)
+        return Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, intent)
-        val response = AuthorizationClient.getResponse(resultCode, data)
-        if (response?.accessToken != null) {
-            writeToPreferences(response.accessToken)
-            if (requestCode == AUTH_TOKEN_REQUEST_CODE) {
-                try {
-                    fetchData()
-                } catch (ioe: IOException) {
-                    Timber.e(ioe.message ?: "Error on return from Spotify auth")
+    private fun generateCodeChallenge(verifier: String): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray(Charsets.US_ASCII))
+        return Base64.encodeToString(digest, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+    }
+
+    private suspend fun exchangeCodeForToken(code: String, verifier: String): String? =
+        withContext(Dispatchers.IO) {
+            try {
+                val params = "grant_type=authorization_code" +
+                    "&code=${URLEncoder.encode(code, "UTF-8")}" +
+                    "&redirect_uri=${URLEncoder.encode(REDIRECT_URI, "UTF-8")}" +
+                    "&client_id=${URLEncoder.encode(CLIENT_ID, "UTF-8")}" +
+                    "&code_verifier=${URLEncoder.encode(verifier, "UTF-8")}"
+                val connection = URL("https://accounts.spotify.com/api/token")
+                    .openConnection() as HttpURLConnection
+                connection.requestMethod = "POST"
+                connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+                connection.doOutput = true
+                connection.outputStream.use { it.write(params.toByteArray(Charsets.UTF_8)) }
+                if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    val json = connection.inputStream.bufferedReader().use { it.readText() }
+                    JSONObject(json).getString("access_token")
+                } else {
+                    val error = connection.errorStream?.bufferedReader()?.use { it.readText() }
+                    Timber.e("Token exchange HTTP ${connection.responseCode}: $error")
+                    null
                 }
-            } else if (requestCode == AUTH_CODE_REQUEST_CODE) {
-                accessCode = response.code
+            } catch (e: Exception) {
+                Timber.e(e, "Token exchange exception")
+                null
             }
         }
-    }
 
     private fun fetchData() {
         mainViewModel.fetchRecentlyPlayedMusic()
+        mainViewModel.fetchMainMusic()
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -331,14 +398,18 @@ class MainActivity : ComponentActivity() {
             PlayerControlAction.Back -> {
 
                 lifecycleScope.launch {
-                    spotifyAppRemote.spotifyConnection().let { remote ->
-                        remote.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
-                            mainViewModel.setLastPlayedTrackData(playerState.track)
-                        }
+                    try {
+                        spotifyAppRemote.spotifyConnection().let { remote ->
+                            remote.playerApi.subscribeToPlayerState().setEventCallback { playerState ->
+                                mainViewModel.setLastPlayedTrackData(playerState.track)
+                            }
 
-                        mainViewModel.isPaused(false)
-                        mainViewModel.setPlaybackPosition(0)
-                        remote.playerApi.skipPrevious()
+                            mainViewModel.isPaused(false)
+                            mainViewModel.setPlaybackPosition(0)
+                            remote.playerApi.skipPrevious()
+                        }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Spotify remote error on Back")
                     }
                 }
             }
@@ -346,14 +417,18 @@ class MainActivity : ComponentActivity() {
             is PlayerControlAction.Play -> {
                 startPlaybackService()
                 lifecycleScope.launch {
-                    spotifyAppRemote.spotifyConnection().let {
-                        it.playerApi.playerState.setResultCallback { playerState ->
-                            mainViewModel.resumePlayback(
-                                position = playerState.playbackPosition.milliseconds.inWholeSeconds,
-                                playerState = playerState,
-                                remote = it,
-                            )
+                    try {
+                        spotifyAppRemote.spotifyConnection().let {
+                            it.playerApi.playerState.setResultCallback { playerState ->
+                                mainViewModel.resumePlayback(
+                                    position = playerState.playbackPosition.milliseconds.inWholeSeconds,
+                                    playerState = playerState,
+                                    remote = it,
+                                )
+                            }
                         }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Spotify remote error on Play")
                     }
                 }
             }
@@ -362,7 +437,11 @@ class MainActivity : ComponentActivity() {
                 mainViewModel.cancelJob()
                 mainViewModel.setPlaybackPosition(action.position.toInt())
                 lifecycleScope.launch {
-                    spotifyAppRemote.spotifyConnection().playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
+                    try {
+                        spotifyAppRemote.spotifyConnection().playerApi?.seekTo(action.position.positionProduct(TICKER_DELAY))
+                    } catch (e: Exception) {
+                        Timber.e(e, "Spotify remote error on Seek")
+                    }
                 }
             }
 
@@ -386,17 +465,21 @@ class MainActivity : ComponentActivity() {
                         val track = mainViewModel.recentlyPlayedMusic().firstOrNull()?.track
 
                         lifecycleScope.launch {
-                            spotifyAppRemote.spotifyConnection().let {
-                                playerViewModel.handlePlayerActions(
-                                    it,
-                                    TrackSelectAction.TrackSelect(
-                                        index = INITIAL_INDEX,
-                                        duration = track?.duration_ms,
-                                        uri = track?.uri,
-                                        tracks = mainViewModel.recentlyPlayedMusic(),
-                                        playlistName = PlaylistNames.RECENTLY_PLAYED,
-                                    ),
-                                )
+                            try {
+                                spotifyAppRemote.spotifyConnection().let {
+                                    playerViewModel.handlePlayerActions(
+                                        it,
+                                        TrackSelectAction.TrackSelect(
+                                            index = INITIAL_INDEX,
+                                            duration = track?.duration_ms,
+                                            uri = track?.uri,
+                                            tracks = mainViewModel.recentlyPlayedMusic(),
+                                            playlistName = PlaylistNames.RECENTLY_PLAYED,
+                                        ),
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                Timber.e(e, "Spotify remote error on Skip")
                             }
                         }
                         mainViewModel.setPlaylistData(
@@ -413,15 +496,19 @@ class MainActivity : ComponentActivity() {
 
             is PlayerControlAction.PlayWithUri -> {
                 lifecycleScope.launch {
-                    spotifyAppRemote.spotifyConnection().let {
-                        it.playerApi.playerState.setResultCallback { playerState ->
-                            mainViewModel.isPaused(playerState.isPaused)
-                            if (playerState.isPaused) {
-                                it.playerApi.play(action.uri)
-                            } else {
-                                it.playerApi.pause()
+                    try {
+                        spotifyAppRemote.spotifyConnection().let {
+                            it.playerApi.playerState.setResultCallback { playerState ->
+                                mainViewModel.isPaused(playerState.isPaused)
+                                if (playerState.isPaused) {
+                                    it.playerApi.play(action.uri)
+                                } else {
+                                    it.playerApi.pause()
+                                }
                             }
                         }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Spotify remote error on PlayWithUri")
                     }
                 }
             }
@@ -444,32 +531,44 @@ class MainActivity : ComponentActivity() {
             is TrackSelectAction.TrackSelect -> {
                 mainViewModel.isPaused(isPaused) // TODO: might not be needed
                 lifecycleScope.launch {
-                    spotifyAppRemote.spotifyConnection().let {
-                        playerViewModel.handlePlayerActions(it, action)
-                        mainViewModel.setPlaylistData(
-                            Playlist(
-                                uri = action.uri,
-                                index = action.index,
-                                name = action.playlistName, // TODO: playlist track paused
-                                tracks = action.tracks,
+                    try {
+                        spotifyAppRemote.spotifyConnection().let {
+                            playerViewModel.handlePlayerActions(it, action)
+                            mainViewModel.setPlaylistData(
+                                Playlist(
+                                    uri = action.uri,
+                                    index = action.index,
+                                    name = action.playlistName,
+                                    tracks = action.tracks,
+                                )
                             )
-                        )
+                        }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Spotify remote error on TrackSelect")
                     }
                 }
             }
             is TrackSelectAction.PlayTrackWithUri -> {
                 lifecycleScope.launch {
-                    if (isPaused) {
-                        spotifyAppRemote.spotifyConnection().playerApi.play(action.playTrackWithUri)
-                    } else {
-                        spotifyAppRemote.spotifyConnection().playerApi.pause()
+                    try {
+                        if (isPaused) {
+                            spotifyAppRemote.spotifyConnection().playerApi.play(action.playTrackWithUri)
+                        } else {
+                            spotifyAppRemote.spotifyConnection().playerApi.pause()
+                        }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Spotify remote error on PlayTrackWithUri")
                     }
                 }
             }
 
             is TrackSelectAction.PlayTrackScrolledToWithUri -> {
                 lifecycleScope.launch {
-                    spotifyAppRemote.spotifyConnection().playerApi.play(action.playTrackWithUri)
+                    try {
+                        spotifyAppRemote.spotifyConnection().playerApi.play(action.playTrackWithUri)
+                    } catch (e: Exception) {
+                        Timber.e(e, "Spotify remote error on PlayTrackScrolledToWithUri")
+                    }
                 }
             }
         }
@@ -485,6 +584,7 @@ class MainActivity : ComponentActivity() {
     // TODO: might not be needed as slider was moved to details
     private fun setupSliderPosition(index: Int = INITIAL_POSITION) {
         lifecycleScope.launch {
+            try {
             spotifyAppRemote.spotifyConnection().let { remote ->
                 when(mainViewModel.playlistData.value?.name) {
                     PlaylistNames.RECENTLY_PLAYED -> {
@@ -552,6 +652,9 @@ class MainActivity : ComponentActivity() {
                         // setupSliderPosition() // TODO: not using slider here
                     }
                 }
+            }
+            } catch (e: Exception) {
+                Timber.e(e, "Spotify remote error in setupSliderPosition")
             }
         }
     }

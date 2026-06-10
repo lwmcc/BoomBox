@@ -170,10 +170,12 @@ class MainViewModel @Inject constructor(
     fun fetchRecentlyPlayedMusic() {
         viewModelScope.launch {
             repository.fetchRecentlyPlayedItem().catch {
+                Timber.e(it, "Exception fetching recently played music")
                 _recentlyPlayedMusic.update { RecentlyPlayedMusicState.Success(emptyList()) }
             }.collect { items ->
                 when (items) {
                     is NetworkRequest.Error -> {
+                        Timber.e("Network error fetching recently played: ${items.message}")
                         _recentlyPlayedMusic.update {
                             RecentlyPlayedMusicState.Success(emptyList())
                         }
@@ -192,61 +194,78 @@ class MainViewModel @Inject constructor(
     }
 
     fun fetchMainMusic() {
+        Timber.d("BoomBox fetchMainMusic called")
         viewModelScope.launch {
             val recentTracks: Deferred<List<TrackItem>> = async {
-                when (val items = repository.fetchRecentlyPlayedItem().retry(2).catch {
-                    Timber.e(it.message ?: "An error occurred trying fetchRecentlyPlayedItem()")
-                }.first()) {
-                    is NetworkRequest.Error -> {
-                        emptyList()
-                    }
-                    is NetworkRequest.Success -> {
-                       items.data.items.distinctBy { track -> track.track?.id }.map { track ->
-                            TrackItem(
-                                context = track.context,
-                                played_at = track.played_at,
-                                track = track.track,
-                            )
+                try {
+                    when (val items = repository.fetchRecentlyPlayedItem().retry(2).catch {
+                        Timber.e(it, "Exception in fetchRecentlyPlayedItem flow")
+                    }.first()) {
+                        is NetworkRequest.Error -> {
+                            Timber.e("fetchMainMusic recentTracks error: ${items.message}")
+                            emptyList()
+                        }
+                        is NetworkRequest.Success -> {
+                            Timber.d("BoomBox recentTracks success: ${items.data.items.size} items")
+                            items.data.items.distinctBy { track -> track.track?.id }.map { track ->
+                                TrackItem(
+                                    context = track.context,
+                                    played_at = track.played_at,
+                                    track = track.track,
+                                )
+                            }
                         }
                     }
+                } catch (e: Exception) {
+                    Timber.e(e, "fetchMainMusic recentTracks exception")
+                    emptyList()
                 }
             }
 
             val playlists: Deferred<List<ListItem>> = async {
-                when (val items = repository.fetchPlayLists().first()) {
-                    is NetworkRequest.Error -> {
-                        emptyList()
-                    }
+                try {
+                    when (val items = repository.fetchPlayLists().first()) {
+                        is NetworkRequest.Error -> {
+                            Timber.e("fetchMainMusic playlists error: ${items.message}")
+                            emptyList()
+                        }
 
-                    is NetworkRequest.Success -> {
-                        items.data.items.map { item ->
-                            ListItem(
-                                collaborative = item.collaborative,
-                                description = item.description,
-                                external_urls = item.external_urls,
-                                href = item.href,
-                                id = item.id,
-                                images = item.images, // TODO: npe
-                                name = item.name,
-                                owner = item.owner,
-                                public = item.public,
-                                snapshot_id = item.snapshot_id,
-                                tracks = item.tracks,
-                                type = item.type,
-                                uri = item.uri,
-                            )
+                        is NetworkRequest.Success -> {
+                            Timber.d("BoomBox playlists success: ${items.data.items.size} items")
+                            items.data.items.map { item ->
+                                ListItem(
+                                    collaborative = item.collaborative,
+                                    description = item.description,
+                                    external_urls = item.external_urls,
+                                    href = item.href,
+                                    id = item.id,
+                                    images = item.images,
+                                    name = item.name,
+                                    owner = item.owner,
+                                    public = item.public,
+                                    snapshot_id = item.snapshot_id,
+                                    tracks = item.tracks,
+                                    type = item.type,
+                                    uri = item.uri,
+                                )
+                            }
                         }
                     }
+                } catch (e: Exception) {
+                    Timber.e(e, "fetchMainMusic playlists exception")
+                    emptyList()
                 }
             }
 
             val recent = recentTracks.await()
+            Timber.d("BoomBox updating mainItems: ${recent.size} tracks")
             _mainItems.update {
                 MainItemsState.Success(buildMap(2) {
                     put("track", recent)
                     put("playlist", playlists.await())
                 })
             }
+            Timber.d("BoomBox mainItems updated to Success")
 
             _recommendedPlaylist.clear()
             _recommendedPlaylist.addAll(recent)
